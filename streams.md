@@ -491,13 +491,11 @@ library provides a portable interface:
   ((inner :initarg :inner :reader inner-stream)
    (count :initform 0 :accessor char-count)))
 
-(defmethod trivial-gray-streams:stream-write-char
-    ((stream counting-stream) char)
+(defmethod trivial-gray-streams:stream-write-char ((stream counting-stream) char)
   (incf (char-count stream))
   (write-char char (inner-stream stream)))
 
-(defmethod trivial-gray-streams:stream-line-column
-    ((stream counting-stream))
+(defmethod trivial-gray-streams:stream-line-column ((stream counting-stream))
   nil)
 ~~~
 
@@ -505,8 +503,7 @@ Using it:
 
 ~~~lisp
 (let* ((out (make-string-output-stream))
-       (counting (make-instance 'counting-stream
-                                :inner out)))
+       (counting (make-instance 'counting-stream :inner out)))
   (write-string "hello" counting)
   (values (get-output-stream-string out)
           (char-count counting)))
