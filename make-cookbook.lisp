@@ -62,6 +62,7 @@
    "debugging.md"
    "performance.md"
    "scripting.md"
+   "streams.md"
    "testing.md"
    "databases.md"
    "gui.md"
