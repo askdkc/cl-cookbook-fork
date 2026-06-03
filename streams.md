@@ -407,13 +407,13 @@ See all of them in the [streams dictionary on the CLCS](https://cl-community-spe
 
 ### `listen`
 
-[`listen`](https://cl-community-spec.github.io/pages/listen.html):
+[listen](https://cl-community-spec.github.io/pages/listen.html):
 
 > Returns true if there is a character immediately available from input-stream; otherwise, returns false. On a non-interactive input-stream, listen returns true except when at end of file_1. If an end of file is encountered, listen returns false. listen is intended to be used when input-stream obtains characters from an interactive device such as a keyboard.
 
 ### `finish-output, force-output, clear-output `
 
-[`finish-output, force-output, clear-output`](https://cl-community-spec.github.io/pages/finish_002doutput.html).
+[finish-output, force-output, clear-output](https://cl-community-spec.github.io/pages/finish_002doutput.html).
 
 When printing to standard output, `finish-output` can be necessary to
 ensure that all output is written to the stream before the program exits.
@@ -422,7 +422,7 @@ ensure that all output is written to the stream before the program exits.
 
 ### `terpri, fresh-line`
 
-[`terpri`](https://cl-community-spec.github.io/pages/terpri.html)
+[terpri](https://cl-community-spec.github.io/pages/terpri.html)
 always writes a newline to an output stream.
 
 `fresh-line` writes a newline only if the stream isn't at the start of a newline.
@@ -437,7 +437,7 @@ boolean value.
 
 ### `with-open-stream`
 
-[`with-open-stream`](https://cl-community-spec.github.io/pages/with_002dopen_002dstream.html)
+[with-open-stream](https://cl-community-spec.github.io/pages/with_002dopen_002dstream.html)
 "performs a series of operations on the stream, returns a value, and then
 closes the stream."
 
