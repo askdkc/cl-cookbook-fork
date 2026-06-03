@@ -95,19 +95,28 @@ default when you don't specify a stream:
 (format *standard-output* "hello") ;; or (format t "hello")
 ~~~
 
-You can rebind them with `let` to redirect output:
+You can rebind them to redirect output.
+
+### Capturing or redirecting a program output
+
+Do you want, for example, to capture some function output, that
+normally prints to standard output, to a string?
+
+You can generally use a `let` binding of this form:
 
 ~~~lisp
 (let ((*standard-output* some-other-stream))
-  (print "hello"))
+  (print "hello"))  ;; or another function call.
   ;; prints to some-other-stream
 ~~~
 
-A convoluted example:
+In this (convoluted) example we create a string stream and we bind
+`*standard-output*` to it:
 
 ```lisp
 (with-output-to-string (s)
  (let ((*standard-output* s))
+   ;; some function calls here…
    (princ "hello")
    (princ " ")
    (princ "streams")))
@@ -290,7 +299,7 @@ that stream is discarded.
   (format sink "this goes nowhere"))
 ~~~
 
-## Real-world example: one report, many destinations
+## Example: one report, many destinations
 
 A common pattern in real programs is to write functions that
 accept a stream instead of deciding for themselves whether
