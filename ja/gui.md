@@ -2,146 +2,107 @@
 title: GUI toolkits
 ---
 
-Lisp has a long and rich history and so does the development of
-Graphical User Interfaces in Lisp. In fact, the first GUI builder was
-written in Lisp (and sold to Apple. It is now Interface Builder).
+Lisp には長く豊かな歴史があり、GUI 開発にも同じことが言えます。実際、最初の GUI ビルダーは Lisp で書かれました（そして Apple に売却され、今では Interface Builder になっています）。
 
-Lisp is also famous and unrivalled for its interactive development
-capabilities, a feature even more worth having to develop GUI
-applications. Can you imagine compiling one function and seeing your
-GUI update instantly? We can do this with many GUI frameworks today,
-even though the details differ from one to another.
+Lisp は対話的開発能力でも有名で、GUI アプリケーション開発ではこの利点がさらに大きくなります。関数 1 つをコンパイルしただけで GUI が即座に更新される様子を想像できるでしょうか。今日では多くの GUI framework でこれが可能ですが、細部はそれぞれ異なります。
 
-Finally, a key part in building software is how to build it and ship
-it to users. Here also, we can build self-contained binaries, for
-the three main operating systems, that users can run with a double
-click.
+最後に、ソフトウェア開発では、どうビルドしてどう利用者へ届けるかも重要です。ここでも、主要な 3 つの OS 向けに自己完結型 binary を作り、利用者がダブルクリックで実行できるようにできます。
 
-We aim here to give you the relevant information to help you choose
-the right GUI framework and to put you on tracks. Don't hesitate to
-[contribute](https://github.com/LispCookbook/cl-cookbook/issues/), to
-send more examples and to furnish the upstream documentations.
+ここでは、適切な GUI framework を選ぶための情報を整理して示します。[contribute](https://github.com/LispCookbook/cl-cookbook/issues/) して、さらに例を追加したり、元のドキュメントを補ったりするのは歓迎です。
 
 
 ## Introduction
 
-In this recipe, we'll present the following GUI toolkits:
+このレシピでは、次の GUI toolkit を紹介します。
 
-- [Tk][tk] with [Ltk][ltk] and [nodgui][nodgui]
-- [Qt4][qt4] with [Qtools][qtools]
-- [IUP][iup-tecgraf] with [lispnik/iup][iup-lisp]
-- [Gtk3][gtk] with [cl-cffi-gtk][cl-cffi-gtk]
-  - if you want Gtk4 bindings, see [cl-gtk4](https://github.com/bohonghuang/cl-gtk4). They are new bindings, released in September, 2022.
+- [Tk][tk] と [Ltk][ltk] / [nodgui][nodgui]
+- [Qt4][qt4] と [Qtools][qtools]
+- [IUP][iup-tecgraf] と [lispnik/iup][iup-lisp]
+- [Gtk3][gtk] と [cl-cffi-gtk][cl-cffi-gtk]
+  - Gtk4 の bindings が欲しい場合は [cl-gtk4](https://github.com/bohonghuang/cl-gtk4) を見てください。これは 2022 年 9 月に公開された新しい bindings です。
 
-- [Nuklear][nuklear] with [Bodge-Nuklear][bodge-nuklear]
+- [Nuklear][nuklear] と [Bodge-Nuklear][bodge-nuklear]
 
-In addition, you might want to have a look to:
+加えて、次のものも見ておくとよいでしょう。
 
-- the [CAPI][capi] toolkit (Common Application Programming Interface),
-  which is proprietary and made by LispWorks. It is a complete and cross-platform
-  toolkit (Windows, Gtk+, Cocoa), very praised by its users. LispWorks
-  also has [iOS and Android
-  runtimes](http://www.lispworks.com/products/lw4mr.html). Example
-  software built with CAPI include [ScoreCloud](https://scorecloud.com/). It is possible to
-  try it with the LispWorks free demo.
-- [Allegro CL's IDE and Common Graphics windowing system](https://franz.com/products/allegro-common-lisp/acl_ide.lhtml) (proprietary): Allegro's IDE is a general environment for developing applications. It works in concert with a windowing system called Common Graphics. The IDE is available for Allegro CL's Microsoft Windows, on Linux platforms, Free BSD and on the Mac.
-  - NEW! 🎉 since Allegro CL 10.1 (released in March of 2022), the IDE, and the Common Graphics GUI toolkit, runs in the browser. It is called [CG/JS](https://franz.com/ftp/pri/acl/cgjs/doc.html).
-- [CCL's built-in Cocoa
+- [CAPI][capi] toolkit（Common Application Programming Interface）,
+  これは LispWorks 製の proprietary な toolkit です。Windows、Gtk+、Cocoa をまたぐ完全な cross-platform toolkit で、利用者の評判も高いです。LispWorks には [iOS と Android の runtimes](http://www.lispworks.com/products/lw4mr.html) もあります。CAPI で作られた例として [ScoreCloud](https://scorecloud.com/) があります。LispWorks の free demo で試せます。
+- [Allegro CL の IDE と Common Graphics windowing system](https://franz.com/products/allegro-common-lisp/acl_ide.lhtml)（proprietary）: Allegro の IDE は application 開発のための一般的な environment です。Common Graphics という windowing system と連携して動きます。この IDE は、Allegro CL の Microsoft Windows 版、Linux platform、Free BSD、Mac 版で利用できます。
+  - NEW! 🎉 Allegro CL 10.1（2022 年 3 月公開）以降、IDE と Common Graphics GUI toolkit は browser 上で動きます。これを [CG/JS](https://franz.com/ftp/pri/acl/cgjs/doc.html) と呼びます。
+- [CCL の組み込み Cocoa
   interface](https://ccl.clozure.com/docs/ccl.html#the-objective-c-bridge),
-  used to build applications such as [Opusmodus](https://opusmodus.com/).
-- Clozure CL's built-in [Objective-C bridge](https://ccl.clozure.com/docs/ccl.html#the-objective-c-bridge) and [CocoaInterface](https://github.com/plkrueger/CocoaInterface/), a Cocoa interface for CCL. Build Cocoa user interface windows dynamically using Lisp code and bypass the typical Xcode processes.
-  - the bridge is good at catching ObjC errors and turning them into Lisp errors, so one can have an iterative REPL-based development cycle for a macOS GUI application.
-* [McCLIM](https://common-lisp.net/project/mcclim/) and [Garnet](https://github.com/earl-ducaine/cl-garnet) are toolkit in 100% Common Lisp. McClim even has [a prototype](https://techfak.de/~jmoringe/mcclim-broadway-7.ogv) running in the browser with the Broadway protocol and Garnet has an ongoing interface to Gtk.
-* [Alloy](https://github.com/Shirakumo/alloy), another very new toolkit in 100% Common Lisp, used for example in the [Kandria](https://github.com/shinmera/kandria) game.
-* [eql, eql5, eql5-android](https://gitlab.com/eql), embedded Qt4 and Qt5 Lisp, embedded in ECL, embeddable in Qt. Port of EQL5 to the Android platform.
-* this [demo using Java Swing from ABCL](https://github.com/defunkydrummer/abcl-jazz)
-* [examples of using Gtk without C files with SBCL](https://github.com/mifpasoti/Gtk-Demos), as well as GTK-server.
-* [Ceramic][ceramic], to ship a cross-platform web app with Electron.
-  * read more: [Electron](https://web-apps-in-lisp.github.io/building-blocks/electron/index.html) and [web views (webview, webui, CLOG Frame)](https://web-apps-in-lisp.github.io/building-blocks/web-views/index.html) on Web Apps in Lisp.
-* the [Barium toolkit](https://tomscii.sig7.se/barium/)
-  * an example application: [ChessLab](https://tomscii.sig7.se/chesslab/) (2025)
+  [Opusmodus](https://opusmodus.com/) のような application を作るのに使われています。
+- Clozure CL の組み込み [Objective-C bridge](https://ccl.clozure.com/docs/ccl.html#the-objective-c-bridge) と [CocoaInterface](https://github.com/plkrueger/CocoaInterface/) は、CCL 向けの Cocoa interface です。Lisp code だけで Cocoa の user interface window を動的に作れ、典型的な Xcode の手順を飛ばせます。
+  - この bridge は ObjC エラーを拾って Lisp エラーに変換するのが得意なので、macOS GUI application でも REPL ベースの反復開発サイクルを回せます。
+* [McCLIM](https://common-lisp.net/project/mcclim/) と [Garnet](https://github.com/earl-ducaine/cl-garnet) は 100% Common Lisp の toolkit です。McCLIM には Broadway protocol で browser 上で動く [プロトタイプ](https://techfak.de/~jmoringe/mcclim-broadway-7.ogv) があり、Garnet には Gtk への継続的な interface があります。
+* [Alloy](https://github.com/Shirakumo/alloy) は、これも新しめの 100% Common Lisp toolkit で、たとえば [Kandria](https://github.com/shinmera/kandria) ゲームで使われています。
+* [eql, eql5, eql5-android](https://gitlab.com/eql) は、ECL に埋め込まれ、Qt にも埋め込める Qt4/Qt5 Lisp です。EQL5 の Android 移植版もあります。
+* [ABCL から Java Swing を使うデモ](https://github.com/defunkydrummer/abcl-jazz)
+* [SBCL で C ファイルなしに Gtk を使う例](https://github.com/mifpasoti/Gtk-Demos) と GTK-server。
+* [Ceramic][ceramic] は、Electron で cross-platform web app を配布するためのものです。
+  * 詳しくは Web Apps in Lisp の [Electron](https://web-apps-in-lisp.github.io/building-blocks/electron/index.html) と [web view (webview, webui, CLOG Frame)](https://web-apps-in-lisp.github.io/building-blocks/web-views/index.html) を見てください。
+* [Barium toolkit](https://tomscii.sig7.se/barium/)
+  * 例の application: [ChessLab](https://tomscii.sig7.se/chesslab/) (2025)
 
-as well as the other ones listed on [awesome-cl#gui](https://github.com/CodyReichert/awesome-cl#Gui) and [Cliki](https://www.cliki.net/GUI).
+そのほか、[awesome-cl#gui](https://github.com/CodyReichert/awesome-cl#Gui) と [Cliki](https://www.cliki.net/GUI) にあるものも参照してください。
 
 ### Tk (Ltk and nodgui)
 
-[Tk][tk] (or Tcl/Tk, where Tcl is the programming language) has the
-infamous reputation of having an outdated look. This is not (so) true
-anymore since its version 8 of 1997 (!). It is probably better than
-you think.
+[Tk][tk]（あるいは Tcl/Tk。Tcl が programming language です）は、古臭い見た目だという悪評があります。ですが、それは今では（それほど）当てはまりません。1997 年の version 8 以降は特にそうです。たぶん、思っているより良いものです。
 
-This is a simple GUI with nodgui's built-in theme (more on that below):
+これは nodgui の組み込み theme を使ったシンプルな GUI です（詳細は後述）。
 
 ![](assets/gui/nodgui-feet2meters-yaru.png)
 
-This is a treeview, with the same theme:
+同じ theme の treeview です。
 
 ![](assets/gui/nodgui-treeview-yaru.png)
 
-A toy mediaplayer, showing a tree list, checkboxes, buttons and labels, with the Arc theme:
+Arc theme を使った、tree list、checkbox、button、label を表示するおもちゃの media player です。
 
 ![](assets/gui/mediaplayer-nodgui-arc.png)
 
-This is a demo with a Macos theme:
+MacOS theme の demo です。
 
 ![](assets/gui/ltk-on-macos.png)
 
-In addition to those, we can use many of the [ttkthemes](https://ttkthemes.readthedocs.io/en/latest/themes.html), the [Forest theme](https://github.com/rdbende/Forest-ttk-theme), and more. See [this tcl/tk list](https://wiki.tcl-lang.org/page/List+of+ttk+Themes).
+これらに加えて、[ttkthemes](https://ttkthemes.readthedocs.io/en/latest/themes.html) や [Forest theme](https://github.com/rdbende/Forest-ttk-theme) など多数の theme を使えます。[この tcl/tk の一覧](https://wiki.tcl-lang.org/page/List+of+ttk+Themes) を見てください。
 
-But what is Tk good for? Tk doesn't have a great choice of widgets, but it has a useful canvas,
-and it has a couple of unique features: we can develop a graphical
-interface **fully interactively** and we can run the GUI **remotely**
-from the core app. It is also cross-platform.
+では Tk は何に向いているのでしょうか。Tk の widget の種類は豊富ではありませんが、便利な canvas があり、さらにいくつか独自の特徴があります。GUI を **完全に対話的に** 開発でき、core app から GUI を **遠隔実行** できます。しかも cross-platform です。
 
-So, Tk isn't native and doesn't have the most advanced features,
-but it is a used and proven GUI toolkit (and
-programming language) still used in the industry. It can be a great
-choice to quickly create simple GUIs, to leverage its ease of deployment, or
-when stability is required.
+つまり Tk は native ではなく、最先端の機能を備えているわけでもありませんが、実績のある GUI toolkit（兼 programming language）で、今も業界で使われています。単純な GUI を素早く作りたいとき、配布のしやすさを重視したいとき、安定性が必要なときに向いています。
 
-There are two Lisp bindings: [Ltk][ltk] and [nodgui][nodgui]. Nodgui
-("No Drama GUI") is a fork of Ltk, with added widgets (such as an
-auto-completion list widget), an asynchronous event loop and, what we
-really enjoy, the surprisingly nice-looking "Yaru" theme that comes
-with the library. It is also very easy to install and use any other theme of
-our choice, see below.
+Lisp bindings は 2 つあります。[Ltk][ltk] と [nodgui][nodgui] です。Nodgui（"No Drama GUI"）は Ltk の fork で、追加 widget（たとえば auto-completion list widget）、非同期 event loop、そして何よりライブラリに付属する意外と見栄えの良い "Yaru" theme を備えています。ほかの theme を入れて使うのも簡単です。詳細は後述します。
 
 - **Tk is Written in**: Tcl
 - **Portability**: cross-platform (Windows, macOS, Linux).
 
-- **Widgets**: this is not the fort of Tk. It has a **small set** of
-  default widgets, and misses important ones, for example a date picker. We
-  can find some in extensions (such as in **Nodgui**), but they don't
-  feel native, at all. The calendar is brought by a Tk extension and looks better.
+- **Widgets**: Tk は widget の豊富さが売りではありません。既定 widget は **少数** で、date picker のような重要なものが欠けています。拡張（**Nodgui** など）で補えますが、あまり native には見えません。calendar は Tk extension が提供しており、こちらのほうが見栄えがよいです。
 
-- **Interactive development**: very much.
+- **Interactive development**: 非常に向いています。
 
-- **Graphical builder**: no
+- **Graphical builder**: なし
 
 - **Other features**:
-  - **remote execution**: the connection between Lisp and Tcl/Tk is
-    done via a stream. It is thus possible to run the Lisp program on
-    one computer, and to display the GUI on another one. The only
-    thing required on the client computer is tcl/tk installed and the
-    remote.tcl script. See [Ltk-remote](http://www.peter-herth.de/ltk/ltkdoc/node46.html).
+  - **remote execution**: Lisp と Tcl/Tk の接続は stream 経由で行われます。そのため、Lisp program を 1 台の computer で動かし、GUI を別の computer に表示できます。client 側に必要なのは tcl/tk のインストールと remote.tcl script だけです。[Ltk-remote](http://www.peter-herth.de/ltk/ltkdoc/node46.html) を見てください。
 
-- **Bindings documentation**: short but complete. Nodgui too.
-- **Bindings stability**: very stable
-- **Bindings activity**: low for Ltk (mostly maintenance), active for nodgui (new features).
-- **Licence**: Tcl/Tk is BSD-style, Ltk is LGPL.
-- Example applications:
-  - [Fulci](https://notabug.org/cage/fulci/) - a program to organise your movie collections.
-  - [Ltk small games](https://github.com/mijohnson99/ltk-small-games) - snake and tic-tac-toe.
-  - [cl-pkr](https://github.com/VitoVan/cl-pkr) - a cross-platform color picker.
-  - [cl-torrents](https://github.com/vindarel/cl-torrents) - searching torrents on popular trackers. CLI, readline and a simple Tk GUI.
-- More examples:
-  - [https://peterlane.netlify.app/ltk-examples/](https://peterlane.netlify.app/ltk-examples/): LTk examples for the [tkdocs](https://tkdocs.com/tutorial/index.html) tutorial.
-  - [LTk Plotchart](https://peterlane.netlify.app/ltk-plotchart/) - A wrapper around the tklib/plotchart library to work with LTk. This includes over 20 different chart types (xy-plots, gantt charts, 3d-bar charts etc...).
+- **Bindings documentation**: 短いですが十分です。Nodgui も同様です。
+- **Bindings stability**: とても安定しています。
+- **Bindings activity**: Ltk は低め（主に maintenance）、Nodgui は活発（新機能あり）です。
+- **Licence**: Tcl/Tk は BSD 風、Ltk は LGPL です。
+- 例:
+  - [Fulci](https://notabug.org/cage/fulci/) - movie collection を整理する program です。
+  - [Ltk small games](https://github.com/mijohnson99/ltk-small-games) - snake と tic-tac-toe です。
+  - [cl-pkr](https://github.com/VitoVan/cl-pkr) - cross-platform の color picker です。
+  - [cl-torrents](https://github.com/vindarel/cl-torrents) - 人気 tracker の torrent を検索します。CLI、readline、シンプルな Tk GUI を備えています。
+- 追加の例:
+  - [https://peterlane.netlify.app/ltk-examples/](https://peterlane.netlify.app/ltk-examples/): [tkdocs](https://tkdocs.com/tutorial/index.html) tutorial 向けの LTk 例です。
+  - [LTk Plotchart](https://peterlane.netlify.app/ltk-plotchart/) - tklib/plotchart library を LTk で使うための wrapper です。xy plot、gantt chart、3d bar chart など 20 種類以上の chart を含みます。
 
 
-**List of widgets**
+**widget 一覧**
 
-(please don't suppose the list is exhaustive)
+(網羅的な一覧ではありません)
 
 ```
 Button Canvas Check-button Entry Frame Label Labelframe Listbox
@@ -157,7 +118,7 @@ Ltk-megawidgets:
     menu-entry
 ```
 
-nodgui adds:
+nodgui に追加されるもの:
 
 ```
 treelist tooltip searchable-listbox date-picker calendar autocomplete-listbox
@@ -168,100 +129,80 @@ swap-list
 
 ### Qt4 (Qtools)
 
-Do we need to present Qt and [Qt4][qt4]? Qt is huge and contains
-everything and the kitchen sink. Qt not only provides UI widgets, but
-numerous other layers (networking, D-BUS…).
+Qt と [Qt4][qt4] を改めて紹介する必要があるでしょうか。Qt は非常に大きく、何でも入っています。UI widget だけでなく、networking や D-BUS など多くの層を提供します。
 
-Qt is free for open-source software, however you'll want to check the
-conditions to ship proprietary ones.
+Qt は open-source software なら無料で使えますが、proprietary software を配布する場合は条件を確認してください。
 
-The [Qtools][qtools] bindings target Qt4. The Qt5 Lisp bindings are [https://github.com/commonqt/commonqt5/](in the works) and not ready for prime time..
+[Qtools][qtools] bindings は Qt4 を対象にしています。Qt5 の Lisp bindings は [https://github.com/commonqt/commonqt5/](in the works) で、まだ本番向けではありません。
 
-A companion library for Qtools, that you'll want to check out once you
-made your first Qtool application, is
-[Qtools-ui](https://github.com/Shinmera/qtools-ui), a collection of
-useful widgets and pre-made components. It comes with short
-[demonstrations
-videos](https://www.youtube.com/playlist?list=PLkDl6Irujx9Mh3BWdBmt4JtIrwYgihTWp).
+Qtools の companion library として、最初の Qtools application を作ったらぜひ見ておきたいのが [Qtools-ui](https://github.com/Shinmera/qtools-ui) です。便利な widget と既成 component の集まりで、短い [デモ動画](https://www.youtube.com/playlist?list=PLkDl6Irujx9Mh3BWdBmt4JtIrwYgihTWp) もあります。
 
 <!-- possible future: gobject-introspection -->
 
 - **Framework written in**: C++
 - **Framework Portability**: multi-platform, Android, embedded systems, WASM.
-- **Bindings Portability**: Qtools runs on x86 desktop platforms on Windows, macOS and GNU/Linux.
+- **Bindings Portability**: Qtools は Windows、macOS、GNU/Linux の x86 desktop platform で動きます。
 
-- **Widgets choice**: large.
+- **Widgets choice**: 豊富。
 
-- **Graphical builder**: yes.
+- **Graphical builder**: あり。
 
-- **Other features**: Web browser, a lot more.
+- **Other features**: web browser など多数。
 
-- **Bindings documentation**: lengthy explanations, a few examples. Prior Qt knowledge is required.
-- **Bindings stability**: stable
-- **Bindings activity**: active
-- **Qt Licence**: both commercial and open source licences.
-- Example applications:
+- **Bindings documentation**: 詳しい説明と少数の例があります。Qt の事前知識が必要です。
+- **Bindings stability**: 安定。
+- **Bindings activity**: 活発。
+- **Qt Licence**: 商用と open source の両方があります。
+- 例:
   - https://github.com/Shinmera/qtools/tree/master/examples
   - https://github.com/Shirakumo/lionchat
-  - https://github.com/shinmera/halftone - a simple image viewer
+  - https://github.com/shinmera/halftone - シンプルな image viewer
 
 
 ### Gtk+3 (cl-cffi-gtk)
 
-[Gtk+3][gtk] is the primary library used to build [GNOME][gnome]
-applications. Its (currently most advanced) lisp bindings is
-[cl-cffi-gtk][cl-cffi-gtk]. While primarily created for GNU/Linux, Gtk
-works fine under macOS and can now also be used on Windows.
+[Gtk+3][gtk] は [GNOME][gnome] application を作る主要 library です。Lisp bindings としては、現時点で最も進んでいるものが [cl-cffi-gtk][cl-cffi-gtk] です。主に GNU/Linux 向けに作られましたが、Gtk は macOS でも問題なく動き、今では Windows でも使えます。
 
 
 - **Framework written in**: C
-- **Portability**: GNU/Linux and macOS, also Windows.
+- **Portability**: GNU/Linux と macOS、Windows でも可。
 
-- **Widgets choice**: large.
+- **Widgets choice**: 豊富。
 
-- **Graphical builder**: yes: Glade.
+- **Graphical builder**: あり: Glade。
 - **Other features**: web browser (WebKitGTK)
 
-- **Bindings documentation**: very good: http://www.crategus.com/books/cl-gtk/gtk-tutorial.html
-- **Bindings stability**: stable
-- **Bindings activity**: low activity, active development.
+- **Bindings documentation**: とても良いです: http://www.crategus.com/books/cl-gtk/gtk-tutorial.html
+- **Bindings stability**: 安定。
+- **Bindings activity**: 活動量は少なめですが、開発は続いています。
 - **Licence**: LGPL
-- Example applications:
-  - an [Atmosphere Calculator](https://github.com/ralph-schleicher/atmosphere-calculator), built with Glade.
-- more documentation and examples:
+- 例:
+  - Glade で作られた [Atmosphere Calculator](https://github.com/ralph-schleicher/atmosphere-calculator)。
+- 追加の documentation と例:
   - [Learn Common Lisp by Example: GTK GUI with SBCL](https://dev.to/goober99/learn-common-lisp-by-example-gtk-gui-with-sbcl-5e5c)
 
 
 ### IUP (lispnik/IUP)
 
-[IUP][iup-tecgraf] is a cross-platform GUI toolkit actively developed
-at the PUC university of Rio de Janeiro, Brazil. It uses **native
-controls**: the Windows API for Windows, Gtk3 for GNU/Linux. At the
-time of writing, it has a Cocoa port in the works (as well as iOS,
-Android and WASM ones). A particularity of IUP is its **small API**.
+[IUP][iup-tecgraf] は、ブラジルのリオデジャネイロ・カトリック大学で活発に開発されている cross-platform GUI toolkit です。**native control** を使い、Windows では Windows API、GNU/Linux では Gtk3 を使います。執筆時点では Cocoa 版も開発中で、iOS、Android、WASM 版もあります。IUP の特徴は **API が小さい** ことです。
 
-The Lisp bindings are [lispnik/iup](https://github.com/lispnik/iup/). They are nicely
-done in that they are automatically generated from the C sources. They
-can follow new IUP versions with a minimal work and the required steps
-are documented. All this gives us good guarantee over the bus
-factor.
+[Lisp bindings] は [lispnik/iup](https://github.com/lispnik/iup/) です。C source から自動生成されているため、よくできています。新しい IUP version に追従する手間が少なく、必要な手順も文書化されています。これにより bus factor の面でも安心です。
 
-IUP stands as a great solution in between Tk and Gtk or Qt.
+IUP は Tk と Gtk/Qt の中間にある、非常に良い選択肢です。
 
-- **Framework written in**: C (official API also in Lua and LED)
-- **Portability**: Windows and Linux, work started for
-  Cocoa, iOS, Android, WASM.
+- **Framework written in**: C（公式 API は Lua と LED にもあります）
+- **Portability**: Windows と Linux、Cocoa、iOS、Android、WASM 版も作業中です。
 
-- **Widgets choice**: medium. Includes a web browser window (WebkitGTK on Linux, IE's WebBrowser on Windows).
+- **Widgets choice**: 中程度。web browser window を含みます（Linux では WebkitGTK、Windows では IE の WebBrowser）。
 
-- **Graphical builder**: yes: [IupVisualLED](http://webserver2.tecgraf.puc-rio.br/iup/en/iupvisualled.html)
+- **Graphical builder**: あり: [IupVisualLED](http://webserver2.tecgraf.puc-rio.br/iup/en/iupvisualled.html)
 
-- **Other features**: OpenGL, Web browser (WebKitGTK on GNU/Linux), plotting, Scintilla text editor
+- **Other features**: OpenGL、web browser（GNU/Linux では WebKitGTK）、plotting、Scintilla text editor
 
-- **Bindings documentation**: good examples and good readme, otherwise low.
-- **Bindings stability**: alpha (but fully generated and working nicely).
-- **Bindings activity**: low but steady, and reactive to new IUP versions.
-- **Licence**: IUP and the bindings are MIT licenced.
+- **Bindings documentation**: 例と README は良いですが、それ以外は少なめです。
+- **Bindings stability**: alpha（ただし完全に生成されていて、問題なく動きます）。
+- **Bindings activity**: 少なめですが安定していて、新しい IUP version にも反応します。
+- **Licence**: IUP も bindings も MIT license です。
 
 
 **List of widgets**
@@ -284,33 +225,27 @@ WebBrowser
 
 ### Nuklear (Bodge-Nuklear)
 
-[Nuklear][nuklear] is a small [immediate-mode](https://en.wikipedia.org/wiki/Immediate_mode_GUI) GUI toolkit:
+[Nuklear][nuklear] は小さな [immediate-mode](https://en.wikipedia.org/wiki/Immediate_mode_GUI) GUI toolkit です。
 
 > [Nuklear] is a minimal-state, immediate-mode graphical user interface toolkit written in ANSI C and licensed under public domain. It was designed as a simple embeddable user interface for application and does not have any dependencies, a default render backend or OS window/input handling but instead provides a highly modular, library-based approach, with simple input state for input and draw commands describing primitive shapes as output. So instead of providing a layered library that tries to abstract over a number of platform and render backends, it focuses only on the actual UI.
 
-its Lisp binding is [Bodge-Nuklear][bodge-nuklear], and its higher level companions [bodge-ui](https://github.com/borodust/bodge-ui) and [bodge-ui-window](https://github.com/borodust/bodge-ui-window).
+Lisp bindings は [Bodge-Nuklear][bodge-nuklear] で、上位の companion として [bodge-ui](https://github.com/borodust/bodge-ui) と [bodge-ui-window](https://github.com/borodust/bodge-ui-window) があります。
 
-Unlike traditional UI frameworks, Nuklear allows the developer to take
-over the rendering loop or the input management. This might require
-more setup, but it makes Nuklear particularly well suited for games,
-or for applications where you want to create new controls.
+従来の UI framework と違い、Nuklear では描画ループや input 管理を開発者が引き継げます。設定は少し増えますが、ゲームや、新しい control を作りたい application には特に向いています。
 
 
-- **Framework written in**: ANSI C, single-header library.
-- **Portability**: where C runs. Nuklear doesn't contain
-  platform-specific code. No direct OS or window handling is done in
-  Nuklear. Instead *all input state has to be provided by platform
-  specific code*.
+- **Framework written in**: ANSI C、single-header library。
+- **Portability**: C が動くところならどこでも。Nuklear には platform-specific code は含まれていません。OS や window の直接処理も Nuklear では行われません。その代わり、*すべての input state を platform-specific code が提供する必要があります*。
 
-- **Widgets choice**: small.
+- **Widgets choice**: 少ない。
 
-- **Graphical builder**: no.
+- **Graphical builder**: なし。
 
-- **Other features**: fully skinnable and customisable.
+- **Other features**: skin と customization が完全に可能。
 
-- **Bindings stability**: stable
-- **Bindings activity**: active
-- **Licence**: MIT or Public Domain (unlicence).
+- **Bindings stability**: 安定。
+- **Bindings activity**: 活発。
+- **Licence**: MIT か Public Domain（unlicense）。
 - Example applications:
   - [Trivial-gamekit](https://github.com/borodust/trivial-gamekit)
   - [Obvius](https://github.com/thicksteadTHpp/Obvius/) - a resurrected image processing library.
@@ -318,7 +253,7 @@ or for applications where you want to create new controls.
 
 **List of widgets**
 
-Non-exhaustive list:
+抜粋です。
 
 ```
 buttons, progressbar, image selector, (collapsable) tree, list, grid, range, slider, color picker,
@@ -363,16 +298,11 @@ handles the main loop, here `with-ltk`:
 
 **How to display widgets**
 
-After we created some widgets, we must place them on the layout. There
-are a few Tk systems for that, but the most recent one and the one we
-should start with is the `grid`. `grid` is a function that takes as
-arguments the widget, its column, its row, and a few optional
-parameters.
+widget を作ったら、layout に配置する必要があります。Tk にはいくつか配置方法がありますが、今使うべきなのは `grid` です。`grid` は widget、列、行、いくつかの optional parameter を引数に取る関数です。
 
-As with any Lisp code in a regular environment, the functions'
-signatures are indicated by the editor. It makes Ltk explorable.
+通常の Lisp code と同じく、関数の signature は editor に出ます。これも Ltk をたどりやすくしてくれます。
 
-Here's how to display a button:
+button を表示する例です。
 
 ~~~lisp
 (with-ltk ()
@@ -380,14 +310,12 @@ Here's how to display a button:
     (grid button 0 0)))
 ~~~
 
-That's all there is to it.
+やることはそれだけです。
 
 
-#### Reacting to events
+#### event に反応する
 
-Many widgets have a `:command` argument that accept a lambda which is
-executed when the widget's event is started. In the case of a button,
-that will be on a click:
+多くの widget には `:command` argument があり、widget の event が発生したときに実行される lambda を受け取ります。button の場合はクリック時です。
 
 ~~~lisp
 (make-instance 'button
@@ -397,26 +325,25 @@ that will be on a click:
 ~~~
 
 
-#### Interactive development
+#### 対話的開発
 
-When we start the Tk process in the background with `(start-wish)`, we
-can create widgets and place them on the grid interactively.
+`(start-wish)` で Tk process を background で起動すると、widget を作って grid に置く作業を対話的に行えます。
 
-See [the documentation](http://www.peter-herth.de/ltk/ltkdoc/node8.html).
+詳しくは [ドキュメント](http://www.peter-herth.de/ltk/ltkdoc/node8.html) を見てください。
 
-Once we're done, we can `(exit-wish)`.
+終わったら `(exit-wish)` を呼びます。
 
 
 #### Nodgui
 
-To try the Nodgui demo, do:
+Nodgui の demo を試すには次のようにします。
 
 ~~~lisp
 (ql:quickload "nodgui")
 (nodgui.demo:demo)
 ~~~
 
-but hey, to load the demo with the better looking theme, do:
+見た目のよい theme で demo を読み込むなら、次のようにします。
 
 ~~~lisp
 (nodgui.demo:demo :theme "yaru")
@@ -429,9 +356,9 @@ or
 (nodgui.demo:demo)
 ~~~
 
-#### Nodgui UI themes
+#### Nodgui UI theme
 
-To use the "yaru" theme that comes with nodgui, we can simply do:
+nodgui に付属する "yaru" theme を使うには、単純に次のようにします。
 
 ~~~lisp
 (with-nodgui ()
@@ -454,7 +381,7 @@ or
   …)
 ~~~
 
-It is also possible to install and load another tcl theme. For example, clone the [Forest ttk theme](https://github.com/rdbende/Forest-ttk-theme) or the [ttkthemes](https://github.com/TkinterEP/ttkthemes/). Your project directory would look like this:
+別の tcl theme をインストールして読み込むこともできます。たとえば [Forest ttk theme](https://github.com/rdbende/Forest-ttk-theme) や [ttkthemes](https://github.com/TkinterEP/ttkthemes/) を clone します。project directory は次のようになります。
 
 ```
 yourgui.asd
@@ -462,11 +389,11 @@ yourgui.lisp
 ttkthemes/
 ```
 
-Inside `ttkthemes/`, you will find themes under the `png/` directory (the other ones are currently not supported):
+`ttkthemes/` の中では `png/` directory に theme があり、それ以外は現時点で未対応です。
 
     /ttkthemes/ttkthemes/png/arc/arc.tcl
 
-You need to load the .tcl file with nodgui, and tell it to use this theme:
+nodgui で .tcl file を読み込み、この theme を使うよう指示します。
 
 ~~~lisp
 (with-nodgui ()
@@ -475,7 +402,7 @@ You need to load the .tcl file with nodgui, and tell it to use this theme:
    … code here …)
 ~~~
 
-and that's it. Your application now uses a new and decently looking GUI theme.
+これで終わりです。application は新しい、そこそこ見栄えのよい GUI theme を使うようになります。
 
 ### Qt4
 
@@ -491,14 +418,14 @@ and that's it. Your application now uses a new and decently looking GUI theme.
 (in-readtable :qtools)
 ~~~
 
-We create our main widget that will contain the rest:
+残りを入れる main widget を作ります。
 
 ~~~lisp
 (define-widget main-window (QWidget)
   ())
 ~~~
 
-We create an input field and a button inside this main widget:
+この main widget の中に input field と button を作ります。
 
 ~~~lisp
 (define-subwidget (main-window name) (q+:make-qlineedit main-window)
@@ -509,7 +436,7 @@ We create an input field and a button inside this main widget:
 (define-subwidget (main-window go-button) (q+:make-qpushbutton "Go!" main-window))
 ~~~
 
-We stack them horizontally:
+横に並べます。
 
 ~~~lisp
 (define-subwidget (main-window layout) (q+:make-qhboxlayout main-window)
@@ -517,7 +444,7 @@ We stack them horizontally:
   (q+:add-widget layout go-button))
 ~~~
 
-and we show them:
+そして表示します。
 
 ~~~lisp
 (with-main-window
@@ -526,27 +453,23 @@ and we show them:
 
 ![](assets/gui/qtools-intro.png)
 
-That's cool, but we don't react to the click event yet.
+これで形はできましたが、まだ click event には反応していません。
 
-#### Reacting to events
+#### event に反応する
 
-Reacting to events in Qt happens through signals and slots. **Slots** are
-functions that receive or "connect to" signals, and **signals** are event carriers.
+Qt で event に反応するには signal と slot を使います。**slot** は signal を受け取る、あるいは signal に "接続する" 関数で、**signal** は event の運び手です。
 
-Widgets already send their own signals: for example, a button sends a
-"pressed" event. So, most of the time, we only need to connect to them.
+widget はすでに自前の signal を送っています。たとえば button は "pressed" event を送ります。そのため、たいていはそれに接続するだけで済みます。
 
-However, had we extra needs, we can create our own set of signals.
+ただし、必要なら独自の signal 群を作ることもできます。
 
-##### Built-in events
+##### 組み込み event
 
-We want to connect our `go-button` to the `pressed` and
-`return-pressed` events and display a message box.
+`go-button` を `pressed` と `return-pressed` event に接続し、message box を表示します。
 
-- we need to do this inside a `define-slot` function,
-- where we establish the connection to those events,
-- and where we create the message box. We grab the text of the `name`
-  input field with `(q+:text name)`.
+- これを `define-slot` 関数の中で行い、
+- その中で event への接続を確立し、
+- さらに message box を作ります。`name` input field の text は `(q+:text name)` で取得します。
 
 ~~~lisp
 (define-slot (main-window go-button) ()
@@ -557,29 +480,23 @@ We want to connect our `go-button` to the `pressed` and
                               (format NIL "Good day to you, ~a!" (q+:text name))))
 ~~~
 
-And voilà. Run it with
+これで完成です。次のように実行します。
 
 ~~~lisp
 (with-main-window (window 'main-window))
 ~~~
 
-##### Custom events
+##### 独自 event
 
-We'll implement the same functionality as above, but for demonstration
-purposes we'll create our own signal named `name-set` to get emitted when
-the button is clicked.
+上と同じ機能を実装しますが、説明のために button クリック時に発火する `name-set` という独自 signal を作ります。
 
-We start by defining the signal, which happens inside the
-`main-window`, and which is of type `string`:
+まず signal を定義します。これは `main-window` の中で行い、型は `string` です。
 
 ~~~lisp
 (define-signal (main-window name-set) (string))
 ~~~
 
-We create a **first slot** to make our button react to the `pressed`
-and `return-pressed` events. But instead of creating the message box
-here, as above, we send the `name-set` signal, with the value of our
-input field..
+最初の slot を作って button を `pressed` と `return-pressed` event に反応させます。ただしここでは上のように message box を作るのではなく、input field の値を載せた `name-set` signal を送ります。
 
 ~~~lisp
 (define-slot (main-window go-button) ()
@@ -599,7 +516,7 @@ parameter type.
         (format NIL "Good day to you, ~a!" new-name)))
 ~~~
 
-and run it:
+そして実行します。
 
 ~~~lisp
 (with-main-window (window 'main-window))
@@ -776,10 +693,7 @@ The following snippet creates a dialog frame to display a text label.
 (hello)
 ~~~
 
-Important note for SBCL: we currently must trap division-by-zero
-errors (see advancement on [this
-issue](https://github.com/lispnik/iup/issues/30)). So, run snippets
-like so:
+SBCL についての重要な注意です。現時点ではゼロ除算エラーを捕捉する必要があります（[この issue](https://github.com/lispnik/iup/issues/30) の進展を見てください）。そのため、スニペットは次のように実行します。
 
 ~~~lisp
 (defun run-gui-function ()
@@ -791,38 +705,32 @@ like so:
 ~~~
 
 
-**How to run the main loop**
+**メインループの起動方法**
 
-As with all the bindings seen so far, widgets are shown inside a
-`with-iup` macro, and with a call to `iup:main-loop`.
+ここまで見てきた bindings と同様に、widget は `with-iup` macro の中で表示し、`iup:main-loop` を呼びます。
 
-**How to create widgets**
+**widget の作り方**
 
-The constructor function is the name of the widget: `iup:label`,
-`iup:dialog`.
+constructor 関数は widget 名そのものです。`iup:label`、`iup:dialog` などです。
 
-**How to display a widget**
+**widget の表示方法**
 
-Be sure to "show" it: `(iup:show dialog)`.
+必ず "show" してください。`(iup:show dialog)` です。
 
-You can group widgets on `frame`s, and stack them vertically or
-horizontally (with `vbox` or `hbox`, see the example below).
+widget は `frame` にまとめられ、縦 (`vbox`) や横 (`hbox`) に並べられます（下の例を参照）。
 
-To allow a widget to be expanded on window resize, use `:expand
-:yes` (or `:horizontal` and `:vertical`).
+window のリサイズ時に widget を伸縮させたい場合は `:expand :yes` を使います（または `:horizontal`、`:vertical`）。
 
-Use also the `:alignement` properties.
+`:alignement` property も使えます。
 
-**How to get and set a widget's attributes**
+**widget の attribute の取得と設定**
 
-Use `(iup:attribute widget attribute)` to get the attribute's value,
-and use `setf` on it to set it.
+attribute の値を得るには `(iup:attribute widget attribute)` を使い、設定するときはそれに `setf` します。
 
 
-#### Reacting to events
+#### event に反応する
 
-Most widgets take an `:action` parameter that takes a lambda function
-with one parameter (the handle).
+ほとんどの widget は `:action` parameter を取り、1 つの parameter（handle）を持つ lambda を受け取ります。
 
 ~~~lisp
 (iup:button :title "Test &1"
@@ -833,8 +741,7 @@ with one parameter (the handle).
                       iup:+default+))
 ~~~
 
-Below we create a label and put a button below it. We display a
-message dialog when we click on the button.
+以下では label を作り、その下に button を置きます。button をクリックすると message dialog を表示します。
 
 ~~~lisp
 (defun click-button ()
@@ -868,8 +775,7 @@ message dialog when we click on the button.
     (click-button))
 ~~~
 
-Here's a similar example to make a counter of clicks.  We use a label
-and its title to hold the count. The title is an integer.
+クリック回数の counter を作る似た例を示します。label とその title に回数を保持します。title は整数です。
 
 ~~~lisp
 (defun counter ()
@@ -907,11 +813,9 @@ and its title to hold the count. The title is an integer.
     (counter)))
 ~~~
 
-#### List widget example
+#### list widget の例
 
-Below we create three list widgets with simple and multiple selection, we
-set their default value (the pre-selected row) and we place them
-horizontally side by side.
+以下では、単一選択と複数選択の list widget を 3 つ作り、既定値（事前選択行）を設定して、横に並べます。
 
 ~~~lisp
 (defun list-test ()
@@ -953,38 +857,34 @@ horizontally side by side.
 
 ### Nuklear
 
-**Disclaimer**: as per the author's words at the time of writing,
-bodge-ui is in early stages of development and not ready for general
-use yet. There are some quirks that need to be fixed, which might
-require some changes in the API.
+**注意**: 執筆時点で著者の言葉によれば、bodge-ui はまだ開発初期段階で、一般利用には未対応です。修正が必要な癖がいくつかあり、API に変更が入る可能性があります。
 
-`bodge-ui` is not in Quicklisp but in its own Quicklisp distribution. Let's install it:
+`bodge-ui` は Quicklisp 本体ではなく、独自の Quicklisp distribution にあります。まずそれをインストールします。
 
 ~~~lisp
 (ql-dist:install-dist "http://bodge.borodust.org/dist/org.borodust.bodge.txt" :replace t :prompt nil)
 ~~~
 
-Uncomment and evaluate this line only if you want to enable the OpenGL 2
-renderer:
+OpenGL 2 renderer を有効にしたい場合だけ、この行のコメントを外して評価します。
 
 ~~~lisp
 ;; (cl:pushnew :bodge-gl2 cl:*features*)
 ~~~
 
-Quickload `bodge-ui-window`:
+`bodge-ui-window` を quickload します。
 
 ~~~lisp
 (ql:quickload "bodge-ui-window")
 ~~~
 
-We can run the built-in example:
+組み込み example を実行できます。
 
 ~~~lisp
 (ql:quickload "bodge-ui-window/examples")
 (bodge-ui-window.example.basic:run)
 ~~~
 
-Now let's define a package to write a simple application.
+では、簡単な application を書くための package を定義します。
 
 ~~~lisp
 (cl:defpackage :bodge-ui-window-test
@@ -994,43 +894,43 @@ Now let's define a package to write a simple application.
 
 ~~~lisp
 (defpanel (main-panel
-           (:title "Hello Bodge UI")
+           (:title "Bodge UI へようこそ")
            (:origin 200 50)
            (:width 400) (:height 400)
            (:options :movable :resizable
                      :minimizable :scrollable
                      :closable))
-    (label :text "Nested widgets:")
+    (label :text "入れ子の widget:")
   (horizontal-layout
    (radio-group
-    (radio :label "Option 1")
-    (radio :label "Option 2" :activated t))
+    (radio :label "選択肢 1")
+    (radio :label "選択肢 2" :activated t))
    (vertical-layout
-    (check-box :label "Check 1" :width 100)
-    (check-box :label "Check 2"))
+    (check-box :label "チェック 1" :width 100)
+    (check-box :label "チェック 2"))
    (vertical-layout
-    (label :text "Awesomely" :align :left)
-    (label :text "Stacked" :align :centered)
-    (label :text "Labels" :align :right)))
-  (label :text "Expand by width:")
+    (label :text "左寄せ" :align :left)
+    (label :text "中央" :align :centered)
+    (label :text "右寄せ" :align :right)))
+  (label :text "幅に応じて伸縮:")
   (horizontal-layout
-   (button :label "Dynamic")
-   (button :label "Min-Width" :width 80)
-   (button :label "Fixed-Width" :expandable nil :width 100))
-  (label :text "Expand by width:")
+   (button :label "可変")
+   (button :label "最小幅" :width 80)
+   (button :label "固定幅" :expandable nil :width 100))
+  (label :text "幅に応じて伸縮:")
   (horizontal-layout
    (button :label "1.0" :expand-ratio 1.0)
    (button :label "0.75" :expand-ratio 0.75)
    (button :label "0.5" :expand-ratio 0.5))
-  (label :text "Rest:")
-  (button :label "Top-level Button"))
+  (label :text "残り:")
+  (button :label "最上位ボタン"))
 
 (defparameter *window-width* 800)
 (defparameter *window-height* 600)
 
 (defclass main-window (bodge-ui-window:ui-window) ()
   (:default-initargs
-   :title "Bodge UI Window Example"
+   :title "Bodge UI Window の例"
    :width *window-width*
    :height *window-height*
    :panels '(main-panel)
@@ -1051,7 +951,7 @@ and run it:
 
 ![](assets/gui/nuklear-test.png)
 
-To react to events, use the following signals:
+event に反応するには、次の signal を使います。
 
 ```
 :on-click
@@ -1062,22 +962,17 @@ To react to events, use the following signals:
 :on-mouse-release
 ```
 
-They take as argument a function with one argument, the panel. But
-beware: they will be called on each rendering cycle when the widget is
-on the given state, so potentially a lot of times.
+これらは引数 1 つ、つまり panel を取る関数を受け取ります。ただし注意してください。widget がその state にあるあいだは描画 cycle ごとに呼ばれるため、かなり頻繁になることがあります。
 
 
-#### Interactive development
+#### 対話的開発
 
-If you ran the example in the REPL, you couldn't see what's cool. Put
-the code in a lisp file and run it, so than you get the window. Now
-you can change the panel widgets and the layout, and your changes will
-be immediately applied while the application is running!
+REPL で example を動かしただけでは、何が面白いかは見えません。code を Lisp file に入れて実行し、window を出してください。そうすれば panel widget や layout を変えたとき、その変更が application の実行中に即座に反映されるのが分かります。
 
 
-## Conclusion
+## まとめ
 
-Have fun, and don't hesitate to share your experience and your apps.
+楽しんでください。体験談や application の共有も遠慮なくどうぞ。
 
 
 [tk]: https://www.tcl.tk

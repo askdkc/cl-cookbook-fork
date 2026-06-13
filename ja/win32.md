@@ -1,17 +1,17 @@
 ---
-title: Using the Win32 API
+title: Win32 API の使い方
 ---
 
 
 <a name="intro"></a>
 
-## Introduction and Scope
+## 導入と範囲
 
-This chapter introduces the basics of the Win32 API, demonstrates how it can be called from Lisp, and shows how Lisp can be used to create a powerful Win32 programming environment optimized for a specific application domain. Any such Lisp environment exposing every option in the Win32 API must be at least as complex as the Win32 API. However, it is hard to imagine a given application domain needing every option of every function in the Win32 API. Extending Lisp's syntax in a domain-specific manner hides those parts of the Win32 API superfluous to the domain. (Most likely the majority of the Win32 API will be hidden.) The programmer then deals with and thinks about only those pieces of the API needed for the task at hand. Pieces of the Win32 API needed later are easily exposed at any time.
+この章では Win32 API の基本を紹介し、Lisp からどう呼び出すかを示し、さらに Lisp を使って特定のアプリケーション領域に最適化した強力な Win32 プログラミング環境を作る方法を示します。Win32 API の全オプションを露出する Lisp 環境は、Win32 API と同じくらい複雑にならざるを得ません。しかし、あるアプリケーション領域が Win32 API のすべての関数のすべてのオプションを必要とするとは考えにくいものです。Lisp の構文を領域固有に拡張すると、その領域には不要な Win32 API の部分を隠せます。たぶん Win32 API の大部分は隠れるでしょう。プログラマは、その時点で必要な API の部分だけを扱い、考えればよくなります。後で必要になった部分は、いつでも簡単に露出できます。
 
-A single environment is not easily optimized for both simple and complex applications. The methods outlined in this chapter can be used to construct environments, from simple to complex, appropriate for a range of application domains.
+単一の環境を、単純なアプリケーションと複雑なアプリケーションの両方に最適化するのは容易ではありません。この章で示す方法を使えば、単純なものから複雑なものまで、さまざまなアプリケーション領域に適した環境を構築できます。
 
-The beginning sections of the chapter introduce concepts and ideas leading to the penultimate section, which concludes with a "Hello" program:
+章の前半では、後半の節へつながる概念や考え方を紹介し、最後から 2 番目の節で "Hello" プログラムにたどり着きます。
 
 ~~~lisp
 (require "win-header")
@@ -28,61 +28,61 @@ The beginning sections of the chapter introduce concepts and ideas leading to th
     :style ws_overlappedwindow :width 150 :height 200 :title "Hello Program"))
 ~~~
 
-Lispworks for Windows version 4.2.7 is used. (The Personal Edition is available for free download.) No attempt is made to accommodate other Lisps and no thought is given to cross-platform compatibility. These ideas were discussed when outlining this document and the current approach decided upon because:
+使用しているのは Lispworks for Windows 4.2.7 です（Personal Edition は無料でダウンロードできます）。他の Lisp に合わせる試みはしておらず、クロスプラットフォーム互換性も考慮していません。これらの点は文書の構成を考える段階で議論し、現在の方針を次の理由で選びました。
 
-* It is good to publish early and publish often. Reducing the scope fits this philosophy. Other Lisps can be included at a later time. I know that [Corman Lisp](http://www.cormanlisp.com) is one that includes a lot of Win32 API capabilities. I don't have experience with other vendor's Lisps, so look at them all.
-* The information presented should apply generally to other vendor's Lisps. The foreign language interface may change but Win32 remains the same.
+* 早く、頻繁に公開するのはよいことです。範囲を絞るのはこの方針に合っています。他の Lisp は後から追加できます。[Corman Lisp](http://www.cormanlisp.com) は Win32 API の機能を多く含んでいることは知っています。ほかのベンダーの Lisp には実際に触れていないので、それぞれ確認してください。
+* ここで示す情報は、他のベンダーの Lisp にも概ね当てはまるはずです。Foreign Language Interface は変わるかもしれませんが、Win32 自体は同じだからです。
 
-The Cookbook welcomes contributions broadening coverage in these (and other) areas.
+Cookbook では、これらの分野や他の分野のカバー範囲を広げる貢献を歓迎します。
 
-Anyone programming for the Win32 API should be familiar with [Programming Windows, The Definitive Guide to the Win32 API](http://www.charlespetzold.com/pw5/index.html) by Charles Petzold, or a comparable book.
+Win32 API を使ってプログラミングする人は、Charles Petzold の [Programming Windows, The Definitive Guide to the Win32 API](http://www.charlespetzold.com/pw5/index.html) や同等の本に目を通しておくべきです。
 
-The code presented here has been tested only with Lispworks for Windows 4.2.7 Professional Edition under Windows XP.
+ここで示すコードは、Windows XP 上の Lispworks for Windows 4.2.7 Professional Edition でのみテストしています。
 
 
 <a name="whywin32"></a>
 
-## Why Use Lisp with Win32?
+## なぜ Lisp を Win32 と組み合わせるのか
 
-If a program can be cross-platform, it should be. The _Common_ in Common Lisp is a tribute to the cross-platform, and cross-vendor, nature of Common Lisp. The advantages of this portability are not ignored lightly. However, writing programs which take advantage of the Win32 API in a non-portable fashion is not a mandate for doing so without the power of Lisp at one's fingertips.
+プログラムがクロスプラットフォームにできるなら、そうすべきです。Common Lisp の "Common" は、クロスプラットフォームかつクロスベンダーである性質への敬意でもあります。この移植性の利点は軽視すべきではありません。ただし、Win32 API を活用するプログラムを非移植的に書くからといって、Lisp の力を手放す必要はありません。
 
-One concern some may have is the perception that Lisp executables are large. Microsoft operating systems are written in C and C++. The supporting libraries for C/C++ programs come with the operating system. Lisp run-time support looks large only because it does not come with the OS. It is possible to ship Lisp programs in delivery mode, especially with Lispworks for Windows which requires no royalties for this, and it is possible to ship the run-time once and then ship small, compiled programs as they become available.
+気になる点の 1 つは、Lisp の実行ファイルは大きいという印象かもしれません。Microsoft の OS は C と C++ で書かれており、C/C++ プログラム向けのサポートライブラリは OS に同梱されています。Lisp の実行時サポートが大きく見えるのは、それが OS に含まれていないからに過ぎません。Lispworks for Windows を使えば、ロイヤリティなしで delivery mode の Lisp プログラムを配布できますし、実行時ライブラリを一度配布してから、小さなコンパイル済みプログラムだけを順次配布することもできます。
 
-If the requirement is to create small programs suitable for public download in large volumes, the fact that Lisp runtime support is not loaded on most computers is a limitation. However, Lispworks for Windows allows aggressive pruning during the delivery stage and programs can sometimes be reduced below two megabytes, which is suitable for many download situations. Situations requiring the full Lisp run-time are most likely large applications where it makes sense to deliver the runtime on CD, or via a large one-time download, and later deliver individually-compiled components which are loaded during program or component initialization.
+大量配布向けの小さなプログラムを作る必要があるなら、Lisp の実行時サポートが大半のコンピュータに入っていないことは制約になります。ただし、Lispworks for Windows では delivery 段階でかなり強い pruning ができ、プログラムを 2MB 未満まで縮められることもあります。多くの配布ケースには十分です。完全な Lisp 実行時環境が必要なケースは、たいてい大規模アプリケーションで、実行時環境を CD や大きな一括ダウンロードで配布し、その後は個別にコンパイルしたコンポーネントをプログラムやコンポーネントの初期化時に読み込むのが理にかなっています。
 
-It is my understanding that the lower limit on delivered program size is not inherent to Lisp as a language but only a result of current market demand. As market demand grows for truly small stand-alone executable programs written in Lisp, vendors will have incentive to spend time developing better pruners and shakers. (Lisp starts with a lot and removes what's not needed to produce a deliverable while C/C++ starts with a little and adds what's needed during the link phase. A freshly-run Lisp begins with a REPL, a read-eval-print loop, with the full power of Lisp available interactively and ready for use.)
+配布可能なプログラムサイズの下限は、Lisp という言語に本質的なものではなく、現在の市場需要の結果に過ぎないと私は考えています。Lisp で書かれた本当に小さなスタンドアロン実行ファイルへの需要が高まれば、ベンダーにはよりよい pruner や shaker を開発する動機が生まれるはずです。（Lisp は最初にたくさん持っていて、配布物に不要なものを取り除きます。一方 C/C++ は最初に少ししか持っておらず、link 時に必要なものを足していきます。起動直後の Lisp は REPL、つまり read-eval-print loop から始まり、Lisp の完全な力が対話的に使える状態になっています。）
 
-Seeing the gory details of Lispwork's Foreign Language Interface, or FLI, may seem strange at first. The OS is written in C/C++, so OS calls from C/C++ are not foreign calls, just as Lisp functions called from Lisp functions are not foreign calls.
+Lispworks の Foreign Language Interface、つまり FLI の生々しい詳細を見ると、最初は奇妙に思えるかもしれません。OS は C/C++ で書かれているので、C/C++ からの OS 呼び出しは foreign call ではありません。Lisp 関数が Lisp 関数から呼ばれるのと同じです。
 
 
 <a name="apioverview"></a>
 
-## A (Very) Brief Overview of a Win32 Program's Life
+## Win32 プログラムの一生をざっと見る
 
-The OS treats a Win32 GUI program as a set of subroutines, or functions.
+OS は Win32 の GUI プログラムを、サブルーチン、つまり関数の集合として扱います。
 
-* The first of these functions, WinMain, is called when the program is initialized.
-* WinMain calls the Win32 function RegisterClass to inform the OS of the location of a callback function. Several calls may be made to RegisterClass but only one of these calls, naming one callback function, serves the primary window of the application. After RegisterClass is called, the OS knows about the newly-defined class.
-* The Win32 function CreateWindowEx is called and given the class name specified on a previous RegisterClass call. Now the window exists and, depending upon the parameters passed to CreateWindowEx, is visible.
-* The OS begins queueing messages relating to the newly-created window. The queue is saved for delivery to WinMain.
-* WinMain accesses the message queue in a loop referred to as a _message pump_. The message pump loop calls GetMessage, TranslateMessage, and DispatchMessage.
-* GetMessage retrieves one message from the queue. There is some method or dependability to the sequence in which messages are queued. A certain sequence of messages is queued when a window is created, for instance. Events, such as mouse movements, cause other messages to be queued.
-* TranslateMessage translates virtual-key messages to character messages. DispatchMessage is a call to the OS requesting the OS to handle the message. The OS handles the message by calling another subroutine, or function, in the application program. The application function which is called is the function specified in a call to RegisterClass, which included a class name parameter, where that class name was specified in the call to CreateWindowEx. (Phew).
-* The application function specified in the RegisterClass call takes four parameters:
-    1. a handle to the window associated with the message
-    2. the message id, an integer
-    3. a wParam unsigned long
-    4. an lParam unsigned long
-* The semantics of wParam and lParam vary depending upon the message id.
-* The application function contains the equivalent of a case statement, switching on the message id. There are many (hundreds of) message ids. Common ones include wm_create, sent when a window is created, wm_paint, sent when a window's contents are to be drawn, and wm_destroy, sent when a window is about to go away. Other messages are generated in response to events such as key presses, mouse movements, and mouse button clicks. There are windows messages related to displaying video from attached cameras, capturing or playing sound files, dialing telephones, and much more. There are thousands of these messages in the OS but any given program normally deals with a small subset of them. When a message function receives a message with which it does not deal explicitly, the message is passed to a Win32 default function.
-*   When a menu command or other event causes the program to enter code which calls the Win32 function PostQuitMessage, the message pump returns zero from GetMessage, which is the cue to exit the message pump loop. WinMain then exits and the program ends.
+* これらの最初の関数である WinMain は、プログラム初期化時に呼ばれます。
+* WinMain は Win32 関数 RegisterClass を呼び、コールバック関数の場所を OS に知らせます。RegisterClass は複数回呼べますが、アプリケーションの主ウィンドウに対応するのは、そのうち 1 つだけです。RegisterClass が呼ばれると、OS は新しく定義された class を認識します。
+* Win32 関数 CreateWindowEx が呼ばれ、先ほどの RegisterClass 呼び出しで指定した class 名が渡されます。これでウィンドウが存在し、CreateWindowEx に渡した引数しだいで表示されます。
+* OS は、新しく作られたウィンドウに関連するメッセージを queue し始めます。その queue は WinMain に渡すために保存されます。
+* WinMain は _message pump_ と呼ばれるループで message queue にアクセスします。このループでは GetMessage、TranslateMessage、DispatchMessage が呼ばれます。
+* GetMessage は queue から 1 つの message を取り出します。message が queue に積まれる順序にはある程度の規則性があります。たとえばウィンドウが作られたとき、特定の順序で message が積まれます。マウス移動のようなイベントも、他の message を queue に積みます。
+* TranslateMessage は virtual-key message を character message に変換します。DispatchMessage は OS に message を処理するよう要求する呼び出しです。OS はアプリケーションプログラム内の別のサブルーチン、つまり関数を呼ぶことで message を処理します。呼ばれるアプリケーション関数は RegisterClass で指定した関数で、そこでは class 名パラメータが与えられ、その class 名は CreateWindowEx の呼び出しで指定されました。（長いですね）。
+* RegisterClass 呼び出しで指定する application function は 4 つの引数を取ります。
+    1. message に関連付いたウィンドウの handle
+    2. message id、整数
+    3. wParam の unsigned long
+    4. lParam の unsigned long
+* wParam と lParam の意味は message id によって変わります。
+* application function には case 文に相当するものがあり、message id で分岐します。message id はたくさんあります（何百もあります）。代表的なものには、ウィンドウ作成時に送られる wm_create、内容を描画するときに送られる wm_paint、ウィンドウが消えるときに送られる wm_destroy があります。ほかにも、キー入力、マウス移動、マウスボタンのクリックなどに応答して生成される message があります。接続されたカメラからの映像表示、音声ファイルの録音や再生、電話発信などに関連する Windows message もあります。OS には何千もの message がありますが、個々のプログラムが通常扱うのはそのごく一部です。message 関数が明示的に処理しない message を受け取ったら、その message は Win32 のデフォルト関数へ渡されます。
+* メニューコマンドや他のイベントによってプログラムが Win32 関数 PostQuitMessage を呼ぶコードに入ると、message pump は GetMessage から 0 を返し、これが message pump ループを抜ける合図になります。すると WinMain が終了し、プログラムは終わります。
 
 
 <a name="unicode"></a>
 
-## Windows Character Systems and Lisp
+## Windows の文字システムと Lisp
 
-Some Microsoft operating systems use a single-byte, ASCII, character set and others use a double-byte, Unicode, character set. Use
+Microsoft の OS には、単一バイトの ASCII 文字集合を使うものと、2 バイトの Unicode 文字集合を使うものがあります。次を使います。
 
 ~~~lisp
 (defun external-format ()
@@ -91,7 +91,7 @@ Some Microsoft operating systems use a single-byte, ASCII, character set and oth
     :ascii)
 ~~~
 
-to determine which format is in use. Win32 functions taking or returning characters or strings come in two flavors: 1) those ending in A for ASCII characters and 2) those ending in W for wide Unicode characters. This external-format function is useful primarily when calling `fli:with-foreign-string`, part of the Lispworks foreign function interface. When defining Win32 functions in the Foreign Function Interface, or FLI, the presence of the keyword :dbcs indicates that the function has both a single-byte and a double-byte version. When :dbcs is present, Lispworks appends an "A" to the function name in single-byte Windows 95 and a "W" in double-byte Windows NT/2000/XP. (I wrote and tested the example program (see Appendix A) under Windows XP.) Without :dbcs, Lispworks leaves the foreign function name unchanged.
+どちらの形式を使っているかを判定します。文字や文字列を受け取る、または返す Win32 関数には 2 種類あります。1) ASCII 文字用で末尾が A のもの、2) 幅広 Unicode 文字用で末尾が W のものです。この external-format 関数は、主に Lispworks の foreign function interface の一部である `fli:with-foreign-string` を呼ぶときに役立ちます。Win32 関数を Foreign Function Interface、つまり FLI で定義するとき、`:dbcs` キーワードがあると、その関数に単一バイト版と二重バイト版の両方があることを示します。`:dbcs` があると、Lispworks は単一バイトの Windows 95 では関数名に "A" を、二重バイトの Windows NT/2000/XP では "W" を付けます（サンプルプログラムは Windows XP で作成・テストしました）。`:dbcs` がなければ、Lispworks は foreign function 名をそのまま使います。
 
 One FLI definition for the Win32 TextOut function is:
 

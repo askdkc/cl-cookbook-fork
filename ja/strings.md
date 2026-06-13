@@ -1,74 +1,49 @@
 ---
-title: Strings
+title: 文字列
 ---
 
-The most important thing to know about strings in Common Lisp is probably that
-they are arrays and thus also sequences. This implies that all concepts that are
-applicable to arrays and sequences also apply to strings. If you can't find a
-particular string function, make sure you've also searched for the more general
-[array or sequence functions](http://www.gigamonkeys.com/book/collections.html).
-We'll only cover a fraction of what can be done with and to strings here.
+Common Lisp の文字列についてまず知っておくべきなのは、文字列は配列であり、したがってシーケンスでもあるという点です。つまり、配列やシーケンスに適用できる概念はすべて文字列にも当てはまります。特定の文字列関数が見つからないときは、より一般的な [配列関数やシーケンス関数](http://www.gigamonkeys.com/book/collections.html) も探してください。ここでは、文字列に対して、そして文字列に対してできることの一部だけを扱います。
 
-ASDF3, which is included with almost all Common Lisp implementations,
-includes
-[Utilities for Implementation- and OS- Portability (UIOP)](https://gitlab.common-lisp.net/asdf/asdf/blob/master/uiop/README.md),
-which defines functions to work on strings (`strcat`,
-`string-prefix-p`, `string-enclosed-p`, `first-char`, `last-char`,
-`split-string`, `stripln`).
+ほとんどの Common Lisp 実装に含まれる ASDF3 には、[Utilities for Implementation- and OS- Portability (UIOP)](https://gitlab.common-lisp.net/asdf/asdf/blob/master/uiop/README.md) も含まれています。UIOP には文字列を扱う関数（`strcat`、`string-prefix-p`、`string-enclosed-p`、`first-char`、`last-char`、`split-string`、`stripln`）があります。
 
-Some external libraries available on Quicklisp bring some more
-functionality or some shorter ways to do.
+Quicklisp で使える外部ライブラリには、さらに機能を増やしたり、短く書けたりするものがあります。
 
-- [str](https://github.com/vindarel/cl-str) defines `trim`, `words`,
-  `unwords`, `lines`, `unlines`, `concat`, `split`, `shorten`, `repeat`,
-  `replace-all`, `starts-with-p`, `ends-with-p`, `blankp`, `emptyp`, …
-- [Serapeum](https://github.com/ruricolist/serapeum/blob/master/REFERENCE.md#strings) is a large set of utilities with many string manipulation functions.
-- [cl-change-case](https://github.com/rudolfochrist/cl-change-case)
-  has functions to convert strings between camelCase, param-case,
-  snake_case and more. They are also included into `str`.
-- [mk-string-metrics](https://github.com/cbaggers/mk-string-metrics)
-  has functions to calculate various string metrics efficiently
-  (Damerau-Levenshtein, Hamming, Jaro, Jaro-Winkler, Levenshtein, etc),
-- and `cl-ppcre` can come in handy, for example
-  `ppcre:replace-regexp-all`. See the [regexp](regexp.html) section.
+- [str](https://github.com/vindarel/cl-str) は `trim`、`words`、`unwords`、`lines`、`unlines`、`concat`、`split`、`shorten`、`repeat`、`replace-all`、`starts-with-p`、`ends-with-p`、`blankp`、`emptyp` などを定義します。
+- [Serapeum](https://github.com/ruricolist/serapeum/blob/master/REFERENCE.md#strings) は、文字列操作関数を多数含む大きなユーティリティ集です。
+- [cl-change-case](https://github.com/rudolfochrist/cl-change-case) には、文字列を camelCase、param-case、snake_case などへ変換する関数があります。これらは `str` にも含まれています。
+- [mk-string-metrics](https://github.com/cbaggers/mk-string-metrics) には、さまざまな文字列メトリクス（Damerau-Levenshtein、Hamming、Jaro、Jaro-Winkler、Levenshtein など）を効率よく計算する関数があります。
+- `cl-ppcre` も便利です。たとえば `ppcre:replace-regexp-all` があります。[正規表現](regexp.html) の節も参照してください。
 
 
-Last but not least, when you'll need to tackle the `format` construct,
-don't miss the following resources:
+最後に、`format` 構文に取り組むときは、次の資料を見逃さないでください。
 
-* the official [CLHS documentation](http://www.lispworks.com/documentation/HyperSpec/Body/22_c.htm)
-* a [quick reference](http://clqr.boundp.org/)
-* a [CLHS summary on HexstreamSoft](https://www.hexstreamsoft.com/articles/common-lisp-format-reference/clhs-summary/#subsections-summary-table)
-* the list of all format directives at the end of this document.
-* plus a Slime tip: type `C-c C-d ~` plus a letter of a format directive to open up its documentation. Use TAB-completion to list them all. Again more useful with `ivy-mode` or `helm-mode`.
+* 公式の [CLHS ドキュメント](http://www.lispworks.com/documentation/HyperSpec/Body/22_c.htm)
+* [クイックリファレンス](http://clqr.boundp.org/)
+* [HexstreamSoft の CLHS 要約](https://www.hexstreamsoft.com/articles/common-lisp-format-reference/clhs-summary/#subsections-summary-table)
+* この文書の末尾にある format ディレクティブ一覧
+* Slime のヒントとして、`C-c C-d ~` のあとに format ディレクティブの文字を入力すると、そのドキュメントを開けます。TAB 補完で一覧できます。これも `ivy-mode` や `helm-mode` だとより便利です。
 
-## Creating strings
+## 文字列を作る
 
-A string is created with double quotes, all right, but we can recall
-these other ways:
+文字列はダブルクォートで作れますが、ほかにも次の方法があります。
 
-- using `format nil` doesn't *print* but returns a new string (see
-  more examples of `format` below):
+- `format nil` を使うと *出力せず* に新しい文字列を返します（`format` の例は後ろに出ます）。
 
 ~~~lisp
 (defparameter *person* "you")
 (format nil "hello ~a" *person*) ;; => "hello you"
 ~~~
 
-- `make-string count` creates a string of the given length. The
-  `:initial-element` character is repeated `count` times:
+- `make-string count` は指定した長さの文字列を作ります。`:initial-element` で指定した文字は `count` 回繰り返されます。
 
 ~~~lisp
 (make-string 3 :initial-element #\♥) ;; => "♥♥♥"
 ~~~
 
 
-## Accessing Substrings
+## 部分文字列へアクセスする
 
-As a string is a sequence, you can access substrings with the SUBSEQ
-function. The index into the string is, as always, zero-based. The third,
-optional, argument is the index of the first character which is not a part of
-the substring, it is not the length of the substring.
+文字列はシーケンスなので、`subseq` 関数で部分文字列へアクセスできます。文字列のインデックスは、いつも通り 0 始まりです。3 番目のオプション引数は、部分文字列に含まれない最初の文字のインデックスであり、部分文字列の長さではありません。
 
 ~~~lisp
 CL-USER> (defparameter *my-string* (string "Groucho Marx"))
@@ -81,7 +56,7 @@ CL-USER> (subseq *my-string* 1 5)
 "rouc"
 ~~~
 
-You can also manipulate the substring if you use SUBSEQ together with SETF.
+`subseq` を `setf` と組み合わせれば、部分文字列を変更することもできます。
 
 ~~~lisp
 CL-USER> (defparameter *my-string* (string "Harpo Marx"))
@@ -94,9 +69,7 @@ CL-USER> *my-string*
 "Chico Marx"
 ~~~
 
-But note that the string isn't "stretchable". To cite from the HyperSpec: "If
-the subsequence and the new sequence are not of equal length, the shorter length
-determines the number of elements that are replaced." For example:
+ただし、文字列は "stretchable" ではありません。HyperSpec には次のようにあります。 "部分シーケンスと新しいシーケンスの長さが等しくない場合、短いほうの長さが置換される要素数を決める"。例を示します。
 
 ~~~lisp
 CL-USER> (defparameter *my-string* (string "Karl Marx"))
@@ -115,10 +88,9 @@ CL-USER> *my-string*
 "Harpo Mar"
 ~~~
 
-## Accessing Individual Characters
+## 個々の文字へアクセスする
 
-You can use the function CHAR to access individual characters of a string. CHAR
-can also be used in conjunction with SETF.
+`char` 関数で、文字列の個々の文字へアクセスできます。`char` は `setf` とも一緒に使えます。
 
 ~~~lisp
 CL-USER> (defparameter *my-string* (string "Groucho Marx"))
@@ -135,12 +107,9 @@ CL-USER> *my-string*
 "Grouchy Marx"
 ~~~
 
-Note that there's also SCHAR. If efficiency is important, SCHAR can be a bit
-faster where appropriate.
+`schar` もあります。効率が重要なら、適切な場面では `schar` のほうが少し速いことがあります。
 
-Because strings are arrays and thus sequences, you can also use the more generic
-functions `aref` and `elt` (which are more general while CHAR might be implemented
-more efficiently).
+文字列は配列であり、したがってシーケンスでもあるので、より一般的な `aref` や `elt` も使えます（`char` のほうが効率的に実装されていることもありますが）。
 
 ~~~lisp
 CL-USER> (defparameter *my-string* (string "Groucho Marx"))
@@ -151,13 +120,7 @@ CL-USER> (elt *my-string* 8)
 #\M
 ~~~
 
-Each character in a string has an integer code. The range of recognized codes
-and Lisp's ability to print them is directed related to your implementation's
-character set support, e.g. ISO-8859-1, or Unicode. Here are some examples in
-SBCL of UTF-8 which encodes characters as 1 to 4 8 bit bytes. The first example
-shows a character outside the first 128 chars, or what is considered the normal
-Latin character set. The second example shows a multibyte encoding (beyond the
-value 255). Notice the Lisp reader can round-trip characters by name.
+文字列中の各文字には整数コードがあります。認識できるコードの範囲や Lisp がそれを表示できるかどうかは、実装の文字セット対応、たとえば ISO-8859-1 や Unicode に直接関係します。以下は SBCL での UTF-8 の例です。UTF-8 は文字を 1 〜 4 バイトで表します。最初の例は先頭 128 文字の外にある文字、つまり通常のラテン文字集合の外にある文字を示します。2 番目の例は、255 を超える多バイト符号化を示します。Lisp reader が文字名で往復できる点にも注目してください。
 
 ~~~lisp
 CL-USER> (stream-external-format *standard-output*)
@@ -176,16 +139,13 @@ CL-USER> (char-code #\SAMARITAN_LETTER_ALAF)
 2048
 ~~~
 
-Check out the UTF-8 Wikipedia article for the range of supported characters and
-their encodings.
+対応する文字の範囲と符号化については、UTF-8 の Wikipedia 記事を参照してください。
 
-## Remove or replace characters from a string
+## 文字列から文字を削除・置換する
 
-There's a slew of (sequence) functions that can be used to manipulate a string
-and we'll only provide some examples here. See the sequences dictionary in the
-HyperSpec for more.
+文字列を操作できる（シーケンス）関数はたくさんあります。ここでは例だけ示します。詳しくは HyperSpec のシーケンス辞書を見てください。
 
-`remove` one character from a string:
+文字列から 1 文字を `remove` します。
 
 ~~~lisp
 CL-USER> (remove #\o "Harpo Marx")
@@ -198,7 +158,7 @@ CL-USER> (remove-if #'upper-case-p "Harpo Marx")
 "arpo arx"
 ~~~
 
-Replace one character with `substitute` (non destructive) or `replace` (destructive):
+1 文字の置換には、`substitute`（非破壊的）か `replace`（破壊的）を使えます。
 
 ~~~lisp
 CL-USER> (substitute #\u #\o "Groucho Marx")
@@ -214,10 +174,9 @@ CL-USER> *my-string*
 ~~~
 
 
-## Concatenating Strings
+## 文字列を連結する
 
-The name says it all: `concatenate` is your friend. Note that this is a generic
-sequence function and you have to provide the result type as the first argument.
+名前の通りです。`concatenate` が役立ちます。これは汎用シーケンス関数なので、最初の引数に結果型を指定する必要があります。
 
 ~~~lisp
 CL-USER> (concatenate 'string "Karl" " " "Marx")
@@ -226,26 +185,19 @@ CL-USER> (concatenate 'list "Karl" " " "Marx")
 (#\K #\a #\r #\l #\Space #\M #\a #\r #\x)
 ~~~
 
-With UIOP, use `strcat`:
+UIOP なら `strcat` を使います。
 
 ~~~lisp
 CL-USER> (uiop:strcat "karl" " " "marx")
 ~~~
 
-or with the library `str`, use `concat`:
+また、`str` ライブラリなら `concat` を使います。
 
 ~~~lisp
 CL-USER> (str:concat "foo" "bar")
 ~~~
 
-If you have to construct a string out of many parts, all of these calls to
-`concatenate` seem wasteful, though. There are at least three other good ways to
-construct a string piecemeal, depending on what exactly your data is. If you
-build your string one character at a time, make it an adjustable vector (a
-one-dimensional array) of type character with a fill-pointer of zero, then use
-`vector-push-extend` on it. That way, you can also give hints to the system if you
-can estimate how long the string will be. (See the optional third argument to
-`vector-push-extend`.)
+ただし、文字列を多くの部分から組み立てるなら、`concatenate` を何度も呼ぶのは無駄に見えます。データの形に応じて、ほかにも少なくとも 3 通りのよい方法があります。1 文字ずつ文字列を作るなら、`fill-pointer` が 0 の、`character` 型の adjustable vector（一方向配列）にして、`vector-push-extend` を使います。こうすると、文字列のおおよその長さが分かるならシステムへヒントも渡せます（`vector-push-extend` の第 3 引数参照）。
 
 ~~~lisp
 CL-USER> (defparameter *my-string* (make-array 0
@@ -306,9 +258,9 @@ CL-USER> (with-output-to-string (stream)
 "Zappa, 1940 - 1993"
 ~~~
 
-## Processing a String One Character at a Time
+## 文字列を 1 文字ずつ処理する
 
-Use the MAP function to process a string one character at a time.
+`map` 関数で、文字列を 1 文字ずつ処理できます。
 
 ~~~lisp
 CL-USER> (defparameter *my-string* (string "Groucho Marx"))
@@ -329,7 +281,7 @@ CL-USER> (map 'string (lambda (c) (print c)) *my-string*)
 "Groucho Marx"
 ~~~
 
-Or do it with LOOP.
+`loop` を使ってもできます。
 
 ~~~lisp
 CL-USER> (loop for char across "Zeppo"
@@ -337,10 +289,9 @@ CL-USER> (loop for char across "Zeppo"
 (#\Z #\e #\p #\p #\o)
 ~~~
 
-## Reversing a String by Word or Character
+## 文字列を文字ごと・単語ごとに逆順にする
 
-Reversing a string by character is easy using the built-in `reverse` function (or
-its destructive counterpart `nreverse`).
+文字ごとに逆順にするのは、組み込みの `reverse` 関数（または破壊的版の `nreverse`）で簡単です。
 
 ~~~lisp
 CL-USER> (defparameter *my-string* (string "DSL"))
@@ -349,11 +300,9 @@ CL-USER> (reverse *my-string*)
 "LSD"
 ~~~
 
-There's no one-liner in CL to reverse a string by word (like you would do it in
-Perl with split and join). You either have to use functions from an external
-library like SPLIT-SEQUENCE or you have to roll your own solution.
+単語ごとに逆順にするワンライナーは、CL にはありません。Perl のように split と join で済ませるわけにはいきません。`split-sequence` のような外部ライブラリを使うか、自分で実装する必要があります。
 
-Here's an attempt with the `str` library:
+`str` ライブラリを使った例です。
 
 ~~~lisp
 CL-USER> (defparameter *singing* "singing in the rain")
@@ -366,7 +315,7 @@ CL-USER> (str:unwords *)
 "rain the in singing"
 ~~~
 
-And here's another one with no external dependencies:
+外部依存なしの別解もあります。
 
 ~~~lisp
 CL-USER> (defun split-by-one-space (string)
@@ -405,37 +354,34 @@ CL-USER> (join-string-list
 "word by sentence this Reverse"
 ~~~
 
-## Dealing with unicode strings
+## Unicode 文字列を扱う
 
-We'll use here [SBCL's string operations](http://www.sbcl.org/manual/index.html#String-operations). More generally, see [SBCL's unicode support](http://www.sbcl.org/manual/index.html#Unicode-Support).
+ここでは [SBCL の文字列操作](http://www.sbcl.org/manual/index.html#String-operations) を使います。より一般には、[SBCL の Unicode サポート](http://www.sbcl.org/manual/index.html#Unicode-Support) を参照してください。
 
 
-### Sorting unicode strings alphabetically
+### Unicode 文字列をアルファベット順に並べる
 
-Sorting unicode strings with `string-lessp` as the comparison function
-isn't satisfying:
+比較関数に `string-lessp` を使って Unicode 文字列を並べるのは、期待どおりではありません。
 
 ~~~lisp
 CL-USER> (sort '("Aaa" "Ééé" "Zzz") #'string-lessp)
 ("Aaa" "Zzz" "Ééé")
 ~~~
 
-With [SBCL](http://www.sbcl.org/manual/#String-operations), use `sb-unicode:unicode<`:
+[SBCL](http://www.sbcl.org/manual/#String-operations) では `sb-unicode:unicode<` を使います。
 
 ~~~lisp
 CL-USER> (sort '("Aaa" "Ééé" "Zzz") #'sb-unicode:unicode<)
 ("Aaa" "Ééé" "Zzz")
 ~~~
 
-### Breaking strings into graphemes, sentences, lines and words
+### 文字列をグラフェム・文・行・単語に分割する
 
-These functions use SBCL's [`sb-unicode`](http://www.sbcl.org/manual/#String-operations): they are SBCL specific.
+これらの関数は SBCL の [`sb-unicode`](http://www.sbcl.org/manual/#String-operations) を使います。SBCL 専用です。
 
-Use `sb-unicode:sentences` to break a string into sentences according
-to the default sentence breaking rules.
+`sb-unicode:sentences` を使うと、既定の文分割規則に従って文字列を文に分けられます。
 
-Use `sb-unicode:lines` to break a string into lines that are no wider
-than the `:margin` keyword argument. Combining marks will always be kept together with their base characters, and spaces (but not other types of whitespace) will be removed from the end of lines. If `:margin` is unspecified, it defaults to 80 characters
+`sb-unicode:lines` を使うと、`:margin` キーワード引数で指定した幅を超えない行に分割できます。結合文字は常に基底文字と一緒に保たれ、行末のスペース（ただし他の空白は除く）は削除されます。`:margin` を指定しない場合、既定値は 80 文字です。
 
 ~~~lisp
 CL-USER> (sb-unicode:lines "A first sentence. A second somewhat long one." :margin 10)
@@ -446,18 +392,18 @@ CL-USER> (sb-unicode:lines "A first sentence. A second somewhat long one." :marg
  "long one.")
 ~~~
 
-See also `sb-unicode:words` and `sb-unicode:graphemes`.
+`sb-unicode:words` と `sb-unicode:graphemes` も参照してください。
 
-Tip: you can ensure these functions are run only in SBCL with a feature flag:
+ヒント: feature フラグを使えば、これらの関数を SBCL でだけ実行するようにできます。
 
     #+sbcl
     (runs on sbcl)
     #-sbcl
     (runs on other implementations)
 
-## Controlling Case
+## 大文字小文字を制御する
 
-Common Lisp has a couple of functions to control the case of a string.
+Common Lisp には、文字列の大文字小文字を制御する関数がいくつかあります。
 
 ~~~lisp
 CL-USER> (string-upcase "cool")
@@ -474,9 +420,7 @@ CL-USER> (string-capitalize "cool example")
 "Cool Example"
 ~~~
 
-These functions take the `:start` and `:end` keyword arguments so you can optionally
-only manipulate a part of the string. They also have destructive counterparts
-whose names starts with "N".
+これらの関数は `:start` と `:end` キーワード引数を取るので、文字列の一部だけを操作することもできます。先頭に `N` が付いた破壊的版もあります。
 
 ~~~lisp
 CL-USER> (string-capitalize "cool example" :start 5)
@@ -493,13 +437,11 @@ CL-USER> *my-string*
 "big"
 ~~~
 
-Note this potential caveat: according to the HyperSpec,
+次の点に注意してください。HyperSpec によると、
 
 > for STRING-UPCASE, STRING-DOWNCASE, and STRING-CAPITALIZE, string is not modified. However, if no characters in string require conversion, the result may be either string or a copy of it, at the implementation's discretion.
 
-This implies that the last result in
-the following example is implementation-dependent - it may either be "BIG" or
-"BUG". If you want to be sure, use `copy-seq`.
+このため、次の例の最後の結果は実装依存です。"BIG" になるか "BUG" になるかは実装次第です。確実にしたいなら `copy-seq` を使ってください。
 
 ~~~lisp
 CL-USER> (defparameter *my-string* (string "BIG"))
@@ -514,11 +456,11 @@ CL-USER> *my-upcase-string*
 "BIG"
 ~~~
 
-### With the format function
+### `format` 関数を使う
 
-The format function has directives to change the case of words:
+`format` 関数には、単語の大文字小文字を変えるディレクティブがあります。
 
-#### To lower case: ~( ~)
+#### 小文字にする: `~( ~)`
 
 ~~~lisp
 CL-USER> (format t "~(~a~)" "HELLO WORLD")
@@ -526,7 +468,7 @@ hello world
 ~~~
 
 
-#### Capitalize every word: ~:( ~)
+#### 各単語の先頭を大文字にする: `~:( ~)`
 
 ~~~lisp
 CL-USER> (format t "~:(~a~)" "HELLO WORLD")
@@ -534,7 +476,7 @@ Hello World
 NIL
 ~~~
 
-#### Capitalize the first word: ~@( ~)
+#### 最初の単語だけ先頭を大文字にする: `~@( ~)`
 
 ~~~lisp
 CL-USER> (format t "~@(~a~)" "hello world")
@@ -542,9 +484,9 @@ Hello world
 NIL
 ~~~
 
-#### To upper case: ~@:( ~)
+#### 大文字にする: `~@:( ~)`
 
-Where we re-use the colon and the @:
+ここではコロンと `@` を再利用しています。
 
 ~~~lisp
 CL-USER> (format t "~@:(~a~)" "hello world")
@@ -553,13 +495,9 @@ NIL
 ~~~
 
 
-## Trimming Blanks from the Ends of a String
+## 文字列の両端から空白を取り除く
 
-Not only can you trim blanks, but you can get rid of arbitrary characters. The
-functions `string-trim`, `string-left-trim` and `string-right-trim` return a substring
-of their second argument where all characters that are in the first argument are
-removed off the beginning and/or the end. The first argument can be any sequence
-of characters.
+空白だけでなく、任意の文字を取り除くこともできます。`string-trim`、`string-left-trim`、`string-right-trim` は、第 2 引数の部分文字列を返し、第 1 引数に含まれる文字を先頭や末尾から削除します。第 1 引数には任意の文字シーケンスを渡せます。
 
 ~~~lisp
 CL-USER> (string-trim " " " trim me ")
@@ -575,20 +513,13 @@ CL-USER> (string-right-trim '(#\Space #\e #\t) " trim me ")
 CL-USER> (string-right-trim '(#\Space #\e #\t #\m) " trim me ")
 ~~~
 
-Note: The caveat mentioned in the section about Controlling Case also applies
-here.
+注意: 先ほどの大文字小文字の節で述べた注意点は、ここにも当てはまります。
 
-## Converting between Symbols and Strings
+## シンボルと文字列を相互変換する
 
-The function `intern` will "convert" a string to a symbol. Actually, it will check
-whether the symbol denoted by the string (its first argument) is already
-accessible in the package (its second, optional, argument which defaults to the
-current package) and enter it, if necessary, into this package. It is beyond the
-scope of this chapter to explain all the concepts involved and to address the
-second return value of this function. See the CLHS chapter about packages for
-details.
+`intern` 関数は、文字列をシンボルに "変換" します。正確には、その文字列（第 1 引数）が表すシンボルが、パッケージ（第 2 引数。省略時は現在のパッケージ）ですでに参照可能かどうかを調べ、必要ならそのパッケージに登録します。ここでは関連する概念や、この関数の第 2 戻り値まで説明しません。詳しくは CLHS のパッケージの章を参照してください。
 
-Note that the case of the string is relevant.
+文字列の大文字小文字が重要である点に注意してください。
 
 ~~~lisp
 CL-USER> (in-package "COMMON-LISP-USER")
@@ -615,8 +546,7 @@ CL-USER> (intern "MY-SYMBOL" "KEYWORD")
 :EXTERNAL
 ~~~
 
-To do the opposite, convert from a symbol to a string, use `symbol-name` or
-`string`.
+逆に、シンボルから文字列へ変換するには `symbol-name` か `string` を使います。
 
 ~~~lisp
 CL-USER> (symbol-name 'MY-SYMBOL)
@@ -629,12 +559,9 @@ CL-USER> (string 'howdy)
 "HOWDY"
 ~~~
 
-## Converting between Characters and Strings
+## 文字と文字列を相互変換する
 
-You can use `coerce` to convert a string of length 1 to a character. You can also
-use `coerce` to convert any sequence of characters into a string. You can not use
-`coerce` to convert a character to a string, though - you'll have to use `string`
-instead.
+`coerce` を使えば、長さ 1 の文字列を文字に変換できます。文字のシーケンスを文字列へ変換することもできます。ただし、文字を文字列にするには `coerce` は使えません。その場合は `string` を使います。
 
 ~~~lisp
 CL-USER> (coerce "a" 'character)
@@ -662,9 +589,9 @@ CL-USER> (coerce #\y 'string)
    [Condition of type SIMPLE-TYPE-ERROR]
 ~~~
 
-## Finding an Element of a String
+## 文字列の要素を探す
 
-Use `find`, `position`, and their `…-if` counterparts to find characters in a string, with the appropriate `:test` parameter:
+`find`、`position`、およびそれぞれの `…-if` 系を使って、適切な `:test` パラメータ付きで文字列内の文字を探せます。
 
 ~~~lisp
 CL-USER> (find #\t "Tea time." :test #'equal)
@@ -701,9 +628,9 @@ CL-USER> (count-if #'digit-char-p "Tea time is at 5'00." :start 18)
 1
 ~~~
 
-## Finding a Substring of a String
+## 文字列の部分文字列を探す
 
-The function `search` can find substrings of a string.
+`search` 関数で、文字列の部分文字列を探せます。
 
 ~~~lisp
 CL-USER> (search "we" "If we can't be free we can at least be cheap")
@@ -724,13 +651,11 @@ CL-USER> (search "FREE" "If we can't be free we can at least be cheap"
 15
 ~~~
 
-## Converting a String to a Number
+## 文字列を数値に変換する
 
-### To an integer: parse-integer
+### 整数へ: `parse-integer`
 
-CL provides the `parse-integer` function to convert a string representation of an integer
-to the corresponding numeric value. The second return value is the index into
-the string where the parsing stopped.
+CL には、整数を表す文字列を対応する数値へ変換する `parse-integer` 関数があります。第 2 戻り値は、解析が止まった位置のインデックスです。
 
 ~~~lisp
 CL-USER> (parse-integer "42")
@@ -757,13 +682,11 @@ Error in function PARSE-INTEGER:
    There's junk in this string: " 42 is forty-two".
 ~~~
 
-`parse-integer` doesn't understand radix specifiers like `#X`, nor is there a
-built-in function to parse other numeric types. You could use `read-from-string`
-in this case.
+`parse-integer` は `#X` のような基数指定を理解しませんし、他の数値型を解析する組み込み関数もありません。その場合は `read-from-string` を使えます。
 
-### Extracting many integers from a string: `ppcre:all-matches-as-strings`
+### 文字列から複数の整数を取り出す: `ppcre:all-matches-as-strings`
 
-We show this in the Regular Expressions chapter but while we are on this topic, you can find it super useful:
+これは正規表現の章でも紹介しますが、この話題のついでに挙げておくと、とても便利です。
 
 ~~~lisp
 CL-USER> (ppcre:all-matches-as-strings "-?\\d+" "42 is 41 plus 1")
@@ -773,11 +696,9 @@ CL-USER> (mapcar #'parse-integer *)
 ;; (42 41 1)
 ~~~
 
-### To any number: `read-from-string`
+### 任意の数値へ: `read-from-string`
 
-Be aware that the full reader is in effect if you're using this
-function. This can lead to vulnerability issues. You should use a
-library like `parse-number` or `parse-float` instead.
+この関数を使うと full reader が有効になる点に注意してください。脆弱性の原因になり得ます。代わりに `parse-number` や `parse-float` のようなライブラリを使うべきです。
 
 ~~~lisp
 CL-USER> (read-from-string "#X23")
@@ -807,18 +728,18 @@ CL-USER> *foo*
 "gotcha"
 ~~~
 
-### Protecting `read-from-string`
+### `read-from-string` を安全に使う
 
-At the very least, if you are reading data coming from the outside, use this:
+少なくとも、外部から来たデータを読むなら、次のようにします。
 
 ~~~lisp
 (let ((cl:*read-eval* nil))
   (read-from-string "…"))
 ~~~
 
-This prevents code to be evaluated at read-time. That way our last example, using the `#.` reader macro, would not work. You'll get the error "can't read #. while \*READ-EVAL\* is NIL".
+これで read 時にコードが評価されるのを防げます。これにより、最後の `#.` reader macro の例は動かなくなります。"can't read #. while *READ-EVAL* is NIL" というエラーになります。
 
-And better yet, for more protection from a possibly custom readtable that would introduce another reader macro:
+さらに、別の reader macro を導入するカスタム readtable からも守りたいなら、次のようにします。
 
 ~~~lisp
 (with-standard-io-syntax
@@ -827,12 +748,9 @@ And better yet, for more protection from a possibly custom readtable that would 
 ~~~
 
 
-### To a float: the parse-float library
+### 浮動小数へ: `parse-float` ライブラリ
 
-There is no built-in function similar to `parse-integer` to parse
-other number types. The external library
-[parse-float](https://github.com/soemraws/parse-float) does exactly
-that. It doesn't use `read-from-string` so it is safe to use.
+`parse-integer` のように他の数値型を解析する組み込み関数はありません。外部ライブラリ [parse-float](https://github.com/soemraws/parse-float) はまさにそれを行います。`read-from-string` を使わないので、安全に使えます。
 
 ~~~lisp
 CL-USER> (ql:quickload "parse-float")
@@ -841,19 +759,14 @@ CL-USER> (parse-float:parse-float "1.2e2")
 5
 ~~~
 
-LispWorks also has a [parse-float](http://www.lispworks.com/documentation/lw51/LWRM/html/lwref-228.htm) function.
+LispWorks にも [parse-float](http://www.lispworks.com/documentation/lw51/LWRM/html/lwref-228.htm) 関数があります。
 
-See also [parse-number](https://github.com/sharplispers/parse-number).
+`[parse-number](https://github.com/sharplispers/parse-number)` も参照してください。
 
 
-## Converting a Number to a String
+## 数値を文字列に変換する
 
-The general function `write-to-string` or one of its simpler variants
-`prin1-to-string` or `princ-to-string` may be used to convert a number to a
-string. With `write-to-string`, the `:base` keyword argument may be used to change
-the output base for a single call. To change the output base globally, set
-*print-base* which defaults to 10. Remember in Lisp, rational numbers are
-represented as quotients of two integers even when converted to strings.
+一般関数 `write-to-string`、またはその簡易版 `prin1-to-string` / `princ-to-string` を使うと、数値を文字列に変換できます。`write-to-string` では、`:base` キーワード引数で 1 回だけ出力基数を変えられます。全体の基数を変えるなら、既定値 10 の `*print-base*` を設定します。Lisp では、有理数は文字列化しても 2 つの整数の比として表されることを覚えておいてください。
 
 ~~~lisp
 CL-USER> (write-to-string 250)
@@ -866,16 +779,11 @@ CL-USER> (write-to-string (/ 1 3))
 "1/3"
 ~~~
 
-## Comparing Strings
+## 文字列を比較する
 
-The general functions `equal` and `equalp` can be used to test whether two strings
-are equal. The strings are compared element-by-element, either in a
-case-sensitive manner (`equal`) or not (`equalp`). There's also a bunch of
-string-specific comparison functions. You'll want to use these if you're
-deploying implementation-defined attributes of characters. Check your vendor's
-documentation in this case.
+一般関数 `equal` と `equalp` で、2 つの文字列が等しいかを確認できます。文字列は要素ごとに比較され、`equal` は大文字小文字を区別し、`equalp` は区別しません。ほかにも文字列専用の比較関数がたくさんあります。文字の実装依存属性を使うなら、こちらを使いたくなるでしょう。その場合は実装のドキュメントを確認してください。
 
-Here are a few examples. Note that all functions that test for inequality return the position of the first mismatch as a generalized boolean. You can also use the generic sequence function `mismatch` if you need more versatility.
+例をいくつか示します。なお、不等を調べる関数はすべて、最初に一致しない位置を一般化ブールとして返します。より柔軟性が必要なら、汎用シーケンス関数 `mismatch` も使えます。
 
 ~~~lisp
 CL-USER> (string= "Marx" "Marx")
@@ -894,15 +802,13 @@ CL-USER> (mismatch "Harpo Marx" "Zeppo Marx" :from-end t :test #'char=)
 3
 ~~~
 
-and also `string/=`, `string-not-equal`, `string-not-lessp`, `string-not-greaterp`.
+さらに `string/=`, `string-not-equal`, `string-not-lessp`, `string-not-greaterp` もあります。
 
-## String formatting: `format`
+## 文字列の整形: `format`
 
-The `format` function has a lot of directives to print strings,
-numbers, lists, going recursively, even calling Lisp functions,
-etc. We'll focus here on a few things to print and format strings.
+`format` 関数には、文字列、数値、リストの出力、再帰処理、Lisp 関数の呼び出しなど、たくさんのディレクティブがあります。ここでは、文字列を出力・整形するいくつかの要点に絞ります。
 
-For our examples below, we'll work with a list of movies:
+以下の例では、映画のリストを使います。
 
 ~~~lisp
 (defparameter *movies* '(
@@ -911,15 +817,9 @@ For our examples below, we'll work with a list of movies:
 ~~~
 
 
-### Structure of format
+### `format` の構造
 
-Format directives start with `~`. A final character like `A` or `a`
-(they are case insensitive) defines the directive. In between, it can
-accept coma-separated options and parameters.  Further, some directives
-can take colon and at-sign modifiers, which change the behavior of the
-directive in some way.  For example, with the `D` directive, the colon
-adds commas every three digits, and the at-sign adds a plus sign when
-the number is positive:
+format ディレクティブは `~` で始まります。`A` や `a` のような末尾の文字（大小文字は区別しません）がディレクティブを決めます。その間に、カンマ区切りのオプションやパラメータを入れられます。さらに、一部のディレクティブはコロンやアットマークの修飾子を受け取り、挙動を変えます。たとえば `D` ディレクティブでは、コロンを付けると 3 桁ごとにカンマが入り、アットマークを付けると正の数にプラス記号が付きます。
 
 ~~~lisp
 (format nil "~d" 2025)
@@ -932,8 +832,7 @@ the number is positive:
 ;; => "+2,025"
 ~~~
 
-With the at-sign modifier, the `R` directive outputs Roman numerals
-rather than an English cardinal number:
+アットマーク修飾子を付けると、`R` ディレクティブは英語の基数ではなくローマ数字を出力します。
 
 ~~~lisp
 (format nil "~r" 2025)
@@ -942,12 +841,11 @@ rather than an English cardinal number:
 ;; => "MMXXV"
 ~~~
 
-If there isn't a sensible interpretation for both modifiers used
-together, the result is either undefined or some additional meaning.
+2 つの修飾子を同時に使っても意味のある解釈がない場合、結果は未定義か、別の意味になります。
 
-Print a tilde with `~~`, or 10 tildes with `~10~`.
+チルダを出すには `~~`、10 個のチルダを出すには `~10~` を使います。
 
-Other directives include:
+ほかのディレクティブには次のものがあります。
 
 - `R`: Roman (e.g., prints in English): `(format t "~R" 20)` => "twenty".
 - `$`: monetary: `(format t "~$" 21982)` => 21982.00
@@ -955,9 +853,9 @@ Other directives include:
 - `F`: fixed-format Floating point.
 - `P`: plural: `(format nil "~D famil~:@P/~D famil~:@P" 7 1)` => "7 families/1 family"
 
-### Basic primitive: ~A or ~a (Aesthetics)
+### 基本プリミティブ: `~A` / `~a` (Aesthetics)
 
-`(format t "~a" *movies*)` is the most basic primitive.
+`(format t "~a" *movies*)` がもっとも基本的な使い方です。
 
 `t` prints to `*standard-output*`.
 
@@ -966,13 +864,12 @@ Other directives include:
 ;; => "((1 Matrix 5) (10 Matrix Trilogy swe sub 3.3))"
 ~~~
 
-Here, `nil` tells `format` to return a new string.
+ここで `nil` は、`format` に新しい文字列を返すよう指示します。
 
 
-### Print to standard output or return a new string: `t` or `nil`
+### 標準出力に出すか新しい文字列を返すか: `t` / `nil`
 
-As seen above, `(format t …)` prints to `*standard-output*` whereas
-`(format nil …)` returns a new string.
+上で見たように、`(format t …)` は `*standard-output*` に出力し、`(format nil …)` は新しい文字列を返します。
 
 Now observe:
 
@@ -983,7 +880,7 @@ Now observe:
 NIL
 ~~~
 
-`format` *prints* to stdout and *returns* NIL.
+`format` は stdout に *出力* し、NIL を *返します*。
 
 But now:
 
@@ -1082,44 +979,41 @@ With `~2,2f`:
 10 Matrix Trilogy swe sub    3.30
 ```
 
-And we're happy with this result.
+これで十分です。
 
-### Iteration
+### 反復
 
-Create a string from a list with iteration construct `~{str~}`:
+反復構文 `~{str~}` で、リストから文字列を作れます。
 
 ~~~lisp
 (format nil "~{~A, ~}" '(a b c))
 ;; "A, B, C, "
 ~~~
 
-using `~^` to avoid printing the comma and space after the last element:
+最後の要素のあとにカンマとスペースを出さないよう、`~^` を使います。
 
 ~~~lisp
 (format nil "~{~A~^, ~}" '(a b c))
 ;; "A, B, C"
 ~~~
 
-`~:{str~}` is similar but for a list of sublists:
+`~:{str~}` は似ていますが、サブリストのリスト向けです。
 
 ~~~lisp
 (format nil "~:{~S are ~S. ~}" '((pigeons birds) (dogs mammals)))
 ;; "PIGEONS are BIRDS. DOGS are MAMMALS. "
 ~~~
 
-`~@{str~}` is similar to `~{str~}`, but instead of using one argument that is a list, all the remaining arguments are used as the list of arguments for the iteration:
+`~@{str~}` は `~{str~}` に似ていますが、1 つのリスト引数ではなく、残りの引数すべてを反復用の引数リストとして使います。
 
 ~~~lisp
 (format nil "~@{~S are ~S. ~}" 'pigeons 'birds 'dogs 'mammals)
 ;; "PIGEONS are BIRDS. DOGS are MAMMALS. "
 ~~~
 
-### Formatting a format string (`~v`, `~?`)
+### format 文字列を組み立てる (`~v`, `~?`)
 
-Sometimes you want to justify a string, but the length is a variable
-itself. You can't hardcode its value as in `(format nil "~30a"
-"foo")`. Enters the `v` directive. We can use it in place of the
-comma-separated prefix parameters:
+文字列を揃えたいけれど、幅が変数そのものになることがあります。`(format nil "~30a" "foo")` のように固定値を書くわけにはいきません。そこで `v` ディレクティブを使います。カンマ区切りの先頭パラメータの代わりに使えます。
 
 ~~~lisp
 (let ((padding 30))
@@ -1127,22 +1021,21 @@ comma-separated prefix parameters:
 ;; "foo                           "
 ~~~
 
-Other times, you would like to insert a complete format directive
-at run time. Enters the `?` directive.
+実行時に complete な format ディレクティブを差し込みたいこともあります。そこで `?` ディレクティブです。
 
 ~~~lisp
 (format nil "~?" "~30a" '("foo"))
 ;;                       ^ a list
 ~~~
 
-or, using `~@?`:
+あるいは `~@?` を使います。
 
 ~~~lisp
 (format nil "~@?" "~30a" "foo" )
 ;;                       ^ not a list
 ~~~
 
-Of course, it is always possible to format a format string beforehand:
+もちろん、あらかじめ format 文字列を組み立てることもできます。
 
 ~~~lisp
 (let* ((length 30)
@@ -1150,9 +1043,9 @@ Of course, it is always possible to format a format string beforehand:
  (format nil directive "foo"))
 ~~~
 
-### Conditional Formatting
+### 条件付き整形
 
-Choose one value out of many options by specifying a number:
+数値を指定して、複数の候補から 1 つを選びます。
 
 ~~~lisp
 (format nil "~[dog~;cat~;bird~:;default~]" 0)
@@ -1162,14 +1055,14 @@ Choose one value out of many options by specifying a number:
 ;; "cat"
 ~~~
 
-If the number is out of range, the default option (after `~:;`) is returned:
+数値が範囲外なら、`~:;` のあとにある既定値が返ります。
 
 ~~~lisp
 (format nil "~[dog~;cat~;bird~:;default~]" 9)
 ;; "default"
 ~~~
 
-Combine it with `~:*` to implement irregular plural:
+`~:*` と組み合わせると、不規則複数形を実装できます。
 
 ~~~lisp
 (format nil "I saw ~r el~:*~[ves~;f~:;ves~]." 0)
@@ -1180,11 +1073,9 @@ Combine it with `~:*` to implement irregular plural:
 ;; => "I saw two elves."
 ~~~
 
-## Capturing what is is printed into a stream
+## ストリームへ出した内容を捕捉する
 
-Inside `(with-output-to-string (mystream) …)`, everything that is
-printed into the stream `mystream` is captured and returned as a
-string:
+`(with-output-to-string (mystream) …)` の中では、`mystream` に書き込まれたものがすべて捕捉され、文字列として返されます。
 
 ~~~lisp
 (defun greet (name &key (stream t))
@@ -1198,34 +1089,31 @@ string:
 ;; NIL
 ~~~
 
-## Cleaning up strings
+## 文字列を整える
 
-The following examples use the
-[cl-slug](https://github.com/EuAndreh/cl-slug/) library which,
-internally, iterates over the characters of the string and uses
-`ppcre:regex-replace-all`.
+次の例では [cl-slug](https://github.com/EuAndreh/cl-slug/) ライブラリを使います。このライブラリは内部で文字列を 1 文字ずつ走査し、`ppcre:regex-replace-all` を使っています。
 
     (ql:quickload "cl-slug")
 
-Then it can be used with the `slug` prefix.
+読み込むと `slug` プレフィックスで使えます。
 
-Its main function is to transform a string to a slug, suitable for a website's url:
+主な関数は、Web サイトの URL に向いた slug へ文字列を変換することです。
 
 ~~~lisp
 (slug:slugify "My new cool article, for the blog (V. 2).")
 ;; "my-new-cool-article-for-the-blog-v-2"
 ~~~
 
-### Removing accentuated letters
+### アクセント付き文字を取り除く
 
-Use `slug:asciify` to replace accentuated letters by their ascii equivalent:
+`slug:asciify` を使うと、アクセント付き文字を ASCII 相当へ置き換えられます。
 
 ~~~lisp
 (slug:asciify "ñ é ß ğ ö")
 ;; => "n e ss g o"
 ~~~
 
-This function supports many (western) languages:
+この関数は多くの（西洋）言語をサポートしています。
 
 ~~~
 slug:*available-languages*
@@ -1239,10 +1127,9 @@ slug:*available-languages*
  (:CURRENCY . "Currency"))
 ~~~
 
-### Removing punctuation
+### 句読点を取り除く
 
-Use `(str:remove-punctuation s)` or `(str:no-case s)` (same as
-`(cl-change-case:no-case s)`):
+`(str:remove-punctuation s)` または `(str:no-case s)`（`(cl-change-case:no-case s)` と同じ）を使います。
 
 ~~~lisp
 (str:remove-punctuation "HEY! What's up ??")
@@ -1252,15 +1139,13 @@ Use `(str:remove-punctuation s)` or `(str:no-case s)` (same as
 ;; "hey what s up"
 ~~~
 
-They strip the punctuation with one ppcre unicode regexp
-(`(ppcre:regex-replace-all "[^\\p{L}\\p{N}]+"` where `p{L}` is the
-"letter" category and `p{N}` any kind of numeric character).
+これらは 1 つの ppcre Unicode 正規表現で句読点を取り除きます（`(ppcre:regex-replace-all "[^\\p{L}\\p{N}]+"`。`p{L}` は "letter" カテゴリ、`p{N}` はあらゆる数値文字です）。
 
-## Appendix
+## 付録
 
-### All format directives
+### すべての format ディレクティブ
 
-All directives are case-insensivite: `~A` is the same as `~a`.
+すべてのディレクティブは大文字小文字を区別しません。`~A` は `~a` と同じです。
 
 ```
 $ - Monetary Floating-Point
@@ -1303,14 +1188,14 @@ _ - Conditional Newline
 ~ - Tilde
 ```
 
-### Slime help
+### Slime のヘルプ
 
-* to look-up a `format` directive, such as `~A`, use `M-x common-lisp-hyperspec-format`, bound to `C-c C-d ~`, and use TAB-completion.
+* `~A` のような `format` ディレクティブを調べるには、`M-x common-lisp-hyperspec-format` を使います。これは `C-c C-d ~` に割り当てられており、TAB 補完も使えます。
 
 
-## String and character types hierarchy
+## 文字列と文字の型の階層
 
-*Solid nodes are concrete types, while dashed ones are type aliases. For example, `'string` is an alias for an array of characters of any size, `(array character (*))`.*
+*実線のノードは具体的な型、破線のノードは型エイリアスです。たとえば `'string` は任意サイズの文字配列、`(array character (*))` の別名です。*
 
 <div style="text-align: center">
     <img src="string-and-chars.png" alt="String and Character Types in Common Lisp"/>
@@ -1321,7 +1206,7 @@ _ - Conditional Newline
    pdf-include-end -->
 
 
-## See also
+## 関連項目
 
-* [the Pretty Printer](https://cl-community-spec.github.io/pages/Examples-of-using-the-Pretty-Printer.html#Examples-of-using-the-Pretty-Printer):`*print-length*`, `*print-right-margin*`, `pprint-tabular` etc.
-* [Pretty printing table data](https://gist.github.com/WetHat/a49e6f2140b401a190d45d31e052af8f), in ASCII art, a tutorial as a Jupyter notebook.
+* [Pretty Printer](https://cl-community-spec.github.io/pages/Examples-of-using-the-Pretty-Printer.html#Examples-of-using-the-Pretty-Printer): `*print-length*`、`*print-right-margin*`、`pprint-tabular` など
+* [表データを整形出力する](https://gist.github.com/WetHat/a49e6f2140b401a190d45d31e052af8f) ASCII アートの Jupyter Notebook チュートリアル

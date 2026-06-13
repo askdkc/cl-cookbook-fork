@@ -1,30 +1,24 @@
 ---
-title: Testing the code
+title: コードのテスト
 ---
 
-So you want to easily test the code you're writing? The following
-recipe covers how to write automated tests and see their code
-coverage. We also give pointers to plug those in modern continuous
-integration services like GitHub Actions, Gitlab CI, Travis CI or Coveralls.
+書いているコードを手軽にテストしたいですか。このレシピでは、自動テストの書き方とコードカバレッジの確認方法を扱います。さらに、GitHub Actions、GitLab CI、Travis CI、Coveralls といった現代的な継続的インテグレーションサービスへ組み込むための手がかりも示します。
 
-We will be using a mature testing framework called
-[FiveAM](https://github.com/lispci/fiveam). It supports test suites,
-random testing, test fixtures (to a certain extent) and, of course,
-interactive development.
+ここでは、[FiveAM](https://github.com/lispci/fiveam) という成熟したテストフレームワークを使います。テストスイート、ランダムテスト、テストフィクスチャ、そしてもちろん対話的開発をサポートしています。
 
-Previously on the Cookbook, the recipe was cooked with [Prove](https://github.com/fukamachi/prove). It used to be a widely liked testing framework but, because of some shortcomings, its repository was later archived. Its successor [Rove](https://github.com/fukamachi/rove) is not stable enough and lacks some features, so we didn't pick it. There are also some [other testing frameworks](https://github.com/CodyReichert/awesome-cl#unit-testing) to explore if you feel like it.
+以前の Cookbook では [Prove](https://github.com/fukamachi/prove) を使っていました。かつては広く好まれたテストフレームワークでしたが、いくつかの弱点があり、のちにリポジトリはアーカイブされました。後継の [Rove](https://github.com/fukamachi/rove) はまだ安定性が十分ではなく、いくつかの機能も不足しているため、ここでは採用しませんでした。気が向けば、[他のテストフレームワーク](https://github.com/CodyReichert/awesome-cl#unit-testing) も試してみてください。
 
-FiveAM has an [API documentation](https://common-lisp.net/project/fiveam/docs/index.html). You may inspect it or simply read the docstrings in code. Most of the time, they would provide sufficient information that answers your questions… if you didn't find them here. Let's get started.
+FiveAM には [API ドキュメント](https://common-lisp.net/project/fiveam/docs/index.html) があります。そこを参照してもよいですし、コード中の docstring を読むだけでもかまいません。たいていは、それだけで疑問に答えるのに十分な情報が得られます。ここに載っていない場合でもです。では始めましょう。
 
-## Testing with FiveAM
+## FiveAM でテストする
 
-FiveAM has 3 levels of abstraction: check, test and suite. As you may have guessed:
+FiveAM には 3 段階の抽象化があります。`check`、`test`、`suite` です。名前の通りです。
 
-1. A **check** is a single assertion that checks that its argument is truthy. The most used check is `is`. For example, `(is (= 2 (+ 1 1)))`.
-2. A **test** is the smallest runnable unit. A test case may contain multiple checks. Any check failure leads to the failure of the whole test.
-3. A **suite** is a collection of tests. When a suite is run, all tests inside would be performed. A suite allows paternity, which means that running a suite will run all the tests defined in it and in its children suites.
+1. **check** は、引数が真であることを確認する単一のアサーションです。もっともよく使うのは `is` です。たとえば `(is (= 2 (+ 1 1)))` です。
+2. **test** は、実行可能な最小単位です。1 つのテストケースに複数の check を含められます。どれか 1 つでも失敗すると、そのテスト全体が失敗になります。
+3. **suite** はテストの集合です。suite を実行すると、その中のすべてのテストが実行されます。suite には親子関係を持たせられるので、ある suite を走らせると、その中で定義されたテストと子 suite のテストもまとめて実行されます。
 
-A simple code sample containing the 3 basic blocks mentioned above can be shown as follows:
+上の 3 つの基本ブロックを含む簡単な例は次のとおりです。
 
 ~~~lisp
 (def-suite* my-suite)
@@ -33,9 +27,9 @@ A simple code sample containing the 3 basic blocks mentioned above can be shown 
   (is (= 2 (+ 1 1))))
 ~~~
 
-It is totally up to the user to decide the hierarchy of tests and suites. Here we mainly focus on the usage of FiveAM.
+テストと suite の階層は、完全に利用者次第です。ここでは主に FiveAM の使い方に注目します。
 
-Suppose we have built a rather complex system and the following functions are part of it:
+かなり複雑なシステムを作っていて、次の関数がその一部だとしましょう。
 
 ~~~lisp
 ;; We have a custom "file doesn't exist" condition.
@@ -58,13 +52,13 @@ the function will return NIL in that case."
     (t nil)))
 ~~~
 
-We will write tests for that code. In particular, we must ensure:
+このコードに対するテストを書きます。特に、次を保証する必要があります。
 
-- that the content read in a file is the expected content,
-- that the condition is signaled if the file doesn't exist.
+- ファイルから読み込んだ内容が期待どおりであること
+- ファイルが存在しないときに条件がシグナルされること
 
 
-### Install and load
+### インストールと読み込み
 
 `FiveAM` is in Quicklisp and can be loaded with the following command:
 
@@ -72,12 +66,11 @@ We will write tests for that code. In particular, we must ensure:
 (ql:quickload "fiveam")
 ~~~
 
-The package is named `fiveam` with a nickname `5am`. For the sake of simplicity, we will ignore the package prefix in the following code samples.
+パッケージ名は `fiveam` で、ニックネームは `5am` です。簡単のため、以下のコード例ではパッケージ接頭辞を省略します。
 
-It is like we `:use`d fiveam in our test package definition. You
-can also follow along in the REPL with `(use-package :fiveam)`.
+これは、テスト用パッケージ定義で fiveam を `:use` したのと同じようなものです。REPL では `(use-package :fiveam)` として追いかけてもかまいません。
 
-Here is a package definition you can use:
+使えるパッケージ定義の例を示します。
 
 ```lisp
 (in-package :cl-user)
@@ -87,21 +80,21 @@ Here is a package definition you can use:
 (in-package :my-fiveam-test)
 ```
 
-### Defining suites (`def-suite`, `def-suite*`)
+### suite を定義する (`def-suite`, `def-suite*`)
 
-Testing in FiveAM usually starts by defining a suite. A suite helps separating tests to smaller collections that makes them more organized. It is highly recommended to define a single *root* suite for the sake of ASDF integration. We will talk about it later, now let's focus on the testing itself.
+FiveAM でのテストは、通常 suite を定義するところから始まります。suite を使うと、テストを小さなまとまりに分けられて整理しやすくなります。ASDF との統合を考えるなら、単一の *root* suite を定義することを強く勧めます。これについては後で触れます。ここではまず、テストそのものに集中しましょう。
 
-The code below defines a suite named `my-system`. We will use it as the root suite for the whole system.
+以下のコードは `my-system` という suite を定義しています。システム全体の root suite として使います。
 
 ~~~lisp
 (def-suite my-system
   :description "Test my system")
 ~~~
 
-Then let's define another suite for testing the `read-file-as-string` function.
+次に、`read-file-as-string` 関数をテストする別の suite を定義しましょう。
 
 ~~~lisp
-;; Define a suite and set it as the default for the following tests.
+;; suite を定義し、以降のテストのデフォルトに設定する。
 (def-suite read-file-as-string
   :description "Test the read-file-as-string function."
   :in my-system)
@@ -111,64 +104,64 @@ Then let's define another suite for testing the `read-file-as-string` function.
 (def-suite* read-file-as-string :in my-system)
 ~~~
 
-Here a new suite named `read-file-as-string` has been defined. It is declared to be a child suite of `my-system` as specified by the `:in` keyword. The macro `in-suite` sets it as the default suite for the tests defined later.
+ここで `read-file-as-string` という新しい suite を定義しました。`:in` キーワードで指定したとおり、`my-system` の子 suite になっています。マクロ `in-suite` は、後で定義するテストのデフォルト suite をこの suite に設定します。
 
-### Defining tests
+### テストを定義する
 
-Before diving into tests, here is a brief introduction of the available checks you may use inside tests:
+テストに入る前に、テストの中で使える check を簡単に紹介します。
 
-* The `is` macro is likely the most used check. It simply checks if the given expression returns a true value and generates a `test-passed` or `test-failure` result accordingly.
-* The `skip` macro takes a reason and generates a `test-skipped` result.
-* The `signals` macro checks if the given condition was signaled during execution.
+* `is` マクロは、おそらくもっともよく使う check です。与えた式が真値を返すかを確認し、それに応じて `test-passed` または `test-failure` を返します。
+* `skip` マクロは理由を受け取り、`test-skipped` を返します。
+* `signals` マクロは、実行中に指定した条件がシグナルされたかを確認します。
 
-There is also:
+ほかにもあります。
 
-* `finishes`: passes if the assertion body executes to normal completion. In other words, if the body signals an error or makes a non-local jump, then this test fails.
-* `pass`: marks the test as passed.
-* `is-true`: like `is`, but unlike it this check does not inspect the assertion body to determine how to report the failure. Similarly, there is `is-false`.
+* `finishes`: アサーション本体が正常終了すれば成功です。つまり、本体がエラーをシグナルしたり非ローカルなジャンプを行ったりした場合、このテストは失敗します。
+* `pass`: テストを成功としてマークします。
+* `is-true`: `is` に似ていますが、失敗の報告内容を決めるためにアサーション本体を調べません。これと同様に `is-false` もあります。
 
-Please note that all the checks accept an optional reason, as string, that can be formatted with format directives (see more below). When omitted, FiveAM generates a report that explains the failure according to the arguments passed to the function.
+なお、すべての check はオプションで理由文字列を受け取れます。この文字列は `format` ディレクティブで整形できます（後述）。省略した場合、FiveAM は関数に渡された引数に基づいて失敗理由を説明するレポートを生成します。
 
-The `test` macro provides a simple way to define a test with a name.
+`test` マクロは、名前付きのテストを簡単に定義するためのものです。
 
-*Note that below, we expect two files to exist: `/tmp/hello.txt` should contain "hello" and `/tmp/empty.txt` should be empty.*
+*以下では 2 つのファイルが存在すると仮定します。`/tmp/hello.txt` には "hello" が入っていて、`/tmp/empty.txt` は空です。*
 
 ~~~lisp
-;; Our first "base" case: we read a file that contains "hello".
+;; 最初の基本ケース: "hello" を含むファイルを読む。
 (test read-file-as-string-normal-file
   (let ((result (read-file-as-string "/tmp/hello.txt")))
-    ;; Tip: put the expected value as the first argument of = or equal, string= etc.
-    ;; FiveAM generates a more readable report following this convention.
+    ;; ヒント: = や equal, string= などでは、期待値を第 1 引数に置く。
+    ;; FiveAM はこの慣例に従うと、より読みやすいレポートを生成する。
     (is (string= "hello" result))))
 
-;; We read an empty file.
+;; 空のファイルを読む。
 (test read-file-as-string-empty-file
   (let ((result (read-file-as-string "/tmp/empty.txt")))
     (is (not (null result)))
-    ;; The reason can be used to provide formatted text.
+    ;; 理由には整形済みテキストを指定できる。
     (is (= 0 (length result)))
         "Empty string expected but got ~a" result))
 
-;; Now we test that reading a non-existing file signals our condition.
+;; では、存在しないファイルを読むとこの条件がシグナルされることを確認する。
 (test read-file-as-string-non-existing-file
   (let ((result (read-file-as-string "/tmp/non-existing-file.txt"
                                      :error-if-not-exists nil)))
     (is (null result)
       "Reading a file should return NIL when :ERROR-IF-NOT-EXISTS is set to NIL"))
-  ;; SIGNALS accepts the unquoted name of a condition and a body to evaluate.
-  ;; Here it checks if FILE-NOT-EXISTING-ERROR is signaled.
+  ;; SIGNALS は、クォートしない条件名と評価する本体を受け取る。
+  ;; ここでは FILE-NOT-EXISTING-ERROR がシグナルされるかを調べる。
   (signals file-not-existing-error
     (read-file-as-string "/tmp/non-existing-file.txt"
                          :error-if-not-exists t)))
 ~~~
 
-In the above code, three tests were defined with 5 checks in total. Some checks were actually redundant for the sake of demonstration. You may put all the checks in one big test, or in multiple scenarios. It is up to you.
+上のコードでは、3 つのテストと合計 5 つの check を定義しました。デモのために、いくつかの check は実際には冗長です。すべての check を 1 つの大きなテストにまとめてもよいですし、複数のシナリオに分けてもかまいません。そこは自由です。
 
-The macro `test` is a convenience for `def-test` to define simple tests. You may read its docstring for a more complete introduction, for example to read about `:depends-on`.
+`test` マクロは、`def-test` を使って単純なテストを定義するための便利なラッパーです。たとえば `:depends-on` についても含め、より詳しくは docstring を読んでください。
 
-### Running tests
+### テストを実行する
 
-FiveAm provides multiple ways to run tests. The macro `run!` is a good start point during development. It accepts a name of suite or test and run it, then prints testing report in standard output. Let's run the tests now!
+FiveAM にはテストの実行方法がいくつかあります。開発中の出発点としては、`run!` マクロが便利です。suite 名または test 名を受け取り、それを実行して標準出力にレポートを出します。では、実際に走らせてみましょう。
 
 ~~~lisp
 (run! 'my-system)
@@ -207,37 +200,35 @@ If we mess `read-file-as-string-non-existing-file` up by replacing `/tmp/non-exi
 ; NIL
 ~~~
 
-The behavior of the suite/test runner can be customized by the `*on-failure*` variable, which controls what to do when a check failure happens. It can be set to one of the following values:
+suite/test ランナーの挙動は `*on-failure*` 変数で調整できます。これは check が失敗したときにどうするかを制御します。次の値を設定できます。
 
-- `:debug` to drop to the debugger.
-- `:backtrace` to print a backtrace and continue.
-- `NIL` (default) to simply continue and print the report.
+- `:debug`: デバッガに入る。
+- `:backtrace`: バックトレースを表示して続行する。
+- `NIL`（既定値）: そのまま続行し、レポートを表示する。
 
-There is also `*on-error*`.
+`*on-error*` もあります。
 
-#### Running tests as they are compiled
+#### コンパイル時にテストを実行する
 
-Under normal circumstances, a test is written and compiled (with the
-usual `C-c C-c` in Slime) separately from the moment it is run. If you
-want to run the test when it is defined (with `C-c C-c`), set this:
+通常、テストは書いてコンパイルし（Slime ならおなじみの `C-c C-c`）、実行はその後で別に行います。定義した瞬間に（`C-c C-c` で）テストを実行したいなら、次のように設定します。
 
 ~~~lisp
 (setf fiveam:*run-test-when-defined* t)
 ~~~
 
 
-### Custom and shorter tests explanations
+### テスト説明をカスタマイズする
 
-We said earlier that a check accepts an optional custom reason that can be formatted with `format` directives. Here's a simple example.
+先ほど、check は `format` ディレクティブで整形できる任意の理由を受け取れると説明しました。簡単な例を示します。
 
-We are testing a math function:
+ここでは数値関数をテストします。
 
 ~~~lisp
 (fiveam:test simple-maths
   (is (= 3 (+ 1 1))))
 ~~~
 
-When we `run!` it, we see this somewhat lengthy but informative output (and that's very important):
+これを `run!` すると、少し長いですが情報量のある出力が表示されます。これは重要です。
 
 ```
 Running test suite NIL
@@ -269,7 +260,7 @@ Running test suite NIL
  --------------------------------
 ```
 
-Now, we can give it a custom reason:
+では、独自の理由を付けてみましょう。
 
 ~~~lisp
 (fiveam:test simple-maths
@@ -278,7 +269,7 @@ Now, we can give it a custom reason:
 ~~~
 
 
-And we will see:
+すると次のようになります。
 
 ~~~
 Running test suite NIL
@@ -295,32 +286,19 @@ Running test suite NIL
  --------------------------------
 ~~~
 
-### Fixtures
+### フィクスチャ
 
-FiveAM also provides a feature called **fixtures** for setting up
-testing context. The goal is to ensure that some functions are not
-called and always return the same result. Think functions hitting the
-network: you want to isolate the network call in a small function and
-write a fixture so that in your tests, this function always returns
-the same, known result. (But if you do so, you might also need an "end
-to end" test that tests with real data and all your code…)
+FiveAM には、テストコンテキストを整えるための **fixture** という機能もあります。目的は、ある関数を呼ばずに常に同じ結果を返すようにすることです。ネットワークにアクセスする関数を想像してください。ネットワーク呼び出しを小さな関数に切り出し、fixture を書いて、テスト中はその関数が常に同じ既知の結果を返すようにしたいわけです。（ただし、その場合でも、実データとすべてのコードを使った "end to end" テストが別途必要になるかもしれません。）
 
-However, FiveAM's fixture system is nothing more than a macro, it is
-not fully-featured compared to other libraries such as
-[Mockingbird](https://github.com/pfdietz/mockingbird), and even
-FiveAM's maintainer encourages to "just use a macro" instead.
+ただし、FiveAM の fixture システムはマクロ以上のものではなく、[Mockingbird](https://github.com/pfdietz/mockingbird) のような他のライブラリと比べて機能は豊富ではありません。FiveAM のメンテナも、代わりに「ただマクロを使えばよい」と勧めています。
 
-Mockingbird (and maybe other libraries), in addition to the basic
-feature descibed above, also allows to count the number of times a
-function was called, with what arguments, and so on.
+Mockingbird（おそらく他のライブラリも同様）では、基本機能に加えて、関数が何回呼ばれたか、どんな引数で呼ばれたか、といったことも数えられます。
 
-### Random checking
+### ランダムテスト
 
-The goal of random testing is to assist the developer in generating
-test cases, and thus, to find cases that the developer would not have
-thought about.
+ランダムテストの目的は、開発者がテストケースを生成するのを助け、思いつかなかったケースを見つけることです。
 
-We have a few data generators at our disposal, for example:
+使えるデータジェネレータはいくつかあります。たとえば次のものです。
 
 ~~~lisp
 (gen-float)
@@ -333,9 +311,9 @@ We have a few data generators at our disposal, for example:
 26
 ~~~
 
-or again, `gen-string`, `gen-list`, `gen-tree`, `gen-buffer`, `gen-character`.
+ほかにも `gen-string`、`gen-list`、`gen-tree`、`gen-buffer`、`gen-character` があります。
 
-And we have a function to run 100 checks, taking each turn a new value from the given generators: `for-all`:
+また、与えたジェネレータから毎回新しい値を取り出して 100 回の check を実行する `for-all` もあります。
 
 ~~~lisp
 (test randomtest
@@ -345,17 +323,16 @@ And we have a function to run 100 checks, taking each turn a new value from the 
     (is (<= a b))))
 ~~~
 
-When you `run! 'randomtest` this, I expect you will hit an error. You can't
-possibly always get `a` lower than `b`, can you?
+これを `run! 'randomtest` すると、おそらくエラーになるはずです。毎回 `a` が `b` 以下になるとは限りませんから。
 
-For more, see [FiveAM's documentation](https://common-lisp.net/project/fiveam/docs/Checks.html#Random_0020_0028QuickCheck-ish_0029_0020testing).
+詳細は [FiveAM のドキュメント](https://common-lisp.net/project/fiveam/docs/Checks.html#Random_0020_0028QuickCheck-ish_0029_0020testing) を参照してください。
 
-See also [cl-quickcheck](https://github.com/mcandre/cl-quickcheck) and [Check-it](https://github.com/DalekBaldwin/check-it), inspired by Haskell's [QuickCheck](https://en.wikipedia.org/wiki/QuickCheck) test framework.
+Haskell の [QuickCheck](https://en.wikipedia.org/wiki/QuickCheck) に触発された [cl-quickcheck](https://github.com/mcandre/cl-quickcheck) や [Check-it](https://github.com/DalekBaldwin/check-it) もあります。
 
 
-### ASDF integration
+### ASDF 統合
 
-So it would be nice to provide a one-line trigger to test our `my-system` system. Recall that we said it is better to provide a root suite? Here is the reason:
+`my-system` を 1 行でテストできると便利です。root suite を用意したほうがよいと言ったのを覚えていますか。理由はここにあります。
 
 ~~~lisp
 (asdf:defsystem my-system
@@ -369,21 +346,21 @@ So it would be nice to provide a one-line trigger to test our `my-system` system
                                  (find-symbol* :my-system :my-system/test))))
 ~~~
 
-The last line tells ASDF to load symbol `:my-system` from `my-system/test` package and call `fiveam:run!`. It fact, it is equivalent to `(run! 'my-system)` as mentioned above.
+最後の行は、ASDF に `my-system/test` パッケージからシンボル `:my-system` を読み込み、`fiveam:run!` を呼ぶよう指示しています。実際には、先ほど述べた `(run! 'my-system)` と同じです。
 
-### Running tests on the terminal
+### ターミナルでテストを実行する
 
-Until now, we ran our tests from our editor's REPL. How can we run them from a terminal window?
+ここまでは、エディタの REPL からテストを実行していました。では、ターミナルからはどう実行するのでしょうか。
 
-As always, the required steps are as follow:
+いつものように、必要な手順は次のとおりです。
 
-- start our Lisp
-- make sure Quicklisp is enabled (if we have external dependencies)
-- load our main system
-- load the test system
-- run the FiveAM tests.
+- Lisp を起動する
+- Quicklisp が有効になっていることを確認する（外部依存がある場合）
+- 本体システムを読み込む
+- テストシステムを読み込む
+- FiveAM のテストを実行する
 
-You could put them in a new `run-tests.lisp` file:
+これらを新しい `run-tests.lisp` ファイルにまとめられます。
 
 ~~~lisp
 (load "mysystem.lisp")
@@ -393,24 +370,17 @@ You could put them in a new `run-tests.lisp` file:
 (run!)  ;; <-- run all the tests and print the report.
 ~~~
 
-and you could invoke it like so, from a source file or from a Makefile:
+そして、ソースファイルや Makefile から次のように呼び出せます。
 
 ~~~lisp
 rlwrap sbcl --non-interactive --load mysystem.asd --eval '(ql:quickload :mysystem)' --load run-tests.lisp
-;; we assume Quicklisp is installed and loaded. This can be done in the Lisp startup file like .sbclrc.
+;; Quicklisp がインストール済みで読み込まれていると仮定しています。
+;; これは .sbclrc のような Lisp 起動ファイルで行えます。
 ~~~
 
-Before going that route however, have a look at the `CI-Utils` tool
-that we use in the Continuous Integration section below. It provides a
-`run-fiveam` command that can do all that for you.
+ただしその方法に進む前に、下の継続的インテグレーション節で使う `CI-Utils` ツールを見てください。これには、ここまでの作業をすべてやってくれる `run-fiveam` コマンドがあります。
 
-But let us highlight something you'll have to take care of if you ran
-your tests like this: the **exit code**. Indeed, `(run!)` prints a
-report, but it doesn't say to your Lisp wether the tests were
-successful or not, and wether to exit with an exit code of 0 (for
-success) or more (for errors). So, if your testst were run on a CI
-system, the CI status would be always green, even if tests failed. To
-remedy that, replace `run!` by:
+ただし、この方法でテストを回すなら、気をつけるべき点があります。それは **終了コード** です。`(run!)` はレポートを表示しますが、テストが成功したかどうかや、終了コードを 0 にするか（成功）、それ以外にするか（エラー）までは Lisp に伝えません。そのため、CI 上ではテストが失敗しても常に緑になってしまいます。これを避けるには、`run!` を次のように置き換えます。
 
 ~~~lisp
 (let ((result (run!)))
@@ -423,16 +393,16 @@ remedy that, replace `run!` by:
      (uiop:quit))))
 ~~~
 
-Check with `echo $?` on your shell that the exit code is correct.
+シェルで `echo $?` を確認して、終了コードが正しいか見てください。
 
 
-### Testing report customization
+### テストレポートをカスタマイズする
 
-It is possible to generate our own testing report. The macro `run!` is nothing more than a composition of `explain!` and `run`.
+自分でテストレポートを生成することもできます。`run!` マクロは、`explain!` と `run` を組み合わせただけのものです。
 
-Instead of generating a testing report like its cousin `run!`, the function `run` runs suite or test passed in and returns a list of `test-result` instance, usually instances of `test-failure` or `test-passed` sub-classes.
+`run!` のようにレポートを直接出す代わりに、`run` 関数は渡された suite や test を実行し、`test-result` のリストを返します。通常は `test-failure` や `test-passed` のサブクラスのインスタンスです。
 
-A class `text-explainer` is defined as a basic class for testing report generator. A generic function `explain` is defined to take a `text-plainer` instance and a `test-result` instance (returned by `run`) and generate testing report. The following 2 code snippets are equivalent:
+`text-explainer` クラスは、テストレポート生成用の基本クラスとして定義されています。汎用関数 `explain` は `text-plainer` インスタンスと `run` が返した `test-result` インスタンスを受け取り、テストレポートを生成します。次の 2 つのコードは同値です。
 
 ~~~lisp
 (run! 'read-file-as-string-non-existing-file)
@@ -441,9 +411,9 @@ A class `text-explainer` is defined as a basic class for testing report generato
          (run 'read-file-as-string-non-existing-file))
 ~~~
 
-By creating a new sub-class of `text-explainer` and a method `explain` for it, it is possible to define a new test reporting system.
+`text-explainer` の新しいサブクラスを作り、それに対する `explain` メソッドを定義すれば、新しいテスト報告システムを作れます。
 
-The following code just provides a proof-of-concept implementation. You may need to read the source code of `5am::detailed-text-explainer` to fully understand it.
+以下のコードは、概念実証としての実装にすぎません。完全に理解するには `5am::detailed-text-explainer` のソースを読む必要があるかもしれません。
 
 ~~~lisp
 (defclass my-explainer (5am::text-explainer)
@@ -464,14 +434,9 @@ The following code just provides a proof-of-concept implementation. You may need
 ~~~
 
 
-## Interactively fixing unit tests
+## 対話的にユニットテストを修正する
 
-Common Lisp is interactive by nature (or so are most implementations),
-and testing frameworks make use of it. It is possible to ask the
-framework to open the debugger on a failing test, so that we can
-inspect the stack trace and go to the erroneous line instantly, fix it
-and re-run the test from where it left off, by choosing the suggested
-*restart*.
+Common Lisp は本質的に対話的です（ほとんどの実装もそうです）。テストフレームワークはその特性を活かせます。失敗したテストでデバッガを開かせ、スタックトレースを確認して該当行へすぐ移動し、修正してから、提案された *restart* を選んで中断したところから再実行できます。
 
 With FiveAM, set `fiveam:*on-failure*` to `:debug`:
 
@@ -479,47 +444,41 @@ With FiveAM, set `fiveam:*on-failure*` to `:debug`:
 (setf fiveam:*on-failure* :debug)
 ~~~
 
-You will be dropped into the interactive debugger if an error occurs.
+エラーが起きると対話デバッガに入ります。
 
-Use `:backtrace` to print a backtrace, continue to run the following tests and print FiveAM's report.
+`:backtrace` を使うと、バックトレースを表示して残りのテストを続行し、FiveAM のレポートを出します。
 
-The default is `nil`: carry on the tests execution and print the report.
+既定値は `nil` で、テスト実行を続けてレポートを表示します。
 
 <!-- epub-exclude-start -->
 
-Below is a short screencast showing all this in action:
+以下は、その一連の流れを示す短いスクリーンキャストです。
 
 <iframe width="560" height="315" src="https://www.youtube.com/embed/KsHxgP3SRTs" frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
 
 <!-- epub-exclude-end -->
 
-Note that in the debugger:
+デバッガでは次の点に注意してください。
 
-- `<enter>` on a backtrace shows more of it
-- `v` on a backtrace goes to the corresponding line or function.
-- you can discover more options with the menu.
+- バックトレース上で `<enter>` を押すと、さらに表示されます
+- バックトレース上で `v` を押すと、対応する行や関数へ移動します
+- ほかの操作はメニューから確認できます
 
 
-## Code coverage
+## コードカバレッジ
 
-A code coverage tool produces a visual output that allows to see what
-parts of our code were tested or not:
+コードカバレッジツールは、どの部分のコードがテストされ、どの部分がされていないかを視覚的に示します。
 
 
 ![](assets/coverage.png "source: https://www.snellman.net/blog/archive/2007-05-03-code-coverage-tool-for-sbcl.html")
 
-Such capabilities are included into Lisp implementations. For example, SBCL has the
-[sb-cover](http://www.sbcl.org/manual/index.html#sb_002dcover) module
-and the feature is also built-in in [CCL](https://ccl.clozure.com/docs/ccl.html#code-coverage)
-or [LispWorks](http://www.lispworks.com/documentation/lw71/LW/html/lw-68.htm).
+こうした機能は Lisp 実装に組み込まれています。たとえば SBCL には [sb-cover](http://www.sbcl.org/manual/index.html#sb_002dcover) モジュールがあり、[CCL](https://ccl.clozure.com/docs/ccl.html#code-coverage) や [LispWorks](http://www.lispworks.com/documentation/lw71/LW/html/lw-68.htm) にも同様の機能があります。
 
-### Generating an html test coverage output
+### HTML のカバレッジ出力を生成する
 
-Let's do it with SBCL's [sb-cover](http://www.sbcl.org/manual/index.html#sb_002dcover).
+SBCL の [sb-cover](http://www.sbcl.org/manual/index.html#sb_002dcover) でやってみましょう。
 
-Coverage reports are only generated for code compiled using
-`compile-file` with the value of the `sb-cover:store-coverage-data`
-optimization quality set to 3.
+カバレッジレポートは、`compile-file` でコンパイルされたコードに対してのみ生成されます。その際、`sb-cover:store-coverage-data` の最適化品質を 3 に設定します。
 
 ~~~lisp
 ;;; Load SB-COVER
@@ -537,61 +496,53 @@ optimization quality set to 3.
 (fiveam:run! yoursystem-test)
 ~~~
 
-Produce a coverage report, set the output directory:
+カバレッジレポートを出力するには、出力先ディレクトリを指定します。
 
 ~~~lisp
 (sb-cover:report "coverage/")
 ~~~
 
-Finally, turn off instrumentation:
+最後に、計測をオフにします。
 
 ~~~lisp
 (declaim (optimize (sb-cover:store-coverage-data 0)))
 ~~~
 
-You can open your browser at
-`../yourproject/t/coverage/cover-index.html` to see the report like
-the capture above or like
-[this code coverage of cl-ppcre](https://www.snellman.net/sbcl/cover/cl-ppcre-report-3/cover-index.html).
+ブラウザで `../yourproject/t/coverage/cover-index.html` を開くと、上の画像のようなレポート、または [cl-ppcre のカバレッジ例](https://www.snellman.net/sbcl/cover/cl-ppcre-report-3/cover-index.html) のような表示を確認できます。
 
 
-## Continuous Integration
+## 継続的インテグレーション
 
-Continuous Integration is important to run automatic tests after a
-commit or before a pull request, to run code quality checks, to build
-and distribute your software… well, to automate everything about software.
+継続的インテグレーションは、コミット後や pull request の前に自動テストを走らせたり、コード品質チェックを行ったり、ソフトウェアをビルドして配布したりするために重要です。要するに、ソフトウェア周りの作業を自動化するためのものです。
 
-We want our programs to be portable across Lisp implementations, so
-we'll set up our CI pipeline to run our tests against several of them (it
-could be SBCL and CCL of course, but while we're at it ABCL, ECL and
-possibly more).
+プログラムを Lisp 実装間で移植可能にしたいので、CI パイプラインを組み、複数の実装でテストを走らせます。もちろん SBCL と CCL でもよいですし、せっかくなら ABCL、ECL、ほかの実装も含められます。
 
-We have a choice of Continuous Integration services: Travis CI, Circle, Gitlab CI, now also GitHub Actions, etc (many existed before GitHub Actions, if you wonder). We'll have a look at how to configure a CI pipeline for Common Lisp, and we'll focus a little more on Gitlab CI on the last part.
+利用できる継続的インテグレーションサービスには、Travis CI、Circle、GitLab CI、現在なら GitHub Actions などがあります（GitHub Actions より前から存在するものも多いです）。ここでは Common Lisp 用の CI パイプラインの組み方を見ていき、最後は少し GitLab CI に重点を置きます。
 
-We'll also quickly show how to publish coverage reports to the [Coveralls](https://coveralls.io/) service. [cl-coveralls](https://github.com/fukamachi/cl-coveralls) helps to post our coverage to the service.
+あわせて、カバレッジレポートを [Coveralls](https://coveralls.io/) に公開する方法も簡単に示します。[cl-coveralls](https://github.com/fukamachi/cl-coveralls) を使うと、カバレッジをこのサービスへ送れます。
 
-### GitHub Actions, Circle CI, Travis… with CI-Utils
+### CI-Utils を使う GitHub Actions、Circle CI、Travis など
 
-We'll use [CI-Utils](https://neil-lindquist.github.io/CI-Utils/), a set of utilities that comes with many examples. It also explains more precisely what is a CI system and compares a dozen of services.
+ここでは、たくさんの例を含むユーティリティ集 [CI-Utils](https://neil-lindquist.github.io/CI-Utils/) を使います。CI システムとは何かをより正確に説明し、十数種類のサービスも比較しています。
 
-It relies on [Roswell](https://github.com/roswell/roswell/) to install the Lisp implementations and to run the tests. They all are installed with a bash one-liner:
+Lisp 実装のインストールとテスト実行には [Roswell](https://github.com/roswell/roswell/) を使います。インストールは bash の 1 行で済みます。
 
     curl -L https://raw.githubusercontent.com/roswell/roswell/release/scripts/install-for-ci.sh | bash
 
-(note that on the Gitlab CI example, we use a ready-to-use Docker image that contains them all)
+(GitLab CI の例では、これらをすべて含んだすぐ使える Docker イメージを使います)
 
-It also ships with a test runner for FiveAM, which eases some rough parts (like returning the right error code to the terminal). We install ci-utils with Roswell, and we get the `run-fiveam` executable.
+FiveAM 用のテストランナーも付属しており、端末へ正しいエラーコードを返すといった面倒な部分を楽にしてくれます。Roswell で ci-utils をインストールすると、`run-fiveam` 実行ファイルが手に入ります。
 
-Then we can run our tests:
+すると、次のようにテストを実行できます。
 
     run-fiveam -e t -l foo/test :foo-tests  # foo is our project
 
-Following is the complete `.travis.yml` file.
+以下は完全な `.travis.yml` です。
 
-The first part should be self-explanatory:
+最初の部分は見れば分かるはずです。
 
 ```yml
-### Example configuration for Travis CI ###
+### Travis CI の設定例 ###
 language: generic
 
 addons:
@@ -604,14 +555,14 @@ addons:
       - libc6-i386 # needed for a couple implementations
       - default-jre # needed for abcl
 
-# Runs each lisp implementation on each of the listed OS
+# 各 OS で各 Lisp 実装を走らせる
 os:
   - linux
 #  - osx # OSX has a long setup on travis, so it's likely easier
 #          to just run select implementations on OSX.
 ```
 
-This is how we configure the implementations matrix, to run our tests on several Lisp implementations. We also send the test coverage made with SBCL to Coveralls.
+こうして実装マトリクスを設定し、複数の Lisp 実装でテストを実行します。SBCL で作ったテストカバレッジは Coveralls に送ります。
 
 ```yml
 env:
@@ -629,8 +580,8 @@ env:
     - LISP=ecl   # warn: in our experience,
     # compilations times can be long on ECL.
 
-# Additional OS/Lisp combinations can be added
-# to those generated above
+# 生成された組み合わせに、追加の OS/Lisp 組み合わせを
+# 加えることもできます
 jobs:
   include:
     - os: osx
@@ -639,12 +590,12 @@ jobs:
       env: LISP=ccl-bin
 ```
 
-Some jobs can be marked as allowed to fail:
+一部のジョブは失敗を許可することもできます。
 
 
 ```yml
-# Note that this should only be used if there is no interest
-# for the library to work on that system
+# これは、そのシステムでライブラリを動かすことに
+# 興味がない場合にだけ使うべきです
 #  allow_failures:
 #    - env: LISP=abcl
 #    - env: LISP=ecl
@@ -655,7 +606,7 @@ Some jobs can be marked as allowed to fail:
   fast_finish: true
 ```
 
-We finally install Roswell, the implementations, and we run our tests.
+最後に Roswell と各実装をインストールし、テストを実行します。
 
 ```yml
 cache:
@@ -677,10 +628,10 @@ script:
   #- rove foo.asd
 ```
 
-Below with Gitlab CI, we'll use a Docker image that already contains the Lisp binaries and every Debian package required to build Quicklisp libraries.
+以下の GitLab CI では、Lisp バイナリと Quicklisp ライブラリのビルドに必要な Debian パッケージをすべて含んだ Docker イメージを使います。
 
 
-### Gitlab CI
+### GitLab CI
 
 [Gitlab CI](https://docs.gitlab.com/ce/ci/README.html) is part of
 Gitlab and is available on [Gitlab.com](https://gitlab.com/), for
@@ -702,30 +653,19 @@ test:
     - make test
 ~~~
 
-Gitlab CI is based on Docker. With `image` we tell it to use the `latest` tag
-of the [clfoundation/sbcl](https://hub.docker.com/r/clfoundation/sbcl/)
-image. This includes the latest version of SBCL, many OS packages useful for CI
-purposes, and a script to install Quicklisp. Gitlab will load the image, clone
-our project and put us at the project root with administrative rights to run
-the rest of the commands.
+GitLab CI は Docker ベースです。`image` で [clfoundation/sbcl](https://hub.docker.com/r/clfoundation/sbcl/) イメージの `latest` タグを使うよう指定しています。これには SBCL の最新版、CI に便利な OS パッケージ群、Quicklisp をインストールするスクリプトが含まれています。GitLab はこのイメージを読み込み、プロジェクトをクローンし、残りのコマンドを実行できる管理権限付きの状態でプロジェクトルートに置いてくれます。
 
-`test` is a "job" we define, `script` is a
-recognized keywords that takes a list of commands to run.
+`test` は定義する "job" で、`script` は実行するコマンドの一覧を受け取る既知のキーワードです。
 
-Suppose we must install dependencies before running our tests: `before_script`
-will run before each job. Here we install Quicklisp (adding it to SBCL's init
-file), and clone a library where Quicklisp can find it.
+テストの前に依存関係を入れる必要がある場合、`before_script` は各 job の前に実行されます。ここでは Quicklisp をインストールし（SBCL の初期化ファイルへ追加し）、Quicklisp が見つけられる場所にライブラリをクローンしています。
 
-We can try locally ourselves. If we already installed [Docker](https://docs.docker.com/) and
-started its daemon (`sudo service docker start`), we can do:
+手元でも試せます。すでに [Docker](https://docs.docker.com/) をインストールしていて、デーモンを起動済み（`sudo service docker start`）なら、次のようにできます。
 
     docker run --rm -it -v /path/to/local/code:/usr/local/share/common-lisp/source clfoundation/sbcl:latest bash
 
-This will download the lisp image (±300MB compressed), mount some local code in
-the image where indicated, and drop us in bash. Now we can try a `make test`.
+これで Lisp イメージ（圧縮で約 300MB）がダウンロードされ、指定した場所にローカルのコードがマウントされ、bash が起動します。これで `make test` を試せます。
 
-Here is a more complete example that tests against several CL implementations
-in parallel:
+以下は、複数の CL 実装に対して並列にテストする、もう少し完全な例です。
 
 ~~~yml
 variables:
@@ -781,30 +721,21 @@ build:
       - some-file-name
 ~~~
 
-Here we defined two `stages` (see
-[environments](https://docs.gitlab.com/ee/ci/environments/)),
-"test" and "build", defined to run one after another. A "build" stage
-will start only if the "test" one succeeds.
+ここでは 2 つの `stages`（[environments](https://docs.gitlab.com/ee/ci/environments/) を参照）"test" と "build" を定義し、順番に実行するようにしています。"build" ステージは "test" が成功したときだけ始まります。
 
-"build" is asked to run `only` when a
-new tag is pushed, not at every commit. When it succeeds, it will make
-the files listed in `artifacts`'s `paths` available for download. We can
-download them from Gitlab's Pipelines UI, or with an url. This one will download
-the file "some-file-name" from the latest "build" job:
+"build" は、毎回のコミットではなく、新しいタグが push されたときにだけ `only` で実行されます。成功すると、`artifacts` の `paths` に列挙したファイルをダウンロード可能にします。これらは GitLab の Pipelines UI から、または URL からダウンロードできます。次の URL は、最新の "build" job から "some-file-name" をダウンロードします。
 
     https://gitlab.com/username/project-name/-/jobs/artifacts/master/raw/some-file-name?job=build
 
-When the pipelines pass, you will see:
+パイプラインが通ると、次のように表示されます。
 
 ![](assets/img-ci-build.png)
 
-You now have a ready to use Gitlab CI.
+これで、すぐ使える GitLab CI の設定ができました。
 
 ### SourceHut
 
-It's very easy to set up [SourceHut](https://sr.ht/)'s CI system for Common
-Lisp. Here is a minimal `.build.yml` file that you can test via the [build
-manifest tester](https://builds.sr.ht/):
+[SourceHut](https://sr.ht/) の Common Lisp 向け CI を設定するのはとても簡単です。以下は最小構成の `.build.yml` で、[build manifest tester](https://builds.sr.ht/) で試せます。
 
 ```yaml
 image: archlinux
@@ -826,9 +757,7 @@ tasks:
     sbcl --non-interactive --load ~/quicklisp/setup.lisp --load run-tests.lisp
 ```
 
-Since the Docker image we're given is nearly empty, we need to install `sbcl`
-and `quicklisp` manually. Notice also that we're running a `run-tests.lisp` file
-to drive the tests. Here's what it could look like:
+与えられる Docker イメージはほぼ空なので、`sbcl` と `quicklisp` を手動でインストールする必要があります。さらに、テスト駆動用に `run-tests.lisp` ファイルを実行している点にも注意してください。例は次のようになります。
 
 ```lisp
 (ql:quickload :transducers/tests)
@@ -839,23 +768,20 @@ to drive the tests. Here's what it could look like:
         (t (uiop:quit 1))))
 ```
 
-Here, examples of the [Parachute](https://shinmera.github.io/parachute/) testing
-library are shown. As shown elsewhere, in order for the CI job to fail when any
-test fails, we manually check the test result status and return `1` when there's
-a problem.
+ここでは [Parachute](https://shinmera.github.io/parachute/) テストライブラリの例を示しています。ほかの箇所でも述べたように、どれか 1 つでもテストが失敗したら CI ジョブ全体を失敗にするには、テスト結果の状態を手動で確認し、問題があれば `1` を返します。
 
-## Emacs integration: running tests using Slite
+## Emacs 統合: Slite を使ってテストを走らせる
 
-[Slite](https://github.com/tdrhq/slite) stands for SLIme TEst runner. It allows you to see the summary of test failures, jump to test definitions, rerun tests with the debugger… all from inside Emacs. We get a dashboard-like buffer with green and red badges, from where we can act on tests. It makes the testing process *even more* integrated and interactive.
+[Slite](https://github.com/tdrhq/slite) は SLIme TEst runner の略です。テスト失敗の要約を見たり、テスト定義へ飛んだり、デバッガ付きでテストを再実行したりできます。しかも、これらを Emacs の中だけで行えます。緑と赤のバッジが並ぶダッシュボード風バッファが表示され、そこからテストに対処できます。テストの流れがさらに一体化し、対話的になります。
 
-It consists of an ASDF system and an Emacs package. It is a new project (it appeared mid 2021) so, as of September 2021, neither can be installed via Quicklisp or MELPA yet. Please refer to its [repository](https://github.com/tdrhq/slite) for instructions.
+これは ASDF システムと Emacs パッケージで構成されています。新しいプロジェクト（2021 年半ばに登場）なので、2021 年 9 月時点では Quicklisp や MELPA からはまだインストールできません。導入方法は [リポジトリ](https://github.com/tdrhq/slite) を参照してください。
 
-## References
+## 参考文献
 
 - [Tutorial: Working with FiveAM](http://turtleware.eu/posts/Tutorial-Working-with-FiveAM.html), by Tomek "uint" Kurcz
 - [Comparison of Common Lisp Testing Frameworks](https://sabracrolleton.github.io/testing-framework), by Sabra Crolleton.
 - the [CL Foundation Docker images](https://hub.docker.com/u/clfoundation)
 
-## See also
+## 関連項目
 
 - [cl-cookieproject](https://github.com/vindarel/cl-cookieproject), a project skeleton with a FiveAM tests structure.

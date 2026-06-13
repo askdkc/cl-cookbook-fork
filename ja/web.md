@@ -1,38 +1,17 @@
 ---
-title: Web development
+title: Web 開発
 ---
 
 
-For web development as for any other task, one can leverage Common Lisp's
-advantages: the unmatched REPL that even helps to interact with a running web
-app, the exception handling system, performance, the ability to build a
-self-contained executable, stability, good threads story, strong typing, etc. We
-can, say, define a new route and try it right away, there is no need to restart
-any running server. We can change and compile *one function at a time* (the
-usual `C-c C-c` in Slime) and try it. The feedback is immediate. We can choose
-the degree of interactivity: the web server can refuse to handle exceptions
-and fire the interactive debugger instead,
-or handle them and print lisp backtraces on the browser, or display a 404
-error page and print logs on standard output. The ability to build
-self-contained executables eases deployment tremendously (compared to, for
-example, npm-based apps), in that we just copy the executable to a server and
-run it.
+Web 開発でも他の作業でも、Common Lisp の利点を活かせます。比類のない REPL は、動いている Web アプリと対話するのにも役立ちます。例外処理、性能、自己完結型実行ファイルを作れること、安定性、スレッドの扱い、強い型付けなどもあります。たとえば新しい route を定義してすぐ試せます。動いている server を再起動する必要はありません。*1 関数ずつ* 変更してコンパイルし（Slime ならおなじみの `C-c C-c`）、試せます。フィードバックは即座です。対話性の度合いも選べます。Web サーバーに例外処理を任せず対話デバッガを起動させることも、例外を処理して browser に Lisp の backtrace を出すことも、404 エラーページを表示し標準出力に log を出すこともできます。自己完結型実行ファイルを作れるので、たとえば npm ベースのアプリに比べて deployment は非常に楽です。実行ファイルを server にコピーして実行するだけだからです。
 
-And when we have deployed our app, we can still interact with it,
-allowing for hot reload, that even works when new dependencies have to
-be installed. If you are careful and don't want to use full live
-reload, you might still enjoy this capability to reload, for example, a user's
-configuration file.
+アプリを deployment したあとでも、引き続き対話できます。依存関係のインストールが必要なときでも hot reload が使えます。完全な live reload は使いたくない慎重な場面でも、たとえば利用者の configuration file を reload する、といった用途にはこの能力が役立ちます。
 
-We'll present here some established web frameworks and other common
-libraries to help you getting started in developing a web
-application. We do *not* aim to be exhaustive nor to replace the
-upstream documentation. Your feedback and contributions are
-appreciated.
+ここでは、Web アプリ開発を始める助けとして、実績のある Web framework と一般的なライブラリを紹介します。網羅を目指してはいませんし、上流のドキュメントの代わりにもなりません。フィードバックや貢献は歓迎します。
 
 <div class="info" style="background-color: #e7f3fe; border-left: 6px solid #2196F3; padding: 17px;">
 <!-- if inside a <p> then bootstrap adds 10px padding to the bottom -->
-<strong>INFO:</strong> a new website now specializes on web development in Common Lisp: <a href="https://web-apps-in-lisp.github.io/">Web Apps in Lisp, Know-how</a> (<a href="https://github.com/web-apps-in-lisp/web-apps-in-lisp.github.io/">sources</a>).
+<strong>INFO:</strong> Common Lisp の Web 開発に特化した新しいサイトがあります: <a href="https://web-apps-in-lisp.github.io/">Web Apps in Lisp, Know-how</a> (<a href="https://github.com/web-apps-in-lisp/web-apps-in-lisp.github.io/">sources</a>).
 </div>
 
 
@@ -40,107 +19,59 @@ appreciated.
 
 <!-- Javascript -->
 
-## Overview
+## 概要
 
-[Hunchentoot][hunchentoot] and [Clack][clack] are two projects that
-you'll often hear about.
+[Hunchentoot][hunchentoot] と [Clack][clack] は、よく耳にする 2 つのプロジェクトです。
 
-Hunchentoot is
+Hunchentoot は次のようなものです。
 
-> a web server and at the same time a toolkit for building dynamic websites. As a stand-alone web server, Hunchentoot is capable of HTTP/1.1 chunking (both directions), persistent connections (keep-alive), and SSL. It provides facilities like automatic session handling (with and without cookies), logging, customizable error handling, and easy access to GET and POST parameters sent by the client.
+> 動的な website を構築するための toolkit であり、同時に web server でもあります。単体の web server として、Hunchentoot は HTTP/1.1 の chunking（両方向）、persistent connection（keep-alive）、SSL に対応しています。自動 session 管理（cookie あり／なし）、logging、カスタマイズ可能な error handling、client が送る GET/POST parameter への簡単なアクセスなども提供します。
 
-It is a software written by Edi Weitz ("Common Lisp Recipes",
-`cl-ppcre` and [much more](https://edicl.github.io/)), it's used and
-proven solid. One can achieve a lot with it, but sometimes with more
-friction than with a traditional web framework. For example,
-dispatching a route by the HTTP method is a bit convoluted, one must
-write a function for the `:uri` parameter that does the check, when it
-is a built-in keyword in other frameworks like Caveman.
+これは Edi Weitz によるソフトウェアです（"Common Lisp Recipes"、`cl-ppcre`、そして [そのほか多数](https://edicl.github.io/)）。実績があり、堅牢です。これだけで多くのことができますが、従来型の Web framework より摩擦が大きいこともあります。たとえば HTTP method で route を振り分けるのは少し面倒で、Caveman のような他の framework では組み込みの keyword で済むところを、`:uri` 引数のための関数を書いて判定しなければなりません。
 
-Clack is
+Clack は次のようなものです。
 
-> a web application environment for Common Lisp inspired by Python's WSGI and Ruby's Rack.
+> Python の WSGI と Ruby の Rack に触発された、Common Lisp 向けの web application environment です。
 
-Also written by a prolific lisper
-([E. Fukamachi](https://github.com/fukamachi/)), it actually uses
-Hunchentoot by default as the server, but thanks to its pluggable
-architecture one can use another web server, like the asynchronous
-[Woo](https://github.com/fukamachi/woo), built on the
-[libev](http://software.schmorp.de/pkg/libev.html) event loop, maybe
-"the fastest web server written in any programming language".
+こちらも多作な lisper である [E. Fukamachi](https://github.com/fukamachi/) によるものです。実際には既定の server として Hunchentoot を使いますが、差し替え可能な architecture により、非同期の [Woo](https://github.com/fukamachi/woo) のような別の web server も使えます。Woo は [libev](http://software.schmorp.de/pkg/libev.html) の event loop 上に構築されており、おそらく "あらゆる programming language の中で最速の web server" でしょう。
 
-We'll cite also [Wookie](https://github.com/orthecreedence/wookie), an asynchronous HTTP server, and its
-companion library
-[cl-async](https://github.com/orthecreedence/cl-async), for general
-purpose, non-blocking programming in Common Lisp, built on libuv, the
-backend library in Node.js.
+さらに、非同期 HTTP server の [Wookie](https://github.com/orthecreedence/wookie) と、その companion library である [cl-async](https://github.com/orthecreedence/cl-async) もあります。cl-async は、Node.js の backend library である libuv 上で動く、Common Lisp の汎用 non-blocking programming 向けライブラリです。
 
-Clack being more recent and less documented, and Hunchentoot a
-de-facto standard, we'll concentrate on the latter for this
-recipe. Your contributions are of course welcome.
+Clack は比較的新しくドキュメントも少なめで、Hunchentoot は事実上の標準です。そのため、このレシピでは後者に絞ります。もちろん貢献は歓迎です。
 
-Web frameworks build upon web servers and can provide facilities for
-common activities in web development, like a templating system, access
-to a database, session management, or facilities to build a REST api.
+Web framework は web server の上に成り立ち、templating system、database へのアクセス、session management、REST api を組み立てる仕組みなど、Web 開発でよく使う機能を提供できます。
 
-Some web frameworks include:
+いくつかの web framework を挙げます。
 
-- [Caveman][caveman], by E. Fukamachi. It provides, out of the box,
-database management, a templating engine (Djula), a project skeleton
-generator, a routing system à la Flask or Sinatra, deployment options
-(mod_lisp or FastCGI), support for Roswell on the command line, etc.
-- [Radiance][radiance], by [Shinmera](https://github.com/Shinmera)
-  (Qtools, Portacle, lquery, …), is a web application environment,
-  more general than usual web frameworks. It lets us write and tie
-  websites and applications together, easing their deployment as a
-  whole. It has thorough [documentation](https://shirakumo.github.io/radiance/), a [tutorial](https://github.com/Shirakumo/radiance-tutorial), [modules](https://github.com/Shirakumo/radiance-contribs), [pre-written applications](https://github.com/Shirakumo?utf8=%E2%9C%93&q=radiance&type=&language=) such as [an image board](https://github.com/Shirakumo/purplish) or a [blogging platform](https://github.com/Shirakumo/reader), and more.
-  For example websites, see
-  [https://shinmera.com/](https://shinmera.com/),
-  [reader.tymoon.eu](https://reader.tymoon.eu/) and [events.tymoon.eu](https://events.tymoon.eu/).
-- [Snooze][snooze], by João Távora (Sly, Emacs' Yasnippet, Eglot, …),
-  is "an URL router designed around REST web services". It is
-  different because in Snooze, routes are just functions and HTTP
-  conditions are just Lisp conditions.
-- [cl-rest-server][cl-rest-server] is a library for writing REST web
-  APIs. It features validation with schemas, annotations for logging,
-  caching, permissions or authentication, documentation via OpenAPI (Swagger),
-  etc.
-- last but not least, [Weblocks][weblocks] is a venerable Common Lisp
-  web framework that permits to write ajax-based dynamic web
-  applications without writing any JavaScript, nor writing some lisp
-  that would transpile to JavaScript. It is seeing an extensive
-  rewrite and update since 2017. We present it in more details below.
+- [Caveman][caveman] は E. Fukamachi によるものです。最初から、database 管理、templating engine（Djula）、project skeleton generator、Flask や Sinatra 風の routing system、deployment オプション（mod_lisp または FastCGI）、command line からの Roswell サポートなどを備えています。
+- [Radiance][radiance] は [Shinmera](https://github.com/Shinmera)（Qtools、Portacle、lquery など）による web application environment で、通常の web framework より一般的です。website と application をまとめて書けるので、全体としての deployment が楽になります。充実した [ドキュメント](https://shirakumo.github.io/radiance/)、[tutorial](https://github.com/Shirakumo/radiance-tutorial)、[modules](https://github.com/Shirakumo/radiance-contribs)、[画像掲示板](https://github.com/Shirakumo/purplish) や [blog platform](https://github.com/Shirakumo/reader) のような [事前作成済み application](https://github.com/Shirakumo?utf8=%E2%9C%93&q=radiance&type=&language=) などがあります。例として [https://shinmera.com/](https://shinmera.com/)、[reader.tymoon.eu](https://reader.tymoon.eu/)、[events.tymoon.eu](https://events.tymoon.eu/) を見てください。
+- [Snooze][snooze] は João Távora（Sly、Emacs の Yasnippet、Eglot など）によるもので、"REST web services を中心に設計された URL router" です。Snooze では route は単なる関数で、HTTP condition も単なる Lisp condition です。
+- [cl-rest-server][cl-rest-server] は REST web API を書くための library です。schema による validation、logging 用の annotation、caching、permissions や authentication、OpenAPI（Swagger）による documentation などを備えています。
+- 最後に [Weblocks][weblocks] です。これは古くからある Common Lisp の web framework で、JavaScript を書かずに、また JavaScript に transpile する Lisp を書かずに、ajax ベースの動的 web application を書けます。2017 年以降、大規模な rewrite と update が進んでいます。詳しくは後で見ます。
 
-For a full list of libraries for the web, please see the [awesome-cl
-list
-#network-and-internet](https://github.com/CodyReichert/awesome-cl#network-and-internet)
-and [Cliki](https://www.cliki.net/Web). If you are looking for a
-featureful static site generator, see
-[Coleslaw](https://github.com/coleslaw-org/coleslaw).
+Web 向けライブラリの完全な一覧は、[awesome-cl の #network-and-internet](https://github.com/CodyReichert/awesome-cl#network-and-internet) と [Cliki](https://www.cliki.net/Web) を参照してください。多機能な静的サイト generator を探しているなら [Coleslaw](https://github.com/coleslaw-org/coleslaw) を見てください。
 
 
-## Installation
+## インストール
 
-Let's install the libraries we'll use:
+使うライブラリをインストールします。
 
 ~~~lisp
 (ql:quickload '("hunchentoot" "caveman2" "spinneret"
                 "djula" "easy-routes"))
 ~~~
 
-To try Weblocks, please see its documentation. The Weblocks in
-Quicklisp is not yet, as of writing, the one we are interested in.
+Weblocks を試すには、そのドキュメントを参照してください。執筆時点の Quicklisp の Weblocks は、ここで扱いたいものではまだありません。
 
-We'll start by serving local files and we'll run more than one local
-server in the running image.
+まずはローカルファイルを配信し、実行中のイメージで複数の local server を動かします。
 
-## Simple webserver
+## シンプルな webserver
 
-### Serve local files
+### ローカルファイルを配信する
 
 #### Hunchentoot
 
-Create and start a webserver like this:
+次のように webserver を作成して起動します。
 
 ~~~lisp
 (defvar *acceptor* (make-instance 'hunchentoot:easy-acceptor
@@ -148,30 +79,22 @@ Create and start a webserver like this:
 (hunchentoot:start *acceptor*)
 ~~~
 
-We create an instance of `easy-acceptor` on port 4242 and we start
-it. We can now access [http://127.0.0.1:4242/](http://127.0.0.1:4242/). You should get a welcome
-screen with a link to the documentation and logs to the console.
+port 4242 に `easy-acceptor` のインスタンスを作って起動しています。これで [http://127.0.0.1:4242/](http://127.0.0.1:4242/) にアクセスできます。ドキュメントへのリンク付きの welcome 画面が出て、console に log が出るはずです。
 
-By default, Hunchentoot serves the files from the `www/` directory in
-its source tree. Thus, if you go to the source of
-`easy-acceptor` (`M-.` in Slime), which is probably
-`~/quicklisp/dists/quicklisp/software/hunchentoot-v1.2.38/`, you'll
-find the `www/` directory. It contains:
+既定では、Hunchentoot はソースツリーの `www/` ディレクトリからファイルを配信します。したがって、`easy-acceptor` のソース（Slime なら `M-.`）へ行くと、おそらく `~/quicklisp/dists/quicklisp/software/hunchentoot-v1.2.38/` にあり、そこに `www/` ディレクトリが見つかります。内容は次のとおりです。
 
-- an `errors/` directory, with the error templates `404.html` and `500.html`,
-- an `img/` directory,
-- an `index.html` file.
+- `errors/` ディレクトリ。エラーテンプレート `404.html` と `500.html` が入っています
+- `img/` ディレクトリ
+- `index.html` ファイル
 
-To serve another directory, we give the option `:document-root` to
-`easy-acceptor`. We can also set the slot with its accessor:
+別のディレクトリを配信したいなら、`easy-acceptor` に `:document-root` オプションを渡します。accessor で slot を設定することもできます。
 
 ~~~lisp
 (setf (hunchentoot:acceptor-document-root *acceptor*)
       #p"path/to/www")
 ~~~
 
-Let's create our `index.html` first. Put this in a new
-`www/index.html` at the current directory (of the lisp repl):
+まず `index.html` を作りましょう。現在のディレクトリ（Lisp REPL の場所）に新しい `www/index.html` を作って、次を入れます。
 
 ~~~html
 <html>
@@ -187,7 +110,7 @@ Let's create our `index.html` first. Put this in a new
 </html>
 ~~~
 
-Let's start a new acceptor on a new port:
+別の port で新しい acceptor を起動してみましょう。
 
 ~~~lisp
 (defvar *my-acceptor* (make-instance 'hunchentoot:easy-acceptor
@@ -196,35 +119,32 @@ Let's start a new acceptor on a new port:
 (hunchentoot:start *my-acceptor*)
 ~~~
 
-go to [http://127.0.0.1:4444/](http://127.0.0.1:4444/) and see the difference.
+[http://127.0.0.1:4444/](http://127.0.0.1:4444/) に行って違いを見てください。
 
-Note that we just created another *acceptor* on a different port on
-the same lisp image. This is already pretty cool.
+同じ Lisp image の中に、別 port の別 acceptor を作ったことに注意してください。これはもう十分に便利です。
 
 
-## Access your server from the internet
+## インターネットから server にアクセスする
 
 ### Hunchentoot
 
-With Hunchentoot we have nothing to do, we can see the server from the
-internet right away.
+Hunchentoot なら特別なことは不要で、すぐにインターネットから server を見られます。
 
-If you evaluate this on your VPS:
+VPS 上で次を評価すると、
 
     (hunchentoot:start (make-instance 'hunchentoot:easy-acceptor :port 4242))
 
-You can see it right away on your server's IP.
+server の IP ですぐに見えます。
 
-Stop it with `(hunchentoot:stop *)`.
+止めるには `(hunchentoot:stop *)` を使います。
 
-## Routing
+## ルーティング
 
-### Simple routes
+### シンプルな route
 
 #### Hunchentoot
 
-To bind an existing function to a route, we create a "prefix dispatch"
-that we push onto the `*dispatch-table*` list:
+既存の関数を route に結び付けるには、"prefix dispatch" を作って `*dispatch-table*` リストに push します。
 
 ~~~lisp
 (defun hello ()
@@ -235,17 +155,16 @@ that we push onto the `*dispatch-table*` list:
   hunchentoot:*dispatch-table*)
 ~~~
 
-To create a route with a regexp, we use `create-regex-dispatcher`, where
-the url-as-regexp can be a string, an s-expression or a cl-ppcre scanner.
+regexp を使った route を作るには `create-regex-dispatcher` を使います。url-as-regexp には文字列、S 式、または cl-ppcre scanner を渡せます。
 
-If you didn't yet, create an acceptor and start the server:
+まだなら acceptor を作って server を起動してください。
 
 ~~~lisp
 (defvar *server* (make-instance 'hunchentoot:easy-acceptor :port 4242))
 (hunchentoot:start *server*)
 ~~~
 
-and access it on [http://localhost:4242/hello.html](http://localhost:4242/hello.html).
+[http://localhost:4242/hello.html](http://localhost:4242/hello.html) にアクセスします。
 
 We can see logs on the REPL:
 
@@ -297,51 +216,39 @@ There are also keys to know for the lambda list. Please see the documentation.
 
 #### Easy-routes (Hunchentoot)
 
-[easy-routes](https://github.com/mmontone/easy-routes) is a route
-handling extension on top of Hunchentoot. It provides:
+[easy-routes](https://github.com/mmontone/easy-routes) は Hunchentoot の上に乗る route 処理拡張です。提供するものは次のとおりです。
 
-- **dispatch** based on the HTTP method, such as GET or POST (which is otherwise cumbersome to do in Hunchentoot)
-- **arguments extraction** from the url path
-- **decorators** (functions to run before the route body, typically used to add a layer of authentication or changing the returned content type)
-- **URL generation** from route names and given URL parameters
-- visualization of routes
-- and more
+- GET や POST のような HTTP method に基づく **dispatch**（Hunchentoot ではこれが面倒です）
+- url path からの **arguments extraction**
+- **decorators**（route 本体の前に実行する関数。通常は認証層の追加や、返す content type の変更に使います）
+- route 名と与えた URL parameter からの **URL 生成**
+- route の可視化
+- その他いろいろ
 
-To use it, don't create a server with `hunchentoot:easy-acceptor` but
-with `easy-routes:easy-routes-acceptor`:
+使うときは、server を `hunchentoot:easy-acceptor` ではなく `easy-routes:easy-routes-acceptor` で作ります。
 
 ~~~lisp
 (setf *server* (make-instance 'easy-routes:easy-routes-acceptor))
 ~~~
 
-Note: there is also `routes-acceptor`. The difference is that
-`easy-routes-acceptor` iterates over Hunchentoot's `*dispatch-table*`
-if no route is found by `easy-routes`. That allows us, for example, to
-serve static content the usual way with Hunchentoot.
+補足: `routes-acceptor` もあります。違いは、`easy-routes-acceptor` は easy-routes で route が見つからなかった場合に Hunchentoot の `*dispatch-table*` を順に見ていくことです。これにより、たとえば静的 content を Hunchentoot の通常方式で配信できます。
 
-Then define a route like this:
+route は次のように定義します。
 
 ~~~lisp
 (easy-routes:defroute my-route-name ("/foo/:x" :method :get) (y &get z)
     (format nil "x: ~a y: ~a z: ~a" x y z))
 ~~~
 
-the route signature is made up of two parts:
+route の signature は 2 つの部分から成ります。
 
     ("/foo/:x" :method :get) (y &get z)
 
-Here, `:x` captures the path parameter and binds it to the `x`
-variable into the route body. `y` and `&get z` define URL parameters,
-and we can have `&post` parameters to extract from the HTTP request
-body.
+ここで `:x` は path parameter を捕捉し、route 本体の `x` 変数に束縛します。`y` と `&get z` は URL parameter を定義し、HTTP request body から取り出す `&post` parameter も使えます。
 
-These parameters can take an `:init-form` and `:parameter-type`
-options as in `define-easy-handler`.
+これらの parameter には、`define-easy-handler` と同じく `:init-form` と `:parameter-type` オプションを指定できます。
 
-Now, imagine that we are deeper in our web application logic, and we
-want to redirect our user to the route "/foo/3". Instead of hardcoding
-the URL, we can **generate the URL from its name**. Use
-`easy-routes:genurl` like this:
+では、Web アプリのロジックのもっと奥で、利用者を "/foo/3" へ redirect したいとしましょう。URL を直書きする代わりに、**route 名から URL を生成** できます。`easy-routes:genurl` を次のように使います。
 
 ~~~lisp
 (easy-routes:genurl 'my-route-name :id 3)
@@ -351,9 +258,7 @@ the URL, we can **generate the URL from its name**. Use
 ;; => /foo/3?y=yay
 ~~~
 
-**Decorators** are functions that are executed before the route body. They
-should call the `next` parameter function to continue executing the
-decoration chain and the route body finally. Examples:
+**decorators** は route 本体の前に実行される関数です。装飾チェーンと route 本体の実行を続けるために、`next` 引数の関数を呼ぶ必要があります。例を示します。
 
 ~~~lisp
 (defun @auth (next)
@@ -374,13 +279,11 @@ decoration chain and the route body finally. Examples:
     (funcall next)))
 ~~~
 
-See `easy-routes`' readme for more.
+詳しくは `easy-routes` の README を参照してください。
 
 #### Caveman
 
-[Caveman](caveman) provides two ways to
-define a route: the `defroute` macro and the `@route` pythonic
-*annotation*:
+[Caveman](caveman) には route を定義する 2 つの方法があります。`defroute` マクロと、Python 風の *annotation* である `@route` です。
 
 ~~~lisp
 (defroute "/welcome" (&key (|name| "Guest"))
@@ -391,15 +294,14 @@ define a route: the `defroute` macro and the `@route` pythonic
   (format nil "Welcome, ~A" |name|))
 ~~~
 
-A route with an url parameter (note `:name` in the url):
+URL parameter を持つ route です（url 内の `:name` に注意）。
 
 ~~~lisp
 (defroute "/hello/:name" (&key name)
   (format nil "Hello, ~A" name))
 ~~~
 
-It is also possible to define "wildcards" parameters. It works with
-the `splat` key:
+"wildcard" parameter を定義することもできます。`splat` キーを使います。
 
 ~~~lisp
 (defroute "/say/*/to/*" (&key splat)
@@ -408,7 +310,7 @@ the `splat` key:
 ;=> (hello world)
 ~~~
 
-We must enable regexps with `:regexp t`:
+regexp を有効にするには `:regexp t` を付けます。
 
 ~~~lisp
 (defroute ("/hello/([\\w]+)" :regexp t) (&key captures)
@@ -416,25 +318,24 @@ We must enable regexps with `:regexp t`:
 ~~~
 
 
-### Accessing GET and POST parameters
+### GET と POST parameter にアクセスする
 
 #### Hunchentoot
 
-First of all, note that we can access query parameters anytime with
+まず、query parameter はいつでも次のようにアクセスできます。
 
 ~~~lisp
 (hunchentoot:parameter "my-param")
 ~~~
 
-It acts on the default `*request*` object which is passed to all handlers.
+これは、すべての handler に渡される既定の `*request*` object に対して動作します。
 
-There is also `get-parameter` and `post-parameter`.
+`get-parameter` と `post-parameter` もあります。
 
 
-Earlier we saw some key parameters to `define-easy-handler`. We now
-introduce `default-parameter-type`.
+先ほど `define-easy-handler` のいくつかの keyword parameter を見ました。ここでは `default-parameter-type` を導入します。
 
-We defined the following handler:
+次の handler を定義しました。
 
 ~~~lisp
 (hunchentoot:define-easy-handler (say-yo :uri "/yo") (name)
@@ -442,7 +343,7 @@ We defined the following handler:
   (format nil "Hey~@[ ~A~]!" name))
 ~~~
 
-The variable `name` is a string by default. Let's check it out:
+`name` 変数は既定で string です。確認してみましょう。
 
 ~~~lisp
 (hunchentoot:define-easy-handler (say-yo :uri "/yo") (name)
@@ -450,35 +351,32 @@ The variable `name` is a string by default. Let's check it out:
   (format nil "Hey~@[ ~A~] you are of type ~a" name (type-of name)))
 ~~~
 
-Going to [http://localhost:4242/yo?name=Alice](http://localhost:4242/yo?name=Alice) returns
+[http://localhost:4242/yo?name=Alice](http://localhost:4242/yo?name=Alice) に行くと、次が返ります。
 
     Hey Alice you are of type (SIMPLE-ARRAY CHARACTER (5))
 
-To automatically bind it to another type, we use `default-parameter-type`. It can be
-one of those simple types:
+別の型へ自動的に束縛するには `default-parameter-type` を使います。次の単純型のどれかを指定できます。
 
 * `'string` (default),
 * `'integer`,
 * `'character` (accepting strings of length 1 only, otherwise it is nil)
 * or `'boolean`
 
-or a compound list:
+または複合リストです。
 
 - `'(:list <type>)`
 - `'(:array <type>)`
 - `'(:hash-table <type>)`
 
-where `<type>` is a simple type.
+ここで `<type>` は単純型です。
 
-### Accessing a JSON request body
+### JSON request body にアクセスする
 
 #### Hunchentoot
 
-To read a request body, use `hunchentoot:raw-post-data`, to which you
-can add `:force-text t` to always get a string (and not a vector of
-octets).
+request body を読むには `hunchentoot:raw-post-data` を使います。`:force-text t` を付けると、octet の vector ではなく常に string を得られます。
 
-Then you can parse this string to JSON with the library of your choice ([jzon](https://github.com/Zulu-Inuoe/jzon/), [shasht](https://github.com/yitzchak/shasht)…).
+それから、この string を好きな JSON ライブラリ（[jzon](https://github.com/Zulu-Inuoe/jzon/)、[shasht](https://github.com/yitzchak/shasht) など）で parse できます。
 
 ~~~lisp
 (easy-routes route-api-demo ("/api/:id/update" :method :post) ()
@@ -495,42 +393,33 @@ Then you can parse this string to JSON with the library of your choice ([jzon](h
 
 <!-- ## Cookies -->
 
-## Error handling
+## エラー処理
 
-In all frameworks, we can choose the level of interactivity. The web
-framework can return a 404 page and print output on the repl, it can
-invoke the interactive lisp debugger, or it can handle the error and show
-the lisp backtrace on the html page.
+どの framework でも、対話性の度合いは選べます。Web framework は 404 ページを返して REPL に output を出すこともできますし、対話 Lisp デバッガを起動することも、error を処理して HTML ページに Lisp の backtrace を表示することもできます。
 
 ### Hunchentoot
 
-The global variables to set to choose the error handling behaviour are:
+エラー処理の挙動を選ぶには、次のグローバル変数を設定します。
 
-- `*catch-errors-p*`: set to `nil` if you want unhandled errors to invoke
-  the interactive debugger (for development only, of course):
+- `*catch-errors-p*`: 未処理の error で対話デバッガを起動したいなら `nil` にします（もちろん開発時だけです）。
 
 ~~~lisp
 (setf hunchentoot:*catch-errors-p* nil)
 ~~~
 
-See also the generic function `maybe-invoke-debugger` if you want to
-fine-tune this behaviour. You might want to specialize it on specific
-condition classes (see below) for debugging purposes.
+この挙動を細かく調整したいなら、汎用関数 `maybe-invoke-debugger` も参照してください。debug のために、特定の condition class に対して specialize したくなるかもしれません（後述）。
 
-- `*show-lisp-errors-p*`: set to `t` if you want to see errors in HTML output in the browser.
-- `*show-lisp-backtraces-p*`: set to `nil` if the errors shown in HTML
-  output (when `*show-lisp-errors-p*` is `t`) should *not* contain
-  backtrace information (defaults to `t`, shows the backtrace).
+- `*show-lisp-errors-p*`: browser の HTML output に error を表示したいなら `t` にします。
+- `*show-lisp-backtraces-p*`: HTML output で表示する error（`*show-lisp-errors-p*` が `t` のとき）に backtrace 情報を *含めたくない* なら `nil` にします（既定値は `t`、backtrace を表示します）。
 
-Hunchentoot defines condition classes. The superclass of all
-conditions is `hunchentoot-condition`. The superclass of errors is `hunchentoot-error` (itself a subclass of `hunchentoot-condition`).
+Hunchentoot には condition class があります。すべての condition の superclass は `hunchentoot-condition` です。error の superclass は `hunchentoot-error` で、これは `hunchentoot-condition` の subclass です。
 
-See the documentation: [https://edicl.github.io/hunchentoot/#conditions](https://edicl.github.io/hunchentoot/#conditions).
+ドキュメントも参照してください: [https://edicl.github.io/hunchentoot/#conditions](https://edicl.github.io/hunchentoot/#conditions)
 
 
 ### Clack
 
-Clack users might make a good use of plugins, like the clack-errors middleware: [https://github.com/CodyReichert/awesome-cl#clack-plugins](https://github.com/CodyReichert/awesome-cl#clack-plugins).
+Clack を使うなら、clack-errors middleware のような plugin が役立つでしょう: [https://github.com/CodyReichert/awesome-cl#clack-plugins](https://github.com/CodyReichert/awesome-cl#clack-plugins)
 
 <img src="assets/clack-errors.png" width="800" alt="The clack-errors plugin shows the error message, a legible backtrace and environment variables."/>
 
@@ -538,31 +427,21 @@ Clack users might make a good use of plugins, like the clack-errors middleware: 
 ![](assets/clack-errors.png)
    pdf-include-end -->
 
-## Weblocks - solving the "JavaScript problem"©
+## Weblocks - "JavaScript 問題" を解く ©
 
-[Weblocks][weblocks] is a widgets-based and
-server-based framework with a built-in ajax update mechanism. It
-allows to write dynamic web applications *without the need to write
-JavaScript or to write lisp code that would transpile to JavaScript*.
+[Weblocks][weblocks] は、widget ベースで server ベースの framework で、組み込みの ajax 更新機構を持っています。JavaScript を書かずに、また JavaScript に transpile される Lisp コードを書かずに、動的 web application を書けます。
 
 ![](assets/weblocks-quickstart-check-task.gif)
 
-Weblocks is an old framework developed by Slava Akhmechet, Stephen
-Compall and Leslie Polzer. After nine calm years, it is seeing a very
-active update, refactoring and rewrite effort by Alexander Artemenko.
+Weblocks は、Slava Akhmechet、Stephen Compall、Leslie Polzer によって開発された古い framework です。しばらく落ち着いたあと、Alexander Artemenko による非常に活発な update、refactoring、rewrite が進んでいます。
 
-It was initially based on continuations (they were removed to date)
-and thus a lispy cousin of Smalltalk's
-[Seaside](https://en.wikipedia.org/wiki/Seaside_(software)). We can
-also relate it to Haskell's Haste, OCaml's Eliom,
-Elixir's Phoenix LiveView and others.
+もともとは continuation ベースでした（現在は除去されています）。そのため、Smalltalk の [Seaside](https://en.wikipedia.org/wiki/Seaside_(software)) の Lisp 版とも言えます。Haskell の Haste、OCaml の Eliom、Elixir の Phoenix LiveView などとも比較できます。
 
-The [Ultralisp](http://ultralisp.org/) website is an example Weblocks
-website in production known in the CL community.
+[Ultralisp](http://ultralisp.org/) の website は、CL コミュニティで知られる production の Weblocks サイトの例です。
 
 ---
 
-Weblock's unit of work is the *widget*. They look like a class definition:
+Weblocks の作業単位は *widget* です。見た目は class definition のようです。
 
 ~~~lisp
 (defwidget task ()
@@ -575,7 +454,7 @@ Weblock's unit of work is the *widget*. They look like a class definition:
      :accessor done)))
 ~~~
 
-Then all we have to do is to define the `render` method for this widget:
+あとは、この widget に対する `render` method を定義するだけです。
 
 ~~~lisp
 (defmethod render ((task task))
@@ -587,10 +466,9 @@ Then all we have to do is to define the `render` method for this widget:
                  (title task)))))
 ~~~
 
-It uses the Spinneret template engine by default, but we can bind any
-other one of our choice.
+既定では Spinneret template engine を使いますが、好きな別のものを bind することもできます。
 
-To trigger an ajax event, we write lambdas in full Common Lisp:
+ajax event を起こすには、完全な Common Lisp で lambda を書きます。
 
 ~~~lisp
 ...
@@ -619,21 +497,20 @@ Is it appealing ? Carry on this quickstart guide here: [http://40ants.com/webloc
 Django template engine to Common Lisp. It has [excellent documentation](https://mmontone.github.io/djula/djula/).
 
 Caveman uses it by default, but otherwise it is not difficult to
-setup. We must declare where our templates are with something like
+setup. まずテンプレートの置き場所を次のように宣言します。
 
 ~~~lisp
 (djula:add-template-directory (asdf:system-relative-pathname "webapp" "templates/"))
 ~~~
 
-and then we can declare and compile the ones we use, for example::
+そのうえで、使うテンプレートを宣言・コンパイルします。例を示します。
 
 ~~~lisp
 (defparameter +base.html+ (djula:compile-template* "base.html"))
 (defparameter +welcome.html+ (djula:compile-template* "welcome.html"))
 ~~~
 
-A Djula template looks like this (forgive the antislash in `{\%`, this
-is a Jekyll limitation):
+Djula のテンプレートは次のようになります。`{\%` のバックスラッシュは Jekyll の制約です。
 
 ```
 {\% extends "base.html" \%}
@@ -647,7 +524,7 @@ is a Jekyll limitation):
 {\% endblock \%}
 ```
 
-At last, to render the template, call `djula:render-template*` inside a route.
+最後に、テンプレートを描画するには route の中で `djula:render-template*` を呼びます。
 
 ~~~lisp
 (easy-routes:defroute root ("/" :method :get) ()
@@ -655,54 +532,44 @@ At last, to render the template, call `djula:render-template*` inside a route.
                           :users (get-users)
 ~~~
 
-Note that for efficiency Djula compiles the templates before rendering them.
+効率のため、Djula は描画前にテンプレートをコンパイルします。
 
-It is, along with its companion
-[access](https://github.com/AccelerationNet/access/) library, one of
-the most downloaded libraries of Quicklisp.
+[access](https://github.com/AccelerationNet/access/) ライブラリと並んで、Quicklisp で最もダウンロードされているライブラリの 1 つです。
 
-#### Djula filters
+#### Djula のフィルタ
 
-Filters allow to modify how a variable is displayed. Djula comes with
-a good set of built-in filters and they are [well documented](https://mmontone.github.io/djula/djula/Filters.html#Filters). They are not to be confused with [tags](https://mmontone.github.io/djula/djula/Tags.html#Tags).
+フィルタは、変数の表示方法を変えるためのものです。Djula にはよくできた組み込みフィルタがあり、[ドキュメントも充実しています](https://mmontone.github.io/djula/djula/Filters.html#Filters)。[tag](https://mmontone.github.io/djula/djula/Tags.html#Tags) と混同しないようにしてください。
 
-They look like this: `{{ name | lower }}`, where `lower` is an
-existing filter, which renders the text into lowercase.
+見た目は `{{ name | lower }}` のようになります。ここで `lower` は既存のフィルタで、テキストを小文字にします。
 
-Filters sometimes take arguments. For example: `{{ value | add:2 }}` calls
-the `add` filter with arguments `value` and 2.
+フィルタは引数を取ることもあります。たとえば `{{ value | add:2 }}` は `add` フィルタを `value` と 2 で呼びます。
 
-Moreover, it is very easy to define custom filters. All we have to do
-is to use the `def-filter` macro, which takes the variable as first
-argument, and which can take more optional arguments.
+さらに、独自フィルタを定義するのも簡単です。やることは `def-filter` マクロを使うだけです。第 1 引数に変数を取り、追加の optional 引数も取れます。
 
-Its general form is:
+一般形は次のとおりです。
 
 ~~~lisp
 (def-filter :myfilter-name (value arg) ;; arg is optional
    (body))
 ~~~
 
-and it is used like this: `{{ value | myfilter-name }}`.
+使い方は `{{ value | myfilter-name }}` です。
 
-Here's how the `add` filter is defined:
+`add` フィルタの定義例を示します。
 
 ~~~lisp
 (def-filter :add (it n)
   (+ it (parse-integer n)))
 ~~~
 
-Once you have written a custom filter, you can use it right away
-throughout the application.
+独自フィルタを書いたら、すぐにアプリ全体で使えます。
 
-Filters are very handy to move non-trivial formatting or logic from the
-templates to the backend.
+フィルタは、単純でない書式化やロジックをテンプレートからバックエンドへ移すのに便利です。
 
 
-### Spinneret - lispy templates
+### Spinneret - Lisp らしいテンプレート
 
-[Spinneret](https://github.com/ruricolist/spinneret) is a "lispy"
-HTML5 generator. It looks like this:
+[Spinneret](https://github.com/ruricolist/spinneret) は "Lisp らしい" HTML5 生成器です。見た目は次のようになります。
 
 ~~~lisp
 (with-page (:title "Home page")
@@ -715,23 +582,21 @@ HTML5 generator. It looks like this:
   (:footer ("Last login: ~A" *last-login*)))
 ~~~
 
-The author finds it is easier to compose the HTML in separate
-functions and macros than with the more famous cl-who. But it
-has more features under it sleeves:
+作者は、より有名な cl-who よりも、HTML を別々の関数や macro に分けて組み立てるほうが簡単だと考えています。ただし、機能はそれだけではありません。
 
-- it warns on invalid tags and attributes
-- it can automatically number headers, given their depth
-- it pretty prints html per default, with control over line breaks
-- it understands embedded markdown
-- it can tell where in the document a generator function is (see `get-html-tag`)
+- 無効な tag や attribute を警告します
+- 深さに応じて見出しに自動で番号を振れます
+- 既定で HTML を pretty print し、改行を制御できます
+- 埋め込み markdown を理解します
+- ドキュメント中のどこで生成関数が使われたかを知れます（`get-html-tag` を参照）
 
-## Serve static assets
+## 静的 asset を配信する
 
 ### Hunchentoot
 
-With Hunchentoot, use `create-folder-dispatcher-and-handler prefix directory`.
+Hunchentoot では `create-folder-dispatcher-and-handler prefix directory` を使います。
 
-For example:
+例:
 
 ~~~lisp
 (push (hunchentoot:create-folder-dispatcher-and-handler
@@ -741,30 +606,24 @@ For example:
       hunchentoot:*dispatch-table*)
 ~~~
 
-Now our project's static files located under
-`/path/to/myproject/src/static/` are served with the `/static/` prefix:
+これで、`/path/to/myproject/src/static/` にあるプロジェクトの静的ファイルは `/static/` プレフィックスで配信されます。
 
 ```html
 <img src="/static/img/banner.jpg" />
 ```
 
 
-## Connecting to a database
+## database に接続する
 
-Please see the [databases section](databases.html). The Mito ORM
-supports SQLite3, PostgreSQL, MySQL, it has migrations and db schema
-versioning, etc.
+詳しくは [databases の節](databases.html) を見てください。Mito ORM は SQLite3、PostgreSQL、MySQL をサポートし、migration や DB schema の versioning などもあります。
 
-In Caveman, a database connection is alive during the Lisp session and is
-reused in each HTTP requests.
+Caveman では、database connection は Lisp session 中ずっと生きており、各 HTTP request で再利用されます。
 
-### Checking a user is logged-in
+### 利用者がログイン済みか確認する
 
-A framework will provide a way to work with sessions. We'll create a
-little macro to wrap our routes to check if the user is logged in.
+framework には session を扱う方法が用意されています。ここでは、利用者がログイン済みか確認するために route を包む小さな macro を作ります。
 
-In Caveman, `*session*` is a hash table that represents the session's
-data. Here are our login and logout functions:
+Caveman では `*session*` は session のデータを表す hash table です。login と logout の関数は次のようになります。
 
 ~~~lisp
 (defun login (user)
@@ -776,14 +635,14 @@ data. Here are our login and logout functions:
   (setf (gethash :user *session*) nil))
 ~~~
 
-We define a simple predicate:
+単純な predicate を定義します。
 
 ~~~lisp
 (defun logged-in-p ()
   (gethash :user cm:*session*))
 ~~~
 
-and we define our `with-logged-in` macro:
+そして `with-logged-in` macro を定義します。
 
 ~~~lisp
 (defmacro with-logged-in (&body body)
@@ -793,9 +652,7 @@ and we define our `with-logged-in` macro:
                '(:message "Please log-in to access this page."))))
 ~~~
 
-If the user isn't logged in, there will nothing in the session store,
-and we render the login page. When all is well, we execute the macro's
-body. We use it like this:
+利用者がログインしていなければ session store には何もなく、login page を描画します。問題なければ macro 本体を実行します。使い方は次のとおりです。
 
 ~~~lisp
 (defroute "/account/logout" ()
@@ -810,39 +667,35 @@ body. We use it like this:
             (list :review (get-review (gethash :user *session*))))))
 ~~~
 
-and so on.
+同様に使えます。
 
 
-### Encrypting passwords
+### password を暗号化する
 
-#### With cl-bcrypt
+#### cl-bcrypt を使う
 
-[cl-bcrypt](https://github.com/dnaeon/cl-bcrypt) is a password hashing and verification library. It is as simple to use as this:
+[cl-bcrypt](https://github.com/dnaeon/cl-bcrypt) は password の hash 化と検証のための library です。使い方は次のとおり簡単です。
 
 ~~~lisp
-;; Create a password object with 12 rounds:
+;; 12 ラウンドの password オブジェクトを作る
 (defparameter *password* (bcrypt:make-password "test" :cost 12 :identifier "2a"))
-;; Generate a hash:
+;; ハッシュを生成する
 (bcrypt:password-hash *password*)
 ;; #(249 97 146 214 147 168 142 174 40 17 15 74 150 236 240 184 72 175 74 206 160 168 22)
-;; String representation:
+;; 文字列表現
 (defparameter *password-string* (bcrypt:encode *password*))
-;; Check the password by comparing "test" to the stored string:
+;; 保存済み文字列と "test" を比べて password を検証する
 (bcrypt:password= "test" *password-string*)
 ;; T
 (bcrypt:password= "correct horse battery staple" *password-string*)
 ;; NIL
 ~~~
 
-#### Manually (with Ironclad)
+#### 手動で (Ironclad を使う)
 
-In this recipe we do the encryption and verification ourselves. We use the de-facto standard
-[Ironclad](https://github.com/froydnj/ironclad) cryptographic toolkit
-and the [Babel](https://github.com/cl-babel/babel) charset
-encoding/decoding library.
+このレシピでは、暗号化と検証を自分で行います。デファクトスタンダードの [Ironclad](https://github.com/froydnj/ironclad) cryptographic toolkit と、[Babel](https://github.com/cl-babel/babel) の文字コード encode/decode library を使います。
 
-The following snippet creates the password hash that should be stored in your
-database. Note that Ironclad expects a byte-vector, not a string.
+次のスニペットは、database に保存すべき password hash を作ります。Ironclad は string ではなく byte-vector を期待する点に注意してください。
 
 ~~~lisp
 (defun password-hash (password)
@@ -850,14 +703,9 @@ database. Note that Ironclad expects a byte-vector, not a string.
    (babel:string-to-octets password)))
 ~~~
 
-`pbkdf2` is defined in [RFC2898](https://tools.ietf.org/html/rfc2898).
-It uses a pseudorandom function to derive a secure encryption key
-based on the password.
+`pbkdf2` は [RFC2898](https://tools.ietf.org/html/rfc2898) で定義されています。pseudorandom function を使って、password に基づく安全な encryption key を導出します。
 
-The following function checks if a user is active and verifies the
-entered password. It returns the user-id if active and verified and
-nil in all other cases even if an error occurs. Adapt it to your
-application.
+次の関数は、利用者が有効かどうかを確認し、入力された password を検証します。active で検証できたなら user-id を返し、それ以外は error が起きてもすべて nil を返します。自分の application に合わせて調整してください。
 
 ~~~lisp
 (defun check-user-password (user password)
@@ -871,10 +719,7 @@ application.
     (condition () nil)))
 ~~~
 
-And the following is an example on how to set the password on the
-database. Note that we use `(password-hash password)` to save the
-password. The rest is specific to the web framework and to the DB
-library.
+次は database に password を設定する例です。password を保存するときは `(password-hash password)` を使っています。残りは web framework と DB library に依存する部分です。
 
 ~~~lisp
 (defun set-password (user password)
@@ -889,22 +734,21 @@ library.
                                            user))))))
 ~~~
 
-*Credit: `/u/arvid` on [/r/learnlisp](https://www.reddit.com/r/learnlisp/comments/begcf9/can_someone_give_me_an_eli5_on_hiw_to_encrypt_and/)*.
+*Credit: [/r/learnlisp](https://www.reddit.com/r/learnlisp/comments/begcf9/can_someone_give_me_an_eli5_on_hiw_to_encrypt_and/) の `/u/arvid`*.
 
-## Runnning and building
+## 実行とビルド
 
-### Running the application from source
+### ソースから application を実行する
 
-To run our Lisp code from source, as a script, we can use the `--load`
-switch from our implementation.
+ソースから Lisp code を script として実行するには、実装の `--load` スイッチを使えます。
 
-We must ensure:
+次を確認する必要があります。
 
-- to load the project's .asd system declaration (if any)
-- to install the required dependencies (this demands we have installed Quicklisp previously)
-- and to run our application's entry point.
+- project の `.asd` system declaration を読み込むこと（あるなら）
+- 必要な dependency をインストールすること（そのためには事前に Quicklisp を入れておく必要があります）
+- application の entry point を実行すること
 
-We could use such commands:
+次のような command を使えます。
 
 ~~~lisp
 ;; run.lisp
@@ -915,7 +759,7 @@ We could use such commands:
 
 (in-package :myproject)
 (handler-case
-    ;; The START function starts the web server.
+    ;; START 関数が web server を起動します。
     (myproject::start :port (ignore-errors
                               (parse-integer
                                 (uiop:getenv "PROJECT_PORT"))))
@@ -924,95 +768,88 @@ We could use such commands:
     (uiop:quit 1)))
 ~~~
 
-In addition we have allowed the user to set the application's port
-with an environment variable.
+さらに、environment variable で application の port を設定できるようにしています。
 
-We can run the file like so:
+ファイルは次のように実行できます。
 
     sbcl --load run.lisp
 
-After loading the project, the web server is started in the
-background. We are offered the usual Lisp REPL, from which we can
-interact with the running application.
+project を読み込んだあと、web server は background で起動します。おなじみの Lisp REPL が使えるので、動いている application と対話できます。
 
-We can also connect to the running application from our preferred
-editor, from home, and compile the changes in our editor to the
-running instance. Read below in "Connecting to a remote Lisp image".
+自分の好きな editor から、離れた場所にある running application に接続し、editor での変更を動いている instance へコンパイルできます。後述の "remote Lisp image に接続する" を参照してください。
 
 
-### Building a self-contained executable
+### 自己完結型実行ファイルを作る
 
-As for all Common Lisp applications, we can bundle our web app in one
-single executable, including the assets. It makes deployment very
-easy: copy it to your server and run it.
+他の Common Lisp application と同様に、Web app も asset を含めて 1 つの executable にまとめられます。配備はとても簡単です。server にコピーして実行するだけです。
 
 ```
 $ ./my-web-app
-Hunchentoot server is started.
-Listening on localhost:9003.
+Hunchentoot server が起動しました。
+localhost:9003 で待ち受けます。
 ```
 
-See this recipe on [scripting#for-web-apps](scripting.html#for-web-apps).
+[scripting#for-web-apps](scripting.html#for-web-apps) のレシピを参照してください。
 
 
-### Continuous delivery with Travis CI or Gitlab CI
+### Travis CI や GitLab CI で継続的 delivery を行う
 
-Please see the section on [testing#continuous-integration](testing.html#continuous-integration).
+[testing#continuous-integration](testing.html#continuous-integration) の節を見てください。
 
 
-### Multi-platform delivery with Electron
+### Electron によるマルチプラットフォーム配信
 
-Once you built a binary of your web application, you can point an Electron window to it.
+Web application の binary を作ったら、Electron window からそれを参照できます。
 
-[Ceramic](https://ceramic.github.io/) is a collection of tools that make all the work for us.
+[Ceramic](https://ceramic.github.io/) は、その作業をまとめてやってくれる tool 群です。
 
-It is as simple as this:
+使い方はこれだけです。
 
 ~~~lisp
-;; Load Ceramic and our app
+;; Ceramic とアプリを読み込む
 (ql:quickload '(:ceramic :our-app))
 
-;; Ensure Ceramic is set up
+;; Ceramic の初期化
 (ceramic:setup)
 (ceramic:interactive)
 
-;; Start our app (here based on the Lucerne framework)
+;; アプリを起動する（ここでは Lucerne ベース）
 (lucerne:start our-app.views:app :port 8000)
 
-;; Open a browser window to it
+;; ブラウザ window を開く
 (defvar window (ceramic:make-window :url "http://localhost:8000/"))
 
-;; start Ceramic
+;; Ceramic を起動する
 (ceramic:show-window window)
 ~~~
 
-and we can ship this on Linux, Mac and Windows.
+これを Linux、Mac、Windows へ配布できます。
 
-There is more:
+さらにあります。
 
-> Ceramic applications are compiled down to native code, ensuring both performance and enabling you to deliver closed-source, commercial applications.
+> Ceramic applications は native code にコンパイルされるため、性能を確保でき、閉源の商用 application も配布できます。
 
-Thus, no need to minify our JS.
+そのため、JS を minify する必要もありません。
 
 ## Deployment
 
-### Deploying manually
+### 手動で deployment する
 
-We can start our executable in a shell and send it to the background (`C-z bg`), or run it inside a `tmux` session. These are not the best but hey, it works©.
+shell で executable を起動して background に回す（`C-z bg`）か、`tmux` session の中で実行できます。最良ではありませんが、動きます。
 
 
-### Systemd: Daemonizing, restarting in case of crashes, handling logs
+### Systemd: daemon 化、クラッシュ時の再起動、log の扱い
 
-This is actually a system-specific task. See how to do that on your system.
+これは実際には system 固有の作業です。自分の system でのやり方を確認してください。
 
-Most GNU/Linux distros now come with Systemd, so here's a little example.
+今では多くの GNU/Linux distro に Systemd が入っているので、簡単な例を示します。
 
-Deploying an app with Systemd is as simple as writing a configuration file:
+Systemd で application を配備するのは、設定 file を書くだけです。
 
 ```
 $ sudo emacs -nw /etc/systemd/system/my-app.service
 [Unit]
-Description=your lisp app on systemd example
+Description=systemd 上の Lisp app の例
 
 [Service]
 WorkingDirectory=/path/to/your/project/directory/
@@ -1024,91 +861,59 @@ Restart=on-failure
 WantedBy=network.target
 ```
 
-Then we have a command to `start` it, only now:
+すると、`start` する command が使えます。
 
     sudo systemctl start my-app.service
 
-and a command to install the service, to **start the app after a boot
-or reboot** (that's the "[Install]" part):
+service を install して、boot や reboot のあとに **app を起動** する command もあります（それが "[Install]" 部分です）。
 
     sudo systemctl enable my-app.service
 
-Then we can check its `status`:
+`status` も確認できます。
 
     systemctl status my-app.service
 
-and see our application's **logs** (we can write to stdout or stderr,
-and Systemd handles the logging):
+application の **log** も見られます（stdout や stderr に書けば、Systemd が logging します）。
 
     journalctl -u my-app.service
 
-(you can also use the `-f` option to see log updates in real time, and in that case augment the number of lines with `-n 50` or `--lines`).
+（`-f` オプションで log の更新をリアルタイム表示でき、その場合は `-n 50` や `--lines` で表示行数を増やせます）
 
-Systemd handles crashes and **restarts the application**. That's the `Restart=on-failure` line.
+Systemd は crash を処理し、**application を再起動** します。それが `Restart=on-failure` の行です。
 
-Now keep in mind a couple things:
+ただし、いくつか注意点があります。
 
-- your main thread has to be kept active, otherwise Systemd will
-  successfully start your app, think that nothing is happening, and it
-  will successfully stop your app. If your app offers a Lisp REPL upon
-  start, this is not enough.
-  - see how we keep our web server thread active in this recipe on
-  [scripting#for-web-apps](scripting.html#for-web-apps).
-  - then, if you want to connect to the running Lisp image, in that
-    case where you don't have access to your app's REPL, use a
-    [Swank server](debugging.html#remote-debugging).
-- we want our app to crash so that it can be re-started automatically:
-  you'll want the `--disable-debugger` flag with SBCL.
-- Systemd will, by default, run your app as root. If you rely on your
-  Lisp to read your startup file (`~/.sbclrc`), especially to setup
-  Quicklisp, you will need to use the `--userinit` flag, or to set the
-  Systemd user with `User=xyz` in the `[service]` section. And if you
-  use a startup file, be aware that the line `(user-homedir-pathname)`
-  will not return the same result depending on the user, so the snippet
-  might not find Quicklisp's setup.lisp file.
+- main thread を動かしたままにしておく必要があります。そうしないと Systemd は app を正常に起動したと判断して、何もしていないと思い、正常停止してしまいます。起動時に Lisp REPL を出すだけでは不十分です。
+  - このレシピの [scripting#for-web-apps](scripting.html#for-web-apps) で、Web server thread をどう生かしておくかを見てください。
+  - running 中の Lisp image に接続したいが app の REPL には入れない、という場合は [Swank server](debugging.html#remote-debugging) を使います。
+- 自動再起動のためには app に crash してもらう必要があります。SBCL では `--disable-debugger` フラグを使いたくなります。
+- Systemd は既定で app を root として実行します。Lisp に startup file（`~/.sbclrc`）を読ませたい場合、とくに Quicklisp の設定のためには、`--userinit` フラグを使うか、`[service]` セクションで `User=xyz` を設定する必要があります。startup file を使うときは、`(user-homedir-pathname)` の結果が user によって変わるので、Quicklisp の `setup.lisp` を見つけられないことがあります。
 
 
-See more: [https://www.freedesktop.org/software/systemd/man/systemd.service.html](https://www.freedesktop.org/software/systemd/man/systemd.service.html).
+詳細: [https://www.freedesktop.org/software/systemd/man/systemd.service.html](https://www.freedesktop.org/software/systemd/man/systemd.service.html)
 
-### With Docker
+### Docker を使う
 
-There are several Docker images for Common
-Lisp. For example:
+Common Lisp 向けの Docker image はいくつかあります。たとえば次のものです。
 
-- [clfoundation/sbcl](https://hub.docker.com/r/clfoundation/sbcl/)
-includes the latest version of SBCL, many OS packages useful for CI
-purposes, and a script to install Quicklisp.
-- [40ants/base-lisp-image](https://github.com/40ants/base-lisp-image) is based on Ubuntu LTS and includes SBCL, CCL, Quicklisp, Qlot and Roswell.
-- [container-lisp/s2i-lisp](https://github.com/container-lisp/s2i-lisp)
-is CentOs based and contains the source for building a Quicklisp based
-Common Lisp application as a reproducible docker image using OpenShift's
-source-to-image.
+- [clfoundation/sbcl](https://hub.docker.com/r/clfoundation/sbcl/) は、SBCL の最新版、CI に便利な OS package 群、Quicklisp を入れる script を含みます。
+- [40ants/base-lisp-image](https://github.com/40ants/base-lisp-image) は Ubuntu LTS ベースで、SBCL、CCL、Quicklisp、Qlot、Roswell を含みます。
+- [container-lisp/s2i-lisp](https://github.com/container-lisp/s2i-lisp) は CentOS ベースで、OpenShift の source-to-image を使って Quicklisp ベースの Common Lisp application を再現可能な docker image としてビルドするための source を含みます。
 
 
-### With Guix
+### Guix を使う
 
-[GNU Guix](https://www.gnu.org/software/guix/) is a transactional
-package manager, that can be installed on top of an existing OS, and a
-whole distro that supports declarative system configuration. It allows
-to ship self-contained tarballs, which also contain system
-dependencies. For an example, see the [Nyxt browser](https://github.com/atlas-engineer/nyxt/).
+[GNU Guix](https://www.gnu.org/software/guix/) は transactional な package manager で、既存の OS の上に入れられるほか、declarative な system 設定をサポートする丸ごとの distro でもあります。system dependency を含む self-contained tarball を配布できます。例として [Nyxt browser](https://github.com/atlas-engineer/nyxt/) を見てください。
 
-### Running behind Nginx
+### Nginx の背後で動かす
 
-There is nothing CL-specific to run your Lisp web app behind Nginx. Here's an example to get you started.
+Lisp web app を Nginx の背後で動かすのに、CL 特有のことは何もありません。始めるための例を示します。
 
-We suppose you are running your Lisp app on a web server, with the IP
-address 1.2.3.4, on the port 8001. Nothing special here. We want to
-access our app with a real domain name (and eventuall benefit of other
-Nginx's advantages, such as rate limiting etc). We bought our domain
-name and we created a DNS record of type A that links the domain name
-to the server's IP address.
+Lisp app が web server 上で、IP address 1.2.3.4、port 8001 で動いているとします。特別なことはありません。real domain name で app にアクセスしたいわけです（rate limiting など、Nginx の他の利点も使いたい）。domain name を買って、domain name を server の IP address に結び付ける A type の DNS record を作ったとします。
 
-We must configure our server with Nginx to tell it that all
-connections coming from "your-domain-name.org", on port 80, are to be
-sent to the Lisp app running locally.
+Nginx で server を設定し、"your-domain-name.org" から port 80 に来る接続を、ローカルで動く Lisp app に送るよう指示します。
 
-Create a new file: `/etc/nginx/sites-enabled/my-lisp-app.conf` and add this proxy directive:
+新しい file `/etc/nginx/sites-enabled/my-lisp-app.conf` を作り、次の proxy directive を追加します。
 
 ~~~lisp
 server {
@@ -1125,41 +930,35 @@ server {
 }
 ~~~
 
-Note that on the proxy_pass directive: `proxy_pass
-http://1.2.3.4:8001/;` we are using our server's public IP
-address. Often, your Lisp webserver such as Hunchentoot directly
-listens on it. You might want, for security reasons, to run the Lisp
-app on localhost.
+`proxy_pass http://1.2.3.4:8001/;` では server の public IP address を使っている点に注意してください。Hunchentoot のような Lisp webserver がその IP に直接 listen していることもよくありますが、security 上の理由から Lisp app を localhost で動かしたいかもしれません。
 
-Reload nginx (send the "reload" signal):
+nginx を reload します（"reload" signal を送る）。
 
     $ nginx -s reload
 
-and that's it: you can access your Lisp app from the outside through `http://www.your-domain-name.org`.
+これで終わりです。`http://www.your-domain-name.org` から外部経由で Lisp app にアクセスできます。
 
 
-### Deploying on Heroku and other services
+### Heroku や他の service へ deployment する
 
-See [heroku-buildpack-common-lisp](https://gitlab.com/duncan-bayne/heroku-buildpack-common-lisp) and the [Awesome CL#deploy](https://github.com/CodyReichert/awesome-cl#deployment) section for interface libraries for Kubernetes, OpenShift, AWS, etc.
+[heroku-buildpack-common-lisp](https://gitlab.com/duncan-bayne/heroku-buildpack-common-lisp) と、Kubernetes、OpenShift、AWS など向けの interface library が載っている [Awesome CL#deploy](https://github.com/CodyReichert/awesome-cl#deployment) を参照してください。
 
 
-## Monitoring
+## 監視
 
-See [Prometheus.cl](https://github.com/deadtrickster/prometheus.cl)
-for a Grafana dashboard for SBCL and Hunchentoot metrics (memory,
-threads, requests per second,…).
+[Prometheus.cl](https://github.com/deadtrickster/prometheus.cl) を見ると、SBCL と Hunchentoot の metric（memory、thread、requests per second など）用の Grafana dashboard が分かります。
 
-## Connecting to a remote Lisp image
+## remote Lisp image に接続する
 
 <!-- links should be relative, but transforming to PDF with Typst blocks on it -->
 
-This this section: [debugging#remote-debugging](https://lispcookbook.github.io/cl-cookbook/debugging.html#remote-debugging).
+この節を参照してください: [debugging#remote-debugging](https://lispcookbook.github.io/cl-cookbook/debugging.html#remote-debugging)
 
-## Hot reload
+## hot reload
 
-This is an example from [Quickutil](https://github.com/stylewarning/quickutil/blob/master/quickutil-server/). It is actually an automated version of the precedent section.
+これは [Quickutil](https://github.com/stylewarning/quickutil/blob/master/quickutil-server/) の例です。実際には先ほどの節を自動化したものです。
 
-It has a Makefile target:
+Makefile の target があります。
 
 ```lisp
 hot_deploy:
@@ -1173,21 +972,17 @@ hot_deploy:
 		$($(LISP)-quit))
 ```
 
-It has to be run on the server (a simple fabfile command can call this
-through ssh). Beforehand, a `fab update` has run `git pull` on the
-server, so new code is present but not running. It connects to the
-local swank server, loads the new code, stops and starts the app in a
-row.
+これは server 上で実行する必要があります（簡単な fabfile command で ssh 経由で呼べます）。その前に `fab update` で server 上に `git pull` 済みなので、新しい code はあるがまだ動いていない状態です。local swank server に接続し、新しい code を読み込み、app を止めてすぐ起動し直します。
 
 
-## See also
+## 関連項目
 
 - [Web Apps in Lisp, Know-how](https://web-apps-in-lisp.github.io/)
 - [lisp-web-template-productlist](https://github.com/vindarel/lisp-web-template-productlist),
-  a simple project template with Hunchentoot, Easy-Routes, Djula and Bulma CSS.
+  Hunchentoot、Easy-Routes、Djula、Bulma CSS を使ったシンプルなプロジェクトテンプレート。
 - [lisp-web-live-reload-example](https://github.com/vindarel/lisp-web-live-reload-example/) -
-  a toy project to show how to interact with a running web app.
-- [video: how to build a web app in Lisp · part 1](https://www.youtube.com/watch?v=h_noB1sI_e8) featuring Hunchentoot, easy-routes, Djula templates, error handling, common traps.
+  実行中の web app と対話する方法を示すおもちゃのプロジェクト。
+- [video: how to build a web app in Lisp · part 1](https://www.youtube.com/watch?v=h_noB1sI_e8) は Hunchentoot、easy-routes、Djula テンプレート、エラー処理、よくある落とし穴を扱っています。
 - [Building a TLS 1.3 implementation in Common Lisp](https://atgreen.github.io/repl-yell/posts/pure-tls/)
 - [Automatic TLS Certificates for Common Lisp with pure-tls/acme](https://atgreen.github.io/repl-yell/posts/pure-tls-acme/)
 

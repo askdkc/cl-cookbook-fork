@@ -1,36 +1,22 @@
 ---
-title: Scripting. Command line arguments. Executables.
+title: スクリプト、コマンドライン引数、実行ファイル
 ---
 
-Using a program from a REPL is fine and well, but once it's ready
-we'll surely want to call it from the terminal. We can run Lisp
-**scripts** for this.
+REPL からプログラムを使うのは問題ありませんが、できあがったらターミナルから呼び出したくなります。そういうときは Lisp の **スクリプト** を使えます。
 
-Next, if we want to distribute our program easily, we'll want to build
-an **executable**.
+さらに、プログラムを手軽に配布したいなら、**実行ファイル** を作りたくなります。
 
-Lisp implementations differ in their processes, but they all create
-**self-contained executables**, for the architecture they are built on. The
-final user doesn't need to install a Lisp implementation, they can run
-the software right away.
+Lisp 実装ごとに作り方は少し違いますが、どれも対象アーキテクチャ向けの **自己完結型実行ファイル** を作れます。利用者は Lisp 実装をインストールする必要がなく、すぐにソフトウェアを実行できます。
 
-**Start-up times** are near to zero, specially with SBCL and CCL.
+**起動時間** はほぼゼロに近く、特に SBCL と CCL では顕著です。
 
-Binaries **size** are large-ish, at least with open-source implementations. They include the whole Lisp
-including its libraries, the names of all symbols, information about
-argument lists to functions, the compiler, the debugger, source code
-location information, and more. However, the advantage of having the compiler
-and the debugger is that you can compile and load Lisp code while your program is running.
-In addition, LispWorks, in its paid edition,
-has a tree shaker that allows to build binaries in the realm of 3 to 5 MB. These don't include
-a compiler, so you can't live update your program.
+少なくともオープンソース実装では、バイナリの **サイズ** はやや大きめです。Lisp 本体だけでなく、ライブラリ、すべてのシンボル名、関数の引数リスト情報、コンパイラ、デバッガ、ソースコードの位置情報なども含まれます。ただし、コンパイラとデバッガが入っているおかげで、プログラム実行中に Lisp コードをコンパイルして読み込めます。さらに、有償版の LispWorks には tree shaker があり、3〜5MB 程度のバイナリを作れます。こちらにはコンパイラが入っていないので、実行中の更新はできません。
 
-Note that we can similarly build self-contained executables for **web
-apps**, that will include all the static assets (HTML, JS, etc).
+同様に、HTML や JS などの静的アセットをすべて含む **Web アプリ** 向けの自己完結型実行ファイルも作れます。
 
-## Scripting with Common Lisp
+## Common Lisp でスクリプトを書く
 
-Create a file named `hello` (you can drop the .lisp extension) and add this:
+`hello` という名前のファイルを作り（`.lisp` 拡張子は外してもかまいません）、次を入れます。
 
 ```
 #!/usr/bin/env -S sbcl --script
@@ -38,39 +24,32 @@ Create a file named `hello` (you can drop the .lisp extension) and add this:
 (format t "hello ~a!~&" (uiop:getenv "USER"))
 ```
 
-Make the script executable (`chmod +x hello`) and run it:
+スクリプトに実行権を付けて（`chmod +x hello`）、実行します。
 
 ```
 $ ./hello
 hello me!
 ```
 
-Nice! We can use this to a great extent already.
+いい感じです。これだけでもかなり使えます。
 
-In addition, the script was quite fast to start, 0.03s on my system.
+しかも、私の環境ではこのスクリプトの起動はかなり速く、0.03 秒でした。
 
-However, we will get longer startup times as soon as we add
-dependencies. The obvious solution is to build a binary. They start even
-faster, with all dependencies compiled. Another possibility is to
-build a *core image* for yourself.
+ただし、依存関係を追加すると起動時間は長くなります。素直な解はバイナリを作ることです。依存関係をすべてコンパイル済みで、さらに速く起動します。別の方法として、自分用の *core image* を作る手もあります。
 
-We used the SBCL CLI option `--script`. It is the equivalent of `--no-sysinit --no-userinit --disable-debugger --end-toplevel-options`:
+ここでは SBCL の CLI オプション `--script` を使いました。これは `--no-sysinit --no-userinit --disable-debugger --end-toplevel-options` と同等です。
 
-- `--no-sysinit` doesn't load a system-wide init file.
-- `--no-userinit` doesn't load the user's `~/.sbclrc` file.
-- `--disable-debugger` disables the debugger. On an error, the Lisp process prints a backtrace on and exits with a status code of 1. It doesn't give us a Lisp REPL.
-- `--end-toplevel-options` is optional and it "prevents options intended for your program being accidentally processed by SBCL".
+- `--no-sysinit` はシステム全体の初期化ファイルを読み込みません。
+- `--no-userinit` はユーザーの `~/.sbclrc` を読み込みません。
+- `--disable-debugger` はデバッガを無効にします。エラー時には Lisp プロセスがバックトレースを表示して終了コード 1 で終了します。Lisp REPL は入りません。
+- `--end-toplevel-options` は省略可能で、"プログラム向けのオプションが誤って SBCL に処理されるのを防ぐ" ものです。
 
-We also used `env -S`: normally, `env` accepts one single argument,
-but `-S` aka `--split-string` allows specifying multiple parameters,
-which allowed us to add the `--script` flag.
+また `env -S` も使いました。通常 `env` は 1 つの引数しか受け取りませんが、`-S`（`--split-string`）を使うと複数の引数を指定できます。そのおかげで `--script` フラグを追加できました。
 
 
-### Quickloading dependencies from a script
+### スクリプトから依存関係を quickload する
 
-Say you don't bother with an .asd project definition yet, you just
-want to write a quick script, but you need to load a quicklisp
-dependency. You'll need a bit more ceremony:
+まだ `.asd` のプロジェクト定義を用意しておらず、とにかく簡単なスクリプトを書きたいだけで、Quicklisp の依存を読み込みたいとします。その場合は少し手順が増えます。
 
 ```lisp
 #!/usr/bin/env -S sbcl --script
@@ -90,19 +69,14 @@ dependency. You'll need a bit more ceremony:
 (princ (str:concat "hello " (uiop:getenv "USER") "!"))
 ```
 
-Accordingly, you could only use `require`, if the quicklisp dependency is already installed:
+そのため、Quicklisp 依存がすでにインストール済みなら、`require` だけでも済ませられます。
 
 ~~~lisp
 ;; replace loading sbclrc and ql:quickload.
 (require :str)
 ~~~
 
-Also note that when you put a `ql:quickload` in the middle of your
-code, you can't load the file anymore, you can't `C-c C-k` from your
-editor. This is because the reader will see the "quickload" without
-running it yet, then sees "str:concat", a call to a package that
-doesn't exist (it wasn't loaded yet). Common Lisp has you covered,
-with a form that executes code during the read phase:
+なお、コードの途中に `ql:quickload` を置くと、そのファイルはもう読み込めませんし、エディタから `C-c C-k` もできなくなります。reader は `quickload` をまだ実行せずに読み進め、そのあとで、まだロードされていないパッケージへの呼び出しである `str:concat` に遭遇するからです。Common Lisp には、read フェーズ中にコードを実行する形があります。
 
 ~~~lisp
 ;; you shouldn't need this. Use an .asd system definition!
@@ -110,11 +84,9 @@ with a form that executes code during the read phase:
   (ql:quickload "str" :silent t))
 ~~~
 
-but ASDF project definitions are here for a reason.
+ただし、ASDF のプロジェクト定義があるのには理由があります。
 
-Find me another
-language that makes you install dependencies in the middle of the
-application code.
+アプリケーションコードの途中で依存関係をインストールさせる言語を、他に見つけてください。
 
 ### The "main" entry point
 
@@ -136,33 +108,25 @@ the `foo` function is compiled but nothing gets executed. With this:
 (foo)
 ```
 
-`foo` is compiled and then executed. However you didn't print anything
-to standard output, so you may see nothing in the terminal.
+`foo` はコンパイルされ、そのあと実行されます。ただし標準出力には何も出していないので、ターミナルには何も表示されないかもしれません。
 
-So, you can consider that `(foo)` is your main entry point. There is no "main" function.
+つまり `(foo)` を main エントリポイントと考えられます。`main` 関数というものはありません。
 
-However, a top-level expression prevents you from compiling and
-loading the whole file, without a side effect each time, like with
-`C-c C-k` in Slime. To fix this, you can do:
+ただし、トップレベル式があると、Slime の `C-c C-k` のように、ファイル全体を副作用なしでコンパイルして読み込むことができなくなります。これを避けるには、次のようにします。
 
 ```lisp
 (eval-when (:execute)
   (foo))
 ```
 
-Now, you can interactively develop your script from your editor, you
-can use `C-c C-k` (slime-compile-and-load-file) without hitting side
-effects of the top-level expressions.
+これで、エディタから対話的にスクリプトを開発でき、トップレベル式の副作用に悩まされずに `C-c C-k`（`slime-compile-and-load-file`）を使えます。
 
 
-## Building a self-contained executable
+## 自己完結型実行ファイルを作る
 
-### With SBCL - Images and Executables
+### SBCL を使う - イメージと実行ファイル
 
-How to build (self-contained) executables is, by default, implementation-specific (see
-below for portable ways). With SBCL, as says
-[its documentation](http://www.sbcl.org/manual/index.html#Function-sb_002dext_003asave_002dlisp_002dand_002ddie),
-it is a matter of calling `save-lisp-and-die` with the `:executable` argument to T:
+自己完結型の実行ファイルの作り方は、デフォルトでは実装依存です（移植可能な方法は後述します）。SBCL では、[ドキュメント](http://www.sbcl.org/manual/index.html#Function-sb_002dext_003asave_002dlisp_002dand_002ddie) にあるとおり、`save-lisp-and-die` を `:executable` 引数を `t` にして呼び出します。
 
 ~~~lisp
 (sb-ext:save-lisp-and-die #P"path/name-of-executable"
@@ -170,33 +134,26 @@ it is a matter of calling `save-lisp-and-die` with the `:executable` argument to
                          :executable t)
 ~~~
 
-`sb-ext` is an SBCL extension to run external processes. See other
-[SBCL extensions](http://www.sbcl.org/manual/index.html#Extensions)
-(many of them are made implementation-portable in other libraries).
+`sb-ext` は SBCL の拡張で、外部プロセスを扱います。ほかの [SBCL 拡張](http://www.sbcl.org/manual/index.html#Extensions) もあります（多くは他のライブラリで移植可能になっています）。
 
-`:executable  t`  tells  to  build  an  executable  instead  of  an
-image. We  could build an  image to save  the state of  our current
-Lisp image, to come back working with it later. This is especially useful if
-we made a lot of work that is computing intensive.
-In that case, we re-use the image with `sbcl --core name-of-image`.
+`:executable t` は、イメージではなく実行ファイルを作ることを意味します。現在の Lisp イメージの状態を保存して、あとでその状態から作業を再開するためにイメージを作ることもできます。計算量の多い作業をたくさんしたときには特に便利です。その場合は `sbcl --core name-of-image` でそのイメージを再利用します。
 
-`:toplevel` gives the program's entry point, here `my-app:main-function`. Don't forget to `export` the symbol, or use `my-app::main-function` (with two colons).
+`:toplevel` はプログラムのエントリポイントで、ここでは `my-app:main-function` です。シンボルを `export` するのを忘れないでください。あるいは `my-app::main-function`（コロン 2 つ）を使ってもかまいません。
 
-If you try to run this in Slime, you'll get an error about threads running:
+これを Slime で実行すると、スレッドが動いていることに関するエラーになります。
 
 > Cannot save core with multiple threads running.
 
-We must run the command from a simple SBCL repl, from the terminal.
+このコマンドは、端末上の素の SBCL REPL から実行する必要があります。
 
-I suppose your project has Quicklisp dependencies. You must then:
+プロジェクトに Quicklisp の依存があるとしましょう。その場合は次のことが必要です。
 
-* ensure Quicklisp is installed and loaded at the Lisp startup (you
-  completed Quicklisp installation),
-* `asdf:load-asd` the project's .asd (recommended instead of just `load`),
-* install the dependencies,
-* build the executable.
+* Lisp 起動時に Quicklisp がインストールされ、読み込まれていることを確認する（Quicklisp の導入を済ませる）
+* プロジェクトの `.asd` を `asdf:load-asd` する（単なる `load` より推奨）
+* 依存関係をインストールする
+* 実行ファイルを作る
 
-That gives:
+すると、次のようになります。
 
 ~~~lisp
 (asdf:load-asd "my-app.asd")
@@ -206,7 +163,7 @@ That gives:
                           :executable t)
 ~~~
 
-From the command line, or from a Makefile, use `--load` and `--eval`:
+コマンドラインや Makefile からは、`--load` と `--eval` を使います。
 
 ```
 build:
@@ -215,18 +172,11 @@ build:
          --eval "(sb-ext:save-lisp-and-die #p\"my-app\" :toplevel #'my-app:main :executable t)"
 ```
 
-### With `uiop:dump-image`
+### `uiop:dump-image` を使う
 
-`sb-ext:save-lisp-and-die` is SBCL-specific. Although the feature
-exists in other implementations, the function to use is named
-differently and it accepts different arguments. On CCL (Clozure CL),
-it is named `ccl:save-application`.
+`sb-ext:save-lisp-and-die` は SBCL 専用です。ほかの実装にも似た機能はありますが、関数名や引数は異なります。CCL（Clozure CL）では `ccl:save-application` です。
 
-If you want to write a build script that is portable across CL
-implementations, you can use `uiop:dump-image`. It takes roughly the
-same arguments as `save-lisp-and-die` described above, with the
-exception of `:toplevel` that should be given to the variable
-`uiop:*image-entry-point*`:
+Common Lisp 実装間で移植可能なビルドスクリプトを書きたいなら、`uiop:dump-image` を使えます。引数はおおむね `save-lisp-and-die` と同じですが、`:toplevel` の代わりに `uiop:*image-entry-point*` 変数へ設定します。
 
 ~~~lisp
 ;; build.lisp
@@ -238,7 +188,7 @@ exception of `:toplevel` that should be given to the variable
 (uiop:dump-image "my-app-binary" :executable t :compression 9)
 ~~~
 
-You can run this file, that we named `build.lisp`, with any implementation:
+この `build.lisp` というファイルは、どの実装でも実行できます。
 
     $ sbcl --load build.lisp
     $ ecl --load build.lisp
@@ -246,12 +196,11 @@ You can run this file, that we named `build.lisp`, with any implementation:
     …
 
 
-### With ASDF
+### ASDF を使う
 
-You can choose to add the build instructions directly in the `.asd` project definition.
+ビルド手順を `.asd` のプロジェクト定義に直接書くこともできます。
 
-Since its version 3.1, ASDF allows to do that. It introduced the [`make` command](https://common-lisp.net/project/asdf/asdf.html#Convenience-Functions),
-that reads parameters from the .asd. Add this to your .asd file:
+ASDF 3.1 以降ではそれが可能です。`.asd` から引数を読む [`make` コマンド](https://common-lisp.net/project/asdf/asdf.html#Convenience-Functions) が導入されました。`.asd` に次を追加します。
 
 ~~~
 :build-operation "program-op" ;; leave as is
@@ -259,9 +208,9 @@ that reads parameters from the .asd. Add this to your .asd file:
 :entry-point "<my-package:main-function>"
 ~~~
 
-and call `asdf:make :my-package`.
+そして `asdf:make :my-package` を呼びます。
 
-So, you could add this in a Makefile:
+そのため、Makefile には次のように書けます。
 
 ~~~lisp
 LISP ?= sbcl
@@ -273,25 +222,19 @@ build:
 		--eval '(quit)'
 ~~~
 
-### With Deploy - ship foreign libraries dependencies
+### Deploy を使う - 外部ライブラリ依存もまとめて配布する
 
-All this is good, you can create binaries that work on your machine…
-but maybe not on someone else's or on your server. Your program
-probably relies on C shared libraries that are defined somewhere on
-your filesystem. For example, `libssl` might be located on
+ここまでで、自分のマシンでは動くバイナリを作れます。しかし、他人の環境やサーバーで動くとは限りません。たぶんプログラムは、ファイルシステム上のどこかにある C の共有ライブラリに依存しています。たとえば `libssl` が次のような場所にあるかもしれません。
 
     /usr/lib/x86_64-linux-gnu/libssl.so.1.1
 
-but on your VPS, maybe somewhere else.
+しかし VPS では別の場所にあるかもしれません。
 
-[Deploy](https://github.com/Shinmera/deploy) to the rescue.
+そこで [Deploy](https://github.com/Shinmera/deploy) の出番です。
 
-It will create a `bin/` directory with your binary and the required
-foreign libraries. It will auto-discover the ones your program needs,
-but you can also help it (or tell it to not do so much).
+Deploy は、バイナリと必要な外部ライブラリを含む `bin/` ディレクトリを作ります。プログラムが必要とするものを自動検出しますが、必要なら手助けもできますし、やりすぎないように指示もできます。
 
-Its use is very close to the above recipe with `asdf:make` and the
-`.asd` project configuration. Use this:
+使い方は、`asdf:make` と `.asd` の構成を使う先ほどのレシピにかなり近いです。次のようにします。
 
 ~~~lisp
 :defsystem-depends-on (:deploy)  ;; (ql:quickload "deploy") before
@@ -300,11 +243,11 @@ Its use is very close to the above recipe with `asdf:make` and the
 :entry-point "my-package:my-start-function"  ;; doesn't change
 ~~~
 
-and build your binary with `(asdf:make :my-app)` like before.
+そして、前と同じく `(asdf:make :my-app)` でバイナリをビルドします。
 
-Now, ship the `bin/` directory to your users.
+これで `bin/` ディレクトリを利用者へ配布できます。
 
-When you run the binary, you'll see it uses the shipped libraries:
+バイナリを実行すると、同梱したライブラリが使われているのが分かります。
 
 ~~~lisp
 $ ./my-app
@@ -319,11 +262,9 @@ $ ./my-app
  […]
 ~~~
 
-Success!
+成功です。
 
-A note regarding `libssl`. It's easier, on Linux at least, to
-rely on your OS' current installation, so we'll tell Deploy to not
-bother shipping it (nor `libcrypto`):
+`libssl` について補足です。少なくとも Linux では、OS に入っているものを使うほうが簡単なので、Deploy にはこれを同梱しないよう指示します（`libcrypto` も同様です）。
 
 ~~~lisp
 (require :cl+ssl)
@@ -331,7 +272,7 @@ bother shipping it (nor `libcrypto`):
 #+linux (deploy:define-library cl+ssl::libcrypto :dont-deploy T)
 ~~~
 
-The day you want to ship a foreign library that Deploy doesn't find, you can instruct it like this:
+Deploy が見つけられない外部ライブラリを同梱したい日には、次のように指定できます。
 
 ~~~lisp
 (deploy:define-library cl+ssl::libcrypto
@@ -340,10 +281,7 @@ The day you want to ship a foreign library that Deploy doesn't find, you can ins
   :path "/usr/lib/x86_64-linux-gnu/libcrypto.so.1.1")
 ~~~
 
-A last remark. Once you built your binary and you run it for the first
-time, you might get a funny message from ASDF that tries to upgrade
-itself, finds nothing into a `~/common-lisp/asdf/` repository, and
-quits. To tell it to not upgrade itself, add this into your .asd:
+最後にもう 1 点です。バイナリを作って初めて実行すると、ASDF が自分自身を更新しようとして `~/common-lisp/asdf/` リポジトリに何も見つけられず、終了することがあります。これを避けるには、`.asd` に次を追加します。
 
 ~~~lisp
 ;; Tell ASDF to not update itself.
@@ -353,35 +291,24 @@ quits. To tell it to not upgrade itself, add this into your .asd:
   #+asdf (defun asdf:upgrade-asdf () nil))
 ~~~
 
-You can also silence Deploy's start-up messages by adding this in your build script, before `asdf:make` is called:
+`asdf:make` を呼ぶ前にビルドスクリプトへこれを追加すると、Deploy の起動メッセージも消せます。
 
     (push :deploy-console *features*)
 
-And there is more, so we refer you to Deploy's documentation.
+ほかにもあります。詳しくは Deploy のドキュメントを参照してください。
 
 
-### With Roswell or Buildapp
+### Roswell または Buildapp を使う
 
-[Roswell](https://roswell.github.io), an implementation manager, script launcher and
-much more, has the `ros build` command, that should work for many
-implementations.
+[Roswell](https://roswell.github.io) は、実装管理、スクリプト起動などを行うツールで、`ros build` コマンドを備えています。多くの実装で使えるはずです。
 
-This is how we can make our application easily installable by others, with a `ros install
-my-app`. See Roswell's documentation.
+これを使えば、`ros install my-app` のようにして他人に簡単にインストールしてもらえます。詳しくは Roswell のドキュメントを参照してください。
 
-Be aware that `ros build` adds core compression by default. That adds
-a significant startup overhead of the order of 150ms (for a simple
-app, startup time went from about 30ms to 180ms). You can disable it
-with `ros build <app.ros> --disable-compression`. Of course, core
-compression reduces your binary size significantly. See the table
-below, "Size and startup times of executables per implementation".
+なお、`ros build` は既定で core compression を有効にします。そのため、単純なアプリでも起動オーバーヘッドがかなり増えます（およそ 150ms 増え、30ms ほどだった起動時間が 180ms ほどになることがあります）。`ros build <app.ros> --disable-compression` で無効化できます。もちろん、core compression はバイナリサイズを大きく減らします。後ろの「実装ごとの実行ファイルサイズと起動時間」の表を見てください。
 
-We'll finish with a word on
-[Buildapp](http://www.xach.com/lisp/buildapp/), a battle-tested and
-still popular "application for SBCL or CCL that configures and saves
-an executable Common Lisp image".
+最後に [Buildapp](http://www.xach.com/lisp/buildapp/) について少し触れます。これは実戦投入され、今でも人気のある「SBCL または CCL 向けで、実行可能な Common Lisp イメージを構成して保存するアプリケーション」です。
 
-Example usage:
+使用例です。
 
 ~~~lisp
 buildapp --output myapp \
@@ -391,28 +318,20 @@ buildapp --output myapp \
          --entry my-app:main
 ~~~
 
-Many applications use it (for example,
-[pgloader](https://github.com/dimitri/pgloader)),  it is available on
-Debian: `apt install buildapp`, but you shouldn't need it now with asdf:make or Roswell.
+多くのアプリケーションが使っています（たとえば [pgloader](https://github.com/dimitri/pgloader)）。Debian では `apt install buildapp` で入りますが、今なら `asdf:make` や Roswell で足りるはずです。
 
 
-### For web apps
+### Web アプリ向け
 
-We can similarly build a self-contained executable for our web appplication. It
-would thus contain a web server and would be able to run on the
-command line:
+同様に、Web アプリケーション向けの自己完結型実行ファイルも作れます。これには Web サーバーが含まれ、コマンドラインから起動できます。
 
     $ ./my-web-app
     Hunchentoot server is started.
     Listening on localhost:9003.
 
-Note that this runs the production webserver, not a development one,
-so we can run the binary on our VPS right away and access the application from
-the outside.
+これは開発用ではなく本番用の Web サーバーを起動する点に注意してください。そのため、バイナリを VPS でそのまま実行して外部からアクセスできます。
 
-We have one thing to take care of, it is to find and put the thread of
-the running web server on the foreground. In our `main` function, we
-can do something like this:
+気をつける点が 1 つあります。動いている Web サーバーのスレッドを見つけて前面に置くことです。`main` 関数では次のようにできます。
 
 ~~~lisp
 (defun main ()
@@ -437,24 +356,16 @@ can do something like this:
     (error (c) (format t "Woops, an unknown error occurred:~&~a~&" c))))
 ~~~
 
-We used the `bordeaux-threads` library (`(ql:quickload
-"bordeaux-threads")`, alias `bt`) and `uiop`, which is part of ASDF so
-already loaded, in order to exit in a portable way (`uiop:quit`, with
-an optional return code, instead of `sb-ext:quit`).
+ここでは `bordeaux-threads` ライブラリ（`(ql:quickload "bordeaux-threads")`、別名 `bt`）と、ASDF の一部としてすでに読み込まれている `uiop` を使い、移植可能な方法で終了しています（`sb-ext:quit` ではなく、任意の終了コードを取れる `uiop:quit`）。
 
 
-### Size and startup times of executables per implementation
+### 実装ごとの実行ファイルサイズと起動時間
 
-**SBCL** isn't the only Lisp implementation.
-[**ECL**](https://gitlab.com/embeddable-common-lisp/ecl/), Embeddable
-Common Lisp, transpiles Lisp programs to C.  That creates a smaller
-executable.
+**SBCL** だけが Lisp 実装ではありません。[**ECL**](https://gitlab.com/embeddable-common-lisp/ecl/)（Embeddable Common Lisp）は Lisp プログラムを C に変換するため、より小さな実行ファイルになります。
 
-According to
-[this reddit source](https://www.reddit.com/r/lisp/comments/46k530/tackling_the_eternal_problem_of_lisp_image_size/), ECL produces indeed the smallest executables of all,
-an order of magnitude smaller than SBCL, but with a longer startup time.
+[この Reddit 投稿](https://www.reddit.com/r/lisp/comments/46k530/tackling_the_eternal_problem_of_lisp_image_size/) によると、ECL は確かに最小の実行ファイルを生成し、SBCL より 1 桁ほど小さい一方で、起動時間は長めです。
 
-CCL's binaries seem to be as fast to start up as SBCL and nearly half the size.
+CCL のバイナリは、SBCL と同程度に速く起動し、サイズはほぼ半分のようです。
 
 
 ```
@@ -473,45 +384,38 @@ CCL's binaries seem to be as fast to start up as SBCL and nearly half the size.
 
 <!-- TODO: what about SBCL with maximum core compression? -->
 
-Regarding compilation times, **CCL** is famous for being fast in that regards.
-ECL is more involved and takes the longer to compile of these three implementations.
+コンパイル時間については、**CCL** が速いことで有名です。ECL は処理が重く、この 3 つの中ではコンパイルに最も時間がかかります。
 
-You'll also want to investigate the proprietary Lisps' **tree shakers** capabilities.
-**LispWorks** can build a 8MB hello-world program, without compression but fully tree-shaken.
-Such an executable is generated in about 1 second and the runtime is inferior to 0.02 seconds on an Apple M2 Pro CPU.
+商用 Lisp の **tree shaker** の能力も調べる価値があります。**LispWorks** なら、圧縮なしでも完全に tree shake された 8MB の hello-world プログラムを作れます。そのような実行ファイルは約 1 秒で生成され、Apple M2 Pro CPU では実行時間は 0.02 秒未満です。
 
 
 ### Building a smaller binary with SBCL's core compression
 
-Building with SBCL's core compression can dramatically reduce your
-application binary's size. In our case, it reduced it from 120MB to 23MB,
-for a loss of a dozen milliseconds of start-up time, which was still
-under 50ms.
+SBCL の core compression を使うと、アプリケーションのバイナリサイズを大幅に減らせます。今回の例では 120MB から 23MB まで減り、その代わり起動時間は十数ミリ秒増えましたが、それでも 50ms 未満でした。
 
 <div class="info-box info">
     <strong>Note:</strong> SBCL 2.2.6 switched to compression with zstd instead of zlib, which provides smaller binaries and faster compression and decompression times. Un-official numbers are: about 4x faster compression, 2x faster decompression, and smaller binaries by 10%.
 </div>
 
 
-Your SBCL must be built with core compression, see the documentation: [Saving-a-Core-Image](http://www.sbcl.org/manual/#Saving-a-Core-Image)
+使っている SBCL は core compression 対応である必要があります。ドキュメント [Saving-a-Core-Image](http://www.sbcl.org/manual/#Saving-a-Core-Image) を参照してください。
 
-Is it the case ?
+対応しているかどうかは次で確認できます。
 
 ~~~lisp
 (find :sb-core-compression *features*)
 :SB-CORE-COMPRESSION
 ~~~
 
-Yes, it is the case with this SBCL installed from Debian.
+はい、Debian 版の SBCL では対応しています。
 
-**With SBCL**
+**SBCL の場合**
 
-In SBCL, we would give an argument to `save-lisp-and-die`, where
-`:compression`
+SBCL では `save-lisp-and-die` に引数を渡します。`:compression` は次の意味です。
 
-> may be an integer from -7 to 22, corresponding to zstd compression levels, or t (which is equivalent to the default compression level, 9).
+> -7 から 22 までの整数で、zstd の圧縮レベルに対応します。`t` は既定の圧縮レベル 9 と同じです。
 
-For a simple "Hello, world" program:
+単純な "Hello, world" プログラムの場合:
 
 ```
 | Program size | Compression level   |
@@ -522,7 +426,7 @@ For a simple "Hello, world" program:
 | 11MB         | 22                  |
 ```
 
-For a bigger project like StumpWM, an X window manager written in Lisp:
+Lisp で書かれた X ウィンドウマネージャー StumpWM のような大きなプロジェクトでは、次のようになります。
 
 ```
 | Program size | Compression level   |
@@ -533,9 +437,9 @@ For a bigger project like StumpWM, an X window manager written in Lisp:
 | 13MB         | 22                  |
 ```
 
-**With ASDF**
+**ASDF の場合**
 
-However, we prefer to do this with ASDF (or rather, UIOP). Add this in your .asd:
+ただし、ASDF（正確には UIOP）でやるほうが好まれます。`.asd` に次を追加します。
 
 ~~~lisp
 #+sb-core-compression
@@ -545,25 +449,19 @@ However, we prefer to do this with ASDF (or rather, UIOP). Add this in your .asd
                    :compression t))
 ~~~
 
-**With Deploy**
+**Deploy の場合**
 
-Also, the [Deploy](https://github.com/Shinmera/deploy/) library can be used
-to build a fully standalone application. It will use compression if available.
+[Deploy](https://github.com/Shinmera/deploy/) ライブラリでも、完全にスタンドアロンなアプリケーションを作れます。利用可能なら圧縮も使います。
 
-Deploy is specifically geared towards applications with foreign
-library dependencies. It collects all the foreign shared libraries of
-dependencies, such as libssl.so in the `bin` subdirectory.
+Deploy は、外部ライブラリ依存のあるアプリケーション向けに特化しています。依存先の共有ライブラリをすべて集め、`bin` サブディレクトリにまとめます。
 
-And voilà !
+これで完了です。
 
-## Building a core image: fast startup with lots of dependencies
+## core image を作る: 依存が多くても速く起動する
 
-Let's come back to our initial use case, of a script using a shebang
-line (`#!/usr/bin/env -S sbcl --script`) where we want to "quickload"
-dependencies. However, we notice that the more dependencies, the
-longer it takes for our script to run. Can we fix this?
+最初の用途に戻りましょう。shebang 行（`#!/usr/bin/env -S sbcl --script`）を使うスクリプトで依存関係を "quickload" したい場面です。ただし、依存が増えるほどスクリプトの起動は遅くなります。これを改善できるでしょうか。
 
-We need a dozen dependencies (and their tansitive dependencies):
+必要なのは十数個の依存関係（とその推移的依存）です。
 
 ```
 str
@@ -581,15 +479,11 @@ clingon
 log4cl
 ```
 
-We have a way to make our script fast again. We can dump a "core
-image" with all the dependencies pre-loaded, and run our script from
-this core image.
+スクリプトを再び速くする方法があります。依存関係をすべて読み込んだ "core image" をダンプし、その core image からスクリプトを実行します。
 
-We build a core image portably with `uiop:dump-image "my.core"`, with
-SBCL this would be `(sb-ext:save-lisp-and-die …)` and its arguments,
-except `:executable t`. If it isn't an executable, it's a core image.
+`uiop:dump-image "my.core"` で移植可能に core image を作れます。SBCL では `sb-ext:save-lisp-and-die …` に相当し、` :executable t` を除いた引数が同じです。実行ファイルでなければ、それは core image です。
 
-Create a file `build-core.lisp`:
+`build-core.lisp` を作ります。
 
 ```lisp
 (ql:quickload
@@ -611,11 +505,11 @@ Create a file `build-core.lisp`:
 (uiop:dump-image "my.core")
 ```
 
-Run this file and build your core image with:
+このファイルを実行して core image を作ります。
 
     sbcl --load build-core.lisp
 
-Output:
+出力は次のようになります。
 
 ```
 This is SBCL 2.5.8, an implementation of ANSI Common Lisp.
@@ -646,14 +540,14 @@ writing 12767232 bytes from the text space at 0xb800000000
 done]
 ```
 
-You now have a new file `my.core`:
+これで新しい `my.core` ファイルができます。
 
 ```
 $ ls -lh my.core
 -rwxr-xr-x 1 me me 86M Mar  3 14:12 my.core
 ```
 
-Now, we can use it from our script, with the command-line flag `--core my.core`. In a file myscript.lisp:
+これをスクリプトから使うには、コマンドライン引数 `--core my.core` を付けます。`myscript.lisp` は次のようになります。
 
 ```lisp
 #!/usr/bin/env -S sbcl --core my.core --script
@@ -668,42 +562,33 @@ Hello script. We are using dependencies. Time is 2084-03-03T14:19:55.573738+01:0
 ./use-core.lisp  0.01s user 0.01s system 99% cpu 0.017 total
 ```
 
-Look how fast it started.
+起動の速さを見てください。
 
-Lasts remarks:
+最後に注意点です。
 
-- a core image is not portable across machines. This one is for you,
-  you can't ship it to users or deploy it to a server. Use executables
-  for this.
-- you can pre-load more than just Lisp libraries, anything else in
-  fact, such as static files (game assets, JS and CSS, markdown
-  documents…) or pre-computed data (parse and load heavy CSV files at
-  compile time…).
+- core image はマシン間で移植できません。これは自分用であり、利用者へ配ったりサーバーへデプロイしたりはできません。そういう用途には実行ファイルを使ってください。
+- Lisp ライブラリ以外も事前読み込みできます。静的ファイル（ゲームアセット、JS/CSS、Markdown 文書など）や、事前計算済みデータ（重い CSV をコンパイル時に解析して読み込むなど）も含められます。
 
-Read more:
+さらに読む:
 
 - [SBCL's documentation](https://www.sbcl.org/manual/#Saving-a-Core-Image)
 
 
-## Parsing command line arguments
+## コマンドライン引数を解析する
 
-SBCL stores the command line arguments into `sb-ext:*posix-argv*`.
+SBCL はコマンドライン引数を `sb-ext:*posix-argv*` に入れます。
 
-But that variable name differs from implementations, so we want a
-way to handle the differences for us.
+ただし変数名は実装ごとに違うので、その差を吸収する手段が欲しくなります。
 
-We have `(uiop:command-line-arguments)`, shipped in ASDF and included in
-nearly all implementations.
-From anywhere in your code, you can simply check if a given string is present in this list:
+そこで `(uiop:command-line-arguments)` があります。これは ASDF に含まれ、ほぼすべての実装で使えます。コードのどこからでも、次のようにして特定の文字列がこのリストにあるか確認できます。
 
 ~~~lisp
 (member "-h" (uiop:command-line-arguments) :test #'string-equal)
 ~~~
 
-That's good, but we also want to parse the arguments, have facilities to check short and long options, build a help message automatically, etc.
+これで十分そうですが、さらに引数の解析や、短いオプション・長いオプションのチェック、自動ヘルプ生成なども欲しくなります。
 
-We chose the [Clingon](https://github.com/dnaeon/clingon) library,
-because it may have the richest feature set:
+そこで [Clingon](https://github.com/dnaeon/clingon) ライブラリを選びました。機能がもっとも豊富かもしれないからです。
 
 - it handles subcommands,
 - it supports various kinds of options (flags, integers, booleans, counters, enums…),
@@ -724,17 +609,15 @@ As often, work happens in two phases:
 * we ask Clingon to parse the command-line options and run our app.
 
 
-### Declaring options
+### オプションを宣言する
 
-We want to represent a command-line tool with this possible usage:
+コマンドラインツールの使い方を、次のように表したいとします。
 
     $ myscript [-h, --help] [-n, --name NAME]
 
-Ultimately, we need to create a Clingon command (with
-`clingon:make-command`) to represent our application. A command is
-composed of options and of a handler function, to do the logic.
+最終的には、アプリケーションを表す Clingon の command を `clingon:make-command` で作る必要があります。command は option と、ロジックを担当する handler 関数から成ります。
 
-So first, let's create options. Clingon already handles "--help" for us, but not the short version. Here's how we use `clingon:make-option` to create an option:
+まずは option を作りましょう。Clingon は `--help` はすでに扱ってくれますが、短い版は扱いません。`clingon:make-option` で option を作る例は次のとおりです。
 
 ~~~lisp
 (clingon:make-option
@@ -746,16 +629,14 @@ So first, let's create options. Clingon already handles "--help" for us, but not
  :key :help)          ;; <--- the internal reference to use with getopt, see later.
 ~~~
 
-This is a **flag**: if "-h" is present on the command-line, the
-option's value will be truthy, otherwise it will be falsy. A flag does
-not expect an argument, it's here for itself.
+これは **flag** です。コマンドラインに `-h` があれば option の値は真、それ以外は偽になります。flag は引数を取りません。単独で存在します。
 
-Similar kind of options would be:
+似た種類の option には次のものがあります。
 
-- `:boolean`: that one expects an argument, which can be "true" or 1 to be truthy. Anything else is considered falsy.
-- `:counter`: a counter option counts how many times the option is provided on the command line. Typically, use it with `-v` / `--verbose`, so the user could use `-vvv` to have extra verbosity. In that case, the option value would be 3. When this option is not provided on the command line, Clingon sets its value to 0.
+- `:boolean`: 引数を取ります。"true" または 1 なら真、それ以外は偽とみなします。
+- `:counter`: コマンドラインで何回指定されたかを数えます。通常は `-v` / `--verbose` に使い、利用者は `-vvv` のようにして詳細度を上げられます。この場合、値は 3 です。指定されなければ 0 になります。
 
-We'll create a second option ("--name" or "-n" with a parameter) and we put everything in a litle function.
+2 つ目の option（引数付きの `--name` または `-n`）を作り、すべてを小さな関数にまとめます。
 
 ~~~lisp
 ;; The naming with a "/" is just our convention.
@@ -809,36 +690,36 @@ Here's a minimal command. We'll define our handler function afterwards:
    :handler #'null))  ;; <--  to change. See below.
 ~~~
 
-At this point, we can already test things out on the REPL.
+この時点で、REPL でもう試せます。
 
-### Testing options parsing on the REPL
+### REPL でオプション解析を試す
 
-Use `clingon:parse-command-line`: it wants a top-level command, and a list of command-line arguments (strings):
+`clingon:parse-command-line` を使います。トップレベル command と、コマンドライン引数の文字列リストを受け取ります。
 
 ~~~lisp
 CL-USER> (clingon:parse-command-line (cli/command) '("-h" "-n" "me"))
 #<CLINGON.COMMAND:COMMAND name=hello options=5 sub-commands=0>
 ~~~
 
-It works!
+動きます。
 
-We can even `inspect` this command object, we would see its properties (name, hooks, description, context…), its list of options, etc.
+この command オブジェクトを `inspect` すると、プロパティ（name、hooks、description、context など）や option の一覧などが見えます。
 
-Let's try again with an unknown option:
+未知の option でも試してみましょう。
 
 ~~~lisp
 CL-USER> (clingon:parse-command-line (cli/command) '("-x"))
 ;; => debugger: Unknown option -x of kind SHORT
 ~~~
 
-In that case, we are dropped into the interactive debugger, which says
+その場合は対話デバッガに入り、次のように表示されます。
 
 ```
 Unknown option -x of kind SHORT
    [Condition of type CLINGON.CONDITIONS:UNKNOWN-OPTION]
 ```
 
-and we are provided a few restarts:
+そして、いくつかの restart が提示されます。
 
 ```
 Restarts:
@@ -849,13 +730,9 @@ Restarts:
  4: [*ABORT] Return to SLIME's top level.
 ```
 
-which are very practical. If we needed, we could create an `:around`
-method for `parse-command-line`, handle Clingon's conditions with
-`handler-bind` and use its restarts, to do something different with
-unknown options. But we don't need that yet, if ever: we want our
-command-line parsing engine to warn us on invalid options.
+これらはかなり実用的です。必要なら `parse-command-line` に `:around` メソッドを作り、`handler-bind` で Clingon の条件を扱い、その restart を使って未知の option に別の処理をさせることもできます。ただ、現時点ではそこまで要りません。無効な option は警告してほしいからです。
 
-Last but not least, we can see how Clingon prints our CLI tool's usage information:
+最後に、Clingon が CLI ツールの usage 情報をどう出すか見てみましょう。
 
 ```
 CL-USER> (clingon:print-usage (cli/command) t)
@@ -878,17 +755,17 @@ LICENSE:
   BSD 2-Clause
 ```
 
-We can tweak the "USAGE" part with the `:usage` key parameter of the lop-level command.
+`USAGE` 部分は、トップレベル command の `:usage` キーパラメータで調整できます。
 
 
-### Handling options
+### option を処理する
 
-When the parsing of command-line arguments succeeds, we need to do something with them. We introduce two new Clingon functions:
+コマンドライン引数の解析が成功したら、それを使って何かする必要があります。ここで新しい Clingon 関数を 2 つ使います。
 
-- `clingon:getopt` is used to get an option's value by its `:key`
-- `clingon:command-arguments` gets use the free arguments remaining on the command-line.
+- `clingon:getopt` は、` :key` で option の値を取得します
+- `clingon:command-arguments` は、コマンドラインに残った自由引数を取得します
 
-Here's how to use them:
+使い方は次のとおりです。
 
 ~~~lisp
 CL-USER> (let ((command (clingon:parse-command-line (cli/command) '("-n" "you" "last"))))
@@ -899,7 +776,7 @@ free args are: ("last")
 NIL
 ~~~
 
-It is with them that we will write the handler of our top-level command:
+これらを使って、トップレベル command の handler を書きます。
 
 ~~~lisp
 (defun cli/handler (cmd)
@@ -912,7 +789,7 @@ It is with them that we will write the handler of our top-level command:
     (format t "Bye!~%")))
 ~~~
 
-We must tell our top-level command to use this handler:
+トップレベル command に、この handler を使うよう伝えます。
 
 ~~~lisp
 ;; from above:
@@ -923,20 +800,20 @@ We must tell our top-level command to use this handler:
    :handler #'cli/handler))  ;; <-- changed.
 ~~~
 
-We now only have to write the main entry point of our binary and we're done.
+あとはバイナリの main エントリポイントを書けば終わりです。
 
-By the way, `clingon:getopt` returns 3 values:
+ちなみに `clingon:getopt` は 3 つの値を返します。
 
-- the option's value
-- a boolean, indicating wether this option was provided on the command-line
-- the command which provided the option for this value.
+- option の値
+- その option がコマンドラインで指定されたかを示す真偽値
+- この値を提供した command
 
-See also `clingon:opt-is-set-p`.
+`clingon:opt-is-set-p` も参照してください。
 
 
-### Main entry point
+### main エントリポイント
 
-This can be any function, but to use Clingon, use its `run` function:
+これは任意の関数でかまいませんが、Clingon を使うなら `run` 関数を呼びます。
 
 ~~~lisp
 (defun main ()
@@ -944,27 +821,26 @@ This can be any function, but to use Clingon, use its `run` function:
   (clingon:run (cli/command)))
 ~~~
 
-To use this main function as your binary entry point, see above how to build a Common Lisp binary. A reminder: set it in your .asd system declaration:
+この main 関数をバイナリのエントリポイントとして使うには、上で説明した Common Lisp バイナリの作り方に従います。念のため、`.asd` の system 定義で次のように設定します。
 
 ~~~lisp
 :entry-point "my-package::main"
 ~~~
 
-And that's about it. Congratulations, you can now properly parse command-line arguments!
+これでほぼ終わりです。おめでとうございます。これでコマンドライン引数をきちんと解析できます。
 
-Go check Clingon's documentation, because there is much more to it: sub-commands, contexts, hooks, handling a C-c, developing new options such as an email kind, Bash and Zsh completion…
+Clingon のドキュメントには、サブコマンド、コンテキスト、フック、C-c の扱い、メール用の option のような新しい種類の開発、Bash/Zsh 補完など、さらに多くの情報があります。
 
 
-## Catching a C-c termination signal
+## C-c の終了シグナルを捕まえる
 
-By default, **Clingon provides a handler for SIGINT signals**. It makes the
-application to immediately exit with the status code 130.
+既定では、**Clingon は SIGINT シグナルの handler を提供します**。これによりアプリケーションはすぐに終了し、終了コード 130 を返します。
 
-If your application needs some clean-up logic, you can use an `unwind-protect` form. However, it might not be appropriate for all cases, so Clingon advertises to use the [with-user-abort](https://github.com/compufox/with-user-abort) helper library.
+アプリケーションに後始末のロジックが必要なら、`unwind-protect` を使えます。ただしすべてのケースに向くとは限らないため、Clingon では [with-user-abort](https://github.com/compufox/with-user-abort) 補助ライブラリの利用も案内しています。
 
-Below we show how to catch a C-c manually. Because by default, you would get a Lisp stacktrace.
+以下では、C-c を手動で捕まえる方法を示します。既定では Lisp のスタックトレースが出るからです。
 
-We built a simple binary, we ran it and pressed `C-c`. Let's read the stacktrace:
+簡単なバイナリを作って実行し、`C-c` を押してみました。スタックトレースを見てみましょう。
 
 ~~~
 $ ./my-app
@@ -981,9 +857,7 @@ restarts (invokable by number or by possibly-abbreviated name):
   1: [RETRY-REQUEST] Retry the same request.
 ~~~
 
-The signaled condition is named after our implementation:
-`sb-sys:interactive-interrupt`. We just have to surround our
-application code with a `handler-case`:
+シグナルされた条件の名前は実装依存で、ここでは `sb-sys:interactive-interrupt` です。アプリケーションコードを `handler-case` で囲めばよいです。
 
 ~~~lisp
 (handler-case
@@ -994,10 +868,7 @@ application code with a `handler-case`:
         (uiop:quit))))
 ~~~
 
-This code is only for SBCL though. We know about
-[trivial-signal](https://github.com/guicho271828/trivial-signal/),
-but we were not satisfied with our test yet. So we can use something
-like this:
+ただし、このコードは SBCL 専用です。[trivial-signal](https://github.com/guicho271828/trivial-signal/) もありますが、ここではまだ十分ではありませんでした。なので、次のような書き方にできます。
 
 ~~~lisp
 (handler-case
@@ -1011,29 +882,24 @@ like this:
    (uiop:quit)))
 ~~~
 
-here `#+` includes the line at compile time depending on
-the  implementation.  There's  also `#-`.  What `#+` does is to look for
-symbols in the `*features*` list.  We can also combine symbols with
-`and`, `or` and `not`.
+ここで `#+` は、実装に応じてその行をコンパイル時に含めます。`#-` もあります。`#+` は `*features*` リスト内のシンボルを見ます。シンボルは `and`、`or`、`not` でも組み合わせられます。
 
-## Continuous delivery of executables
+## 実行ファイルの継続的デリバリー
 
-We can make a Continuous Integration system (Travis CI, Gitlab CI,…)
-build binaries for us at every commit, or at every tag pushed or at
-whichever other policy.
+継続的インテグレーションシステム（Travis CI、GitLab CI など）に、コミットごと、タグ push ごと、あるいは任意のポリシーでバイナリをビルドさせられます。
 
-See [Continuous Integration](testing.html#continuous-integration).
+[`継続的インテグレーション`](testing.html#continuous-integration) を参照してください。
 
-## See also
+## 関連項目
 
-* [SBCL-GOODIES](https://github.com/sionescu/sbcl-goodies) - Allows to distribute SBCL binaries with foreign libraries: `libssl`, `libcrypto` and `libfixposix` are statically baked in. This removes the need of Deploy, when only these three foreign libraries are used.
-  * it was released on February, 2023.
-* [CIEL Is an Extended Lisp](http://ciel-lang.org/) - a batteries-included Common Lisp package with script facilities.
-* [kiln](https://github.com/ruricolist/kiln) - an infrastructure (managing a hidden multicall binary) to make Lisp scripting efficient and ergonomic.
-  * Kiln makes it practical to write very small scripts. Kiln scripts are fast and cheap to the point where it makes sense to expose even small pieces of Lisp functionality to the shell.
-- [Cross-compiling Common Lisp for Windows](https://www.fosskers.ca/en/blog/cl-windows)
+- [SBCL-GOODIES](https://github.com/sionescu/sbcl-goodies) - 外部ライブラリ付きの SBCL バイナリを配布できます。`libssl`、`libcrypto`、`libfixposix` が静的に組み込まれます。これら 3 つの外部ライブラリだけを使うなら、Deploy は不要になります。
+  * 2023 年 2 月に公開されました。
+- [CIEL Is an Extended Lisp](http://ciel-lang.org/) - スクリプト機能を備えた、盛り込み済みの Common Lisp パッケージです。
+- [kiln](https://github.com/ruricolist/kiln) - Lisp のスクリプト実行を効率的かつ扱いやすくするための基盤です（隠しマルチコールバイナリを管理します）。
+  * Kiln を使うと、非常に小さなスクリプトも実用的に書けます。Kiln のスクリプトは高速で低コストなので、Lisp の小さな機能片でもシェルへ公開する意味が出てきます。
+- [Common Lisp を Windows 向けにクロスコンパイルする](https://www.fosskers.ca/en/blog/cl-windows)
 
-## Credit
+## 謝辞
 
-* [cl-torrents' tutorial](https://vindarel.github.io/cl-torrents/tutorial.html)
+* [cl-torrents のチュートリアル](https://vindarel.github.io/cl-torrents/tutorial.html)
 * [lisp-journey/web-dev](https://lisp-journey.gitlab.io/web-dev/)
