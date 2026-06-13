@@ -1,33 +1,20 @@
 ---
-title: Editor support
+title: エディタサポート
 ---
 
-The editor of choice is still [Emacs](https://www.gnu.org/software/emacs/), but it is not the only one.
+今でも定番のエディタは [Emacs](https://www.gnu.org/software/emacs/) ですが、選択肢はそれだけではありません。
 
-For newcomers to the ecosystem, we advise to first try the ICL enhanced REPL and `mine`.
+このエコシステムに初めて触れる人には、まず ICL の拡張 REPL と `mine` を試してみることを勧めます。
 
 ## Emacs
 
-[SLIME](https://github.com/slime/slime/) is the Superior Lisp
-Interaction Mode for Emacs. It has support for interacting with a
-running Common Lisp process for compilation, debugging, documentation
-lookup, cross-references, and so on. It works with many implementations.
+[SLIME](https://github.com/slime/slime/) は Emacs 向けの Superior Lisp Interaction Mode です。実行中の Common Lisp プロセスとやり取りし、コンパイル、デバッグ、ドキュメント検索、クロスリファレンスなどを扱えます。多くの処理系で動作します。
 
-[IDEmacs](https://codeberg.org/IDEmacs/IDEmacs) is an attempt at
-making Emacs beginner friendly. It ships Sly for Common Lisp. With
-Emacs v29 or higher, you can try IDEmacs temporarily without messing
-with your .emacs configuration, thanks to the new `--init-directory`
-option. Other Emacs distributions such as [Doom](https://github.com/doomemacs/doomemacs/blob/3e15fb36d7f94f0a218bda977be4d3f5da983a71/modules/lang/common-lisp/README.org#L9) or
-[Spacemacs](https://www.spacemacs.org/layers/LAYERS.html#lisp-dialects)
-ship CL support (Sly and Slime, respectively).
+[IDEmacs](https://codeberg.org/IDEmacs/IDEmacs) は、Emacs を初心者に使いやすくしようとする試みです。Common Lisp 用に Sly が同梱されています。Emacs v29 以降では、新しい `--init-directory` オプションのおかげで、.emacs 設定を汚さず一時的に IDEmacs を試せます。[Doom](https://github.com/doomemacs/doomemacs/blob/3e15fb36d7f94f0a218bda977be4d3f5da983a71/modules/lang/common-lisp/README.org#L9) や [Spacemacs](https://www.spacemacs.org/layers/LAYERS.html#lisp-dialects) など、ほかの Emacs ディストリビューションにも CL サポートが含まれています（それぞれ Sly と Slime）。
 
-[plain-common-lisp](https://github.com/pascalcombier/plain-common-lisp/)
-is a crafted, easy-to-install Common Lisp environment for
-**Windows**. It ships Emacs, SBCL, Slime, Quicklisp. It also shows how
-to display GUI windows with Win32, Tk, IUP, ftw and Opengl.
+[plain-common-lisp](https://github.com/pascalcombier/plain-common-lisp/) は、**Windows** 向けに作られた、インストールしやすい Common Lisp 環境です。Emacs、SBCL、Slime、Quicklisp が同梱されています。また、Win32、Tk、IUP、ftw、Opengl で GUI ウィンドウを表示する方法も示しています。
 
-[lisp-stat's Docker image](https://lisp-stat.dev/blog/2026/03/09/getting-started/) comes
-with a ready-to-use Emacs:
+[lisp-stat の Docker イメージ](https://lisp-stat.dev/blog/2026/03/09/getting-started/) には、すぐ使える Emacs が含まれています。
 
 ```
 $ docker run --rm -it ghcr.io/lisp-stat/ls-dev:latest ls-repl
@@ -46,19 +33,16 @@ $ emacs
 <!-- todo: PDF generation: lacks IMG images -->
 
 
-### Using Emacs as an IDE
+### Emacs を IDE として使う
 
-See ["Using Emacs as an IDE"](emacs-ide.html).
+["Using Emacs as an IDE"](emacs-ide.html) を参照してください。
 
 
 ## Vim & Neovim
 
-[Slimv](https://github.com/kovisoft/slimv) is a full-blown
-environment for Common Lisp inside of Vim.
+[Slimv](https://github.com/kovisoft/slimv) は、Vim 内で Common Lisp を扱うための本格的な環境です。
 
-[Vlime](https://github.com/vlime/vlime) is a Common Lisp dev
-environment for Vim (and Neovim), similar to SLIME for Emacs and SLIMV
-for Vim.
+[Vlime](https://github.com/vlime/vlime) は Vim（および Neovim）向けの Common Lisp 開発環境で、Emacs の SLIME や Vim の SLIMV に似ています。
 
 <img src="assets/slimv.jpg"
      style="width: 800px" alt="The Slimv plugin with an open REPL"/>
@@ -67,77 +51,68 @@ for Vim.
 ![](assets/slimv.jpg)
    pdf-include-end -->
 
-[cl-neovim](https://github.com/adolenc/cl-neovim/) makes it possible to write
-Neovim plugins in Common Lisp.
+[cl-neovim](https://github.com/adolenc/cl-neovim/) を使うと、Common Lisp で Neovim プラグインを書けます。
 
-[quicklisp.nvim](https://gitlab.com/HiPhish/quicklisp.nvim) is a Neovim
-frontend for Quicklisp.
+[quicklisp.nvim](https://gitlab.com/HiPhish/quicklisp.nvim) は Quicklisp 向けの Neovim フロントエンドです。
 
-[Slimv_box](https://github.com/justin2004/slimv_box) brings Vim, SBCL, ABCL,
-and tmux in a Docker container for a quick installation.
+[Slimv_box](https://github.com/justin2004/slimv_box) は、手早くインストールできるよう、Vim、SBCL、ABCL、tmux を Docker コンテナで提供します。
 
-See also:
+関連項目:
 
-* [Lisp in Vim](https://susam.net/blog/lisp-in-vim.html) demonstrates usage and
-  compares both Slimv and Vlime
+* [Lisp in Vim](https://susam.net/blog/lisp-in-vim.html) は使い方を実演し、Slimv と Vlime の両方を比較しています
 
-## Mine: single-download IDE for Common Lisp and Coalton
+## Mine: Common Lisp と Coalton のための単一ダウンロード IDE
 
-`mine` is a brand new (released in April of 2026) terminal-based IDE
-for *both* Common Lisp and [Coalton](https://coalton-lang.github.io/)
-(the statically typed functional superset of Common Lisp).
+`mine` は、*Common Lisp* と [Coalton](https://coalton-lang.github.io/)（Common Lisp の静的型付き関数型スーパーセット）の*両方*に対応した、まったく新しい（2026 年 4 月リリースの）ターミナルベース IDE です。
 
-> `mine` is a complete, single-download application that comes with everything needed to experience the interactive and incremental development programming workflow, including hot-reloading and on-the-fly debugging, that Lisp programmers often refer to as the differentiating feature of the ecosystem.
+> `mine` は、Lisp プログラマがこのエコシステムを特徴づけるものとしてよく挙げる、対話的でインクリメンタルな開発ワークフローを体験するために必要なものをすべて備えた、単一ダウンロードの完全なアプリケーションです。ホットリロードやその場でのデバッグも含まれています。
 
-- [Mine's homepage](https://coalton-lang.github.io/mine/)
-  - 👉 [download the latest release for Windows, MacOS and GNU/Linux](https://github.com/coalton-lang/coalton/releases/latest)
+- [Mine のホームページ](https://coalton-lang.github.io/mine/)
+  - 👉 [Windows、MacOS、GNU/Linux 向けの最新リリースをダウンロード](https://github.com/coalton-lang/coalton/releases/latest)
 - [Introducing mine, a Coalton and Common Lisp IDE](https://coalton-lang.github.io/20260424-mine/)
-- youtube: [video presenting `mine`](https://www.youtube.com/watch?v=qe3vDKQShKs)
+- youtube: [`mine` を紹介する動画](https://www.youtube.com/watch?v=qe3vDKQShKs)
 
 <img src="assets/mine-screenshot.png"
      style="width: 80%" alt="The beginner friendly mine editor."/>
 
-`mine` features:
+`mine` の機能:
 
-- Inline **diagnostics**, from critical errors to harmless optimization notes
-- Integrated **debugger** with readable backtraces
-- Jump-to-definition (the Lisper-favorite meta-dot)
-- **Autocomplete** that is aware of package nicknames
-- Real-time display of argument lists and function types
-- Syntax highlighting
-- Auto-indentation
-- Structural editing
-- **Project creation** and setup
-- Built-in **Quicklisp setup**
-- Native code compiler and executable builder
+- 重大なエラーから無害な最適化メモまで表示するインライン**診断**
+- 読みやすいバックトレースを備えた統合**デバッガ**
+- 定義へジャンプ（Lisper におなじみの meta-dot）
+- パッケージニックネームを認識する**補完**
+- 引数リストと関数型のリアルタイム表示
+- シンタックスハイライト
+- 自動インデント
+- 構造編集
+- **プロジェクト作成**とセットアップ
+- 組み込みの **Quicklisp セットアップ**
+- ネイティブコードコンパイラと実行ファイルビルダー
 
-Check it out.
+ぜひ試してみてください。
 
-Also please note that `mine` is different:
+また、`mine` が少し変わっている点にも注意してください。
 
-> mine is supposed to be as easy as the QBASIC or the Borland Turbo products of yore
+> mine は、かつての QBASIC や Borland Turbo 製品のように簡単であることを目指しています
 
 
-## Pulsar (ex Atom)
+## Pulsar（旧 Atom）
 
-See [SLIMA](https://github.com/neil-lindquist/slima). This package
-allows you to interactively develop Common Lisp code, turning Atom, or
-now [Pulsar](https://github.com/pulsar-edit/pulsar), into a pretty
-good Lisp IDE. It features:
+[SLIMA](https://github.com/neil-lindquist/slima) を参照してください。このパッケージを使うと、Common Lisp コードを対話的に開発でき、Atom、現在では [Pulsar](https://github.com/pulsar-edit/pulsar) をかなり優れた Lisp IDE にできます。主な機能は次のとおりです。
 
 * REPL
-* integrated debugger
-  * (not a stepping debugger yet)
-* jump to definition
-* autocomplete suggestions based on your code
-* compile this function, compile this file
-* function arguments order
-* integrated profiler
-* interactive object inspection.
+* 統合デバッガ
+  * （まだステップ実行デバッガではありません）
+* 定義へジャンプ
+* コードに基づく補完候補
+* この関数をコンパイル、このファイルをコンパイル
+* 関数引数の順序
+* 統合プロファイラ
+* 対話的なオブジェクト調査。
 
-It is based on the Swank backend, like Slime for Emacs.
+これは、Emacs の Slime と同じく Swank バックエンドに基づいています。
 
-**Important notice**: at the time of writing, SLIMA doesn't work with the latest Slime sources. We tested it successfully with [Slime 2.27](https://github.com/slime/slime/releases/tag/v2.27). It worked with SBCL 2.5.8 and SBCL 2.1.11.debian. Just follow SLIMA's documentation to set this 1 setting.
+**重要なお知らせ**: 執筆時点では、SLIMA は最新の Slime ソースでは動作しません。[Slime 2.27](https://github.com/slime/slime/releases/tag/v2.27) で動作確認しました。SBCL 2.5.8 と SBCL 2.1.11.debian で動作しました。この 1 つの設定については、SLIMA のドキュメントに従ってください。
 
 <img src="assets/atom-slime.png"
      style="width: 800px" alt="The SLIMA extension for Atom with an open Lisp REPL"/>
@@ -148,19 +123,18 @@ It is based on the Swank backend, like Slime for Emacs.
 
 ## VSCode
 
-### OLIVE (NEW as of June, 2026)
+### OLIVE（2026 年 6 月時点の新規）
 
-[OLIVE](https://github.com/kchanqvq/olive/) is a new (published on
-June of 2026) "Old-school LIsp Vscode Extension".
+[OLIVE](https://github.com/kchanqvq/olive/) は新しい（2026 年 6 月公開の）"Old-school LIsp Vscode Extension" です。
 
-It is based on interactions with the Lisp Swank server, and it features:
+Lisp Swank サーバとのやり取りを基盤としており、次の機能があります。
 
-- the basics: code completion, syntax highlighting, go to definition, documentation on hover…
-- a REPL and an interactive debugger
-  - with jump to source from the stack frames, ability to see local variables, etc.
-- compile current form and load files with different debug settings
-- find an ASDF system definition in the current project and load it
-- a macro stepper.
+- 基本機能: コード補完、シンタックスハイライト、定義へ移動、ホバー時のドキュメント表示…
+- REPL と対話的デバッガ
+  - スタックフレームからソースへジャンプ、ローカル変数の表示など
+- 現在のフォームのコンパイルと、異なるデバッグ設定でのファイル読み込み
+- 現在のプロジェクト内で ASDF システム定義を見つけて読み込む
+- マクロステッパ。
 
 <img src="assets/olive-repl.png" style="max-width: 800px" alt="The new OLIVE VSCode plugin showing the REPL."/>
 
@@ -168,38 +142,37 @@ It is based on interactions with the Lisp Swank server, and it features:
 ![](assets/olive-repl.png)
    pdf-include-end -->
 
-OLIVE vs. Alive:
+OLIVE と Alive の比較:
 
-- OLIVE is based on the Swank server, like Slime in Emacs, Lem, SLIMA in Pulsar, which is more mature for Common Lisp than a Common Lisp LSP.
-- Alive's REPL starts a new thread for every evaluation, which prevents doing some interactions.
-- OLIVE wants to be more stable than Alive,
-- and as good as Emacs and Slime as possible.
+- OLIVE は、Emacs の Slime、Lem、Pulsar の SLIMA と同じく Swank サーバに基づいており、Common Lisp LSP より Common Lisp 向けには成熟しています。
+- Alive の REPL は評価ごとに新しいスレッドを開始するため、一部の対話ができません。
+- OLIVE は Alive より安定することを目指しています。
+- そして可能なかぎり Emacs と Slime に近いものを目指しています。
 
 
 ### Alive
 
-[Alive](https://marketplace.visualstudio.com/items?itemName=rheller.alive) makes
-VSCode a powerful Common Lisp development.
+[Alive](https://marketplace.visualstudio.com/items?itemName=rheller.alive) は VSCode を強力な Common Lisp 開発環境にします。
 
-It is based on LSP (through cl-lsp), and currently supports:
+これは LSP（cl-lsp 経由）に基づいており、現在は次をサポートしています。
 
-- Syntax highlighting
-- Code completion
-- Code formatter
-- Jump to definition
-- Snippets
-- REPL integration
-- Interactive Debugger
-  - restart frames
-  - eval in frame (since v0.4.4)
-- REPL history
-- Inline evaluation
-- Macro expand
-- Disassemble
-- Inspector
-- Hover Text
-- Rename function args and let bindings
-- Code folding
+- シンタックスハイライト
+- コード補完
+- コードフォーマッタ
+- 定義へジャンプ
+- スニペット
+- REPL 連携
+- 対話的デバッガ
+  - フレームの再起動
+  - フレーム内での eval（v0.4.4 以降）
+- REPL 履歴
+- インライン評価
+- マクロ展開
+- 逆アセンブル
+- インスペクタ
+- ホバーテキスト
+- 関数引数と let 束縛のリネーム
+- コード折りたたみ
 
 <img src="assets/commonlisp-vscode-alive.png" style="width: 800px" alt="The Alive VSCode plugin showing the interactive debugger."/>
 
@@ -207,25 +180,20 @@ It is based on LSP (through cl-lsp), and currently supports:
 ![](assets/commonlisp-vscode-alive.png)
    pdf-include-end -->
 
-### Using VSCode with Alive
+### VSCode で Alive を使う
 
-See [Using VSCode with Alive](vscode-alive.html).
+[Using VSCode with Alive](vscode-alive.html) を参照してください。
 
 ### commonlisp-vscode
 
-[commonlisp-vscode
-extension](https://marketplace.visualstudio.com/items?itemName=ailisp.commonlisp-vscode)
-works via the [cl-lsp](https://github.com/ailisp/cl-lsp) language server and
-it's possible to write LSP client that works in other editors. It depends
-heavily on [Roswell](https://roswell.github.io/Home.html). It currently
-supports:
+[commonlisp-vscode extension](https://marketplace.visualstudio.com/items?itemName=ailisp.commonlisp-vscode) は [cl-lsp](https://github.com/ailisp/cl-lsp) 言語サーバ経由で動作し、ほかのエディタで動く LSP クライアントを書くこともできます。[Roswell](https://roswell.github.io/Home.html) に大きく依存しています。現在サポートしている機能は次のとおりです。
 
-- running a REPL
-- evaluate code
-- auto indent,
-- code completion
-- go to definition
-- documentation on hover
+- REPL の実行
+- コードの評価
+- 自動インデント
+- コード補完
+- 定義へ移動
+- ホバー時のドキュメント表示
 
 <img src="assets/commonlisp-vscode.png" style="width: 800px" alt="The VSCode extension with a Lisp REPL, code completion and a mini-map."/>
 
@@ -235,30 +203,27 @@ supports:
    pdf-include-end -->
 
 
-## Intellij (new and experimental)
+## Intellij（新しく実験的）
 
-[SLT](https://github.com/Enerccio/SLT) is a new (published on January,
-2023) plugin for the suite of JetBrains' IDEs. It uses a modified SLIME/Swank
-protocol to commmunicate with SBCL, providing IDE capabilities for
-Common Lisp.
+[SLT](https://github.com/Enerccio/SLT) は JetBrains IDE スイート向けの新しい（2023 年 1 月公開の）プラグインです。修正版の SLIME/Swank プロトコルを使って SBCL と通信し、Common Lisp 向けの IDE 機能を提供します。
 
-It has a very good [user guide](https://github.com/Enerccio/SLT/wiki/User-Guide).
+とても優れた[ユーザーガイド](https://github.com/Enerccio/SLT/wiki/User-Guide)があります。
 
-At the time of writing, for its version 0.4, it supports:
+執筆時点のバージョン 0.4 では、次をサポートしています。
 
 - REPL
-- symbol completion
-- send expressions to the REPL
-- interactive debugging, breakpoints
-- documentation display
-- cross-references
-- find symbol by name, global class/symbol search
-- inspector (read-only)
-- graphical threads list
-- SDK support, automatic download for Windows users
-- multiple implementations support: SBCL, CCL, ABCL and AllegroCL.
+- シンボル補完
+- 式を REPL に送る
+- 対話的デバッグ、ブレークポイント
+- ドキュメント表示
+- クロスリファレンス
+- 名前によるシンボル検索、グローバルなクラス/シンボル検索
+- インスペクタ（読み取り専用）
+- グラフィカルなスレッド一覧
+- SDK サポート、Windows ユーザー向けの自動ダウンロード
+- 複数処理系のサポート: SBCL、CCL、ABCL、AllegroCL。
 
-*warn: this plugin might not work on every Intellij releases. See also this updated fork: https://github.com/ivanbulanov/SLT/releases*
+*警告: このプラグインは Intellij のすべてのリリースで動作するとは限りません。こちらの更新されたフォークも参照してください: https://github.com/ivanbulanov/SLT/releases*
 
 <img src="assets/jetbrains-slt.png" style="width: 800px" alt="SLT, a good Common Lisp plugin for JetBrains IDEs."/>
 
@@ -269,12 +234,9 @@ At the time of writing, for its version 0.4, it supports:
 
 ## Eclipse
 
-[Dandelion](https://github.com/Ragnaroek/dandelion) is a plugin for the
-Eclipse IDE.
+[Dandelion](https://github.com/Ragnaroek/dandelion) は Eclipse IDE 用のプラグインです。
 
-Available for Windows, Mac and Linux, built-in SBCL and CLISP support
-and possibility to connect other environments, interactive debugger
-with restarts, macro-expansion, parenthesis matching,…
+Windows、Mac、Linux で利用でき、SBCL と CLISP の組み込みサポート、ほかの環境へ接続する機能、restart 付きの対話的デバッガ、マクロ展開、括弧対応の表示などを備えています。
 
 <img src="assets/dandelion.png" style="width: 800px" alt="Dandelion, a simple Common Lisp plugin for Eclipse"/>
 
@@ -284,18 +246,9 @@ with restarts, macro-expansion, parenthesis matching,…
 
 ## Lem
 
-[Lem](https://github.com/lem-project/lem/) is a general-purpose
-editor. It is built in Common Lisp, it is extensible interactively from the ground
-up in Common Lisp, and it is tailored for Common Lisp
-development. Once you install it, you can start working.
-It supports [many programming languages out of the box](https://lem-project.github.io/modes/)
-thanks to
-its built-in LSP client: Python, Go, Rust, JS, Clojure, Kotlin, Scheme, HTML, CSS…
-It has a directory mode, a good vim layer, an interactive Git mode, and more.
+[Lem](https://github.com/lem-project/lem/) は汎用エディタです。Common Lisp で作られており、Common Lisp で土台から対話的に拡張でき、Common Lisp 開発に合わせて作られています。インストールすればすぐ作業を始められます。組み込みの LSP クライアントにより、Python、Go、Rust、JS、Clojure、Kotlin、Scheme、HTML、CSS など、[多くのプログラミング言語を標準でサポート](https://lem-project.github.io/modes/)しています。ディレクトリモード、優れた vim レイヤー、対話的な Git モードなどもあります。
 
-Its interface resembles Emacs and SLIME (same shortcuts). It comes with an
-ncurses frontend, a web view and a (deprecated) SDL2 frontend.
-You can download pre-built binaries for the three platforms.
+インターフェイスは Emacs と SLIME に似ています（ショートカットも同じです）。ncurses フロントエンド、Web ビュー、（非推奨の）SDL2 フロントエンドが付属しています。3 つのプラットフォーム向けにビルド済みバイナリをダウンロードできます。
 
 <img src="assets/lem-sdl2.png"
      style="width: 800px" alt="Lem running in a SDL2 GUI."/>
@@ -304,18 +257,18 @@ You can download pre-built binaries for the three platforms.
 ![](assets/lem-sdl2.png)
    pdf-include-end -->
 
-It can be started as a REPL right away in the terminal. Run it with:
+ターミナルですぐ REPL として起動できます。次のように実行します。
 
     lem --eval "(lem-lisp-mode:start-lisp-repl t)"
 
-So you probably want a shell alias:
+そのため、シェルエイリアスを用意したくなるでしょう。
 
     alias ilem='lem --eval "(lem-lisp-mode:start-lisp-repl t)"'
 
-There is more:
+さらに次のものもあります。
 
-* 🚀 [Lem on the cloud](https://www.youtube.com/watch?v=IMN7feOQOak) (video presentation) Rooms is a product that runs Lem, a text editor created in Common Lisp, in the Cloud and can be used by multiple users.
-  * Lem on the cloud is NEW as of April, 2024. In private beta at the time of writing.
+* 🚀 [Lem on the cloud](https://www.youtube.com/watch?v=IMN7feOQOak)（動画プレゼンテーション）Rooms は Common Lisp で作られたテキストエディタ Lem を Cloud 上で動かし、複数ユーザーで利用できるようにする製品です。
+  * Lem on the cloud は 2024 年 4 月時点の新しいものです。執筆時点ではプライベートベータです。
 
 <img src="assets/lem1.png" style="width: 800px" title="Lem's REPL" alt="Lem running in the terminal with the Lisp REPL full screen, showing a completion window."/>
 
@@ -326,17 +279,11 @@ There is more:
 
 ## Sublime Text
 
-[Sublime Text](http://www.sublimetext.com/3) has now good support for
-Common Lisp.
+[Sublime Text](http://www.sublimetext.com/3) は現在、Common Lisp を十分にサポートしています。
 
-First install the "SublimeREPL" package and then see the options
-in Tools/SublimeREPL to choose your CL implementation.
+まず "SublimeREPL" パッケージをインストールし、それから Tools/SublimeREPL のオプションで CL 処理系を選びます。
 
-Then [Slyblime](https://github.com/s-clerc/slyblime) ships IDE-like
-features to interact with the running Lisp image. It is an
-implementation of SLY and it uses the same backend (SLYNK). It
-provides advanced features including a debugger with stack frame
-inspection.
+次に [Slyblime](https://github.com/s-clerc/slyblime) が、実行中の Lisp イメージとやり取りする IDE 風の機能を提供します。これは SLY の実装で、同じバックエンド（SLYNK）を使います。スタックフレーム調査付きデバッガなど、高度な機能を提供します。
 
 <img src="assets/editor-sublime.png"
      style="width: 800px" alt="A Lisp REPL in Sublime Text"/>
@@ -346,14 +293,11 @@ inspection.
    pdf-include-end -->
 
 
-## LispWorks (proprietary)
+## LispWorks（プロプライエタリ）
 
-[LispWorks](http://www.lispworks.com/) is a Common Lisp implementation that
-comes with its own Integrated Development Environment (IDE) and its share of
-unique features, such as the CAPI GUI toolkit. It is **proprietary** and
-provides a **free limited version**.
+[LispWorks](http://www.lispworks.com/) は、独自の統合開発環境（IDE）と、CAPI GUI ツールキットなどの独自機能を備えた Common Lisp 処理系です。これは**プロプライエタリ**で、**無料の制限版**を提供しています。
 
-You can [read our LispWorks review here](lispworks.html).
+[LispWorks のレビューはこちら](lispworks.html)で読めます。
 
 <img src="assets/lispworks/two-sided-view.png" style="width: 800px" title="The LispWorks IDE" alt="The LispWorks listener and the editor in the Mate desktop environment"/>
 
@@ -361,30 +305,26 @@ You can [read our LispWorks review here](lispworks.html).
 ![](assets/lispworks/two-sided-view.png)
    pdf-include-end -->
 
-## Zed (new as of 2026)
+## Zed（2026 年時点の新規）
 
-[zed-cl](https://github.com/etyurkin/zed-cl) is an extension for the [Zed](https://zed.dev) editor.
+[zed-cl](https://github.com/etyurkin/zed-cl) は [Zed](https://zed.dev) エディタ用の拡張機能です。
 
-It provides:
+次を提供します。
 
-- smart type-aware code completion
-- smart parameter completion (includes type information when available)
-- LSP, tree-sitter
-- Jupyter REPL integration
-- rainbow brackets support
+- 型を意識したスマートなコード補完
+- スマートなパラメータ補完（利用可能なら型情報を含む）
+- LSP、tree-sitter
+- Jupyter REPL 連携
+- rainbow brackets サポート
 
-As of writing, you need to build the editor plugin (the LSP,
-tree-sitter and Jupyter Rust crates), so you need a Rust toolchain.
+執筆時点では、エディタプラグイン（LSP、tree-sitter、Jupyter の Rust crate）をビルドする必要があるため、Rust ツールチェーンが必要です。
 
-*It is likely that this extension was assembled with the help of LLMs*.
+*この拡張機能は LLM の助けを借りて組み立てられた可能性があります*。
 
 
-## Geany (experimental)
+## Geany（実験的）
 
-[Geany-lisp](https://github.com/jasom/geany-lisp) is an experimental
-lisp mode for the [Geany](https://geany.org/) editor. It features completion of symbols,
-smart indenting, jump to definition, compilation of the current file and
-highlighting of errors and warnings, a REPL, and a project skeleton creator.
+[Geany-lisp](https://github.com/jasom/geany-lisp) は [Geany](https://geany.org/) エディタ用の実験的な lisp モードです。シンボル補完、スマートインデント、定義へジャンプ、現在のファイルのコンパイル、エラーと警告のハイライト、REPL、プロジェクトスケルトン作成機能を備えています。
 
 <img src="assets/geany.png" style="width: 800px" alt="The Geany Lisp plugin showing compilation warnings"/>
 
@@ -395,10 +335,9 @@ highlighting of errors and warnings, a REPL, and a project skeleton creator.
 
 ## Notebooks
 
-[common-lisp-jupyter](https://github.com/yitzchak/common-lisp-jupyter) is a Common Lisp
-kernel for Jupyter notebooks.
+[common-lisp-jupyter](https://github.com/yitzchak/common-lisp-jupyter) は Jupyter notebook 用の Common Lisp カーネルです。
 
-You can [see a live Jupyter notebook written in Lisp here](https://nbviewer.jupyter.org/github/yitzchak/common-lisp-jupyter/blob/master/examples/about.ipynb). It is easy to install (Roswell, repo2docker and Docker recipes).
+[Lisp で書かれたライブ Jupyter notebook をこちらで見る](https://nbviewer.jupyter.org/github/yitzchak/common-lisp-jupyter/blob/master/examples/about.ipynb)ことができます。インストールは簡単です（Roswell、repo2docker、Docker レシピ）。
 
 <img src="assets/jupyterpreview.png"
      style="width: 800px" alt="A Jupyter notebook running a Common Lisp kernel, exploring the Lorentz system of differential equations, showing a colorful 3D plot with interactive controls (note: the code in the screenshot is actually not Lisp!)"/>
@@ -407,29 +346,26 @@ You can [see a live Jupyter notebook written in Lisp here](https://nbviewer.jupy
 ![](assets/jupyterpreview.png)
    pdf-include-end -->
 
-There is also [Darkmatter](https://github.com/tamamu/darkmatter), a notebook-style
-Common Lisp environment, built in Common Lisp.
+[Darkmatter](https://github.com/tamamu/darkmatter) という、Common Lisp で作られた notebook 風の Common Lisp 環境もあります。
 
 
-## REPLs
+## REPL
 
-### ICL - featureful enhanced REPL for the terminal (NEW)
+### ICL - ターミナル向けの高機能拡張 REPL（NEW）
 
-[ICL](https://github.com/atgreen/icl), Interactive Common Lisp, is an
-enhanced REPL for the terminal. It works with any implementation you
-have on your system. It brings a *lot* of nice features, such as:
+[ICL](https://github.com/atgreen/icl)、Interactive Common Lisp は、ターミナル向けの拡張 REPL です。システムにある任意の処理系で動作します。次のような非常に多くの便利な機能を提供します。
 
-- easy to use terminal-based REPL (code completion, etc)
-- browser REPL
-  - with a packages and systems browser,
-  - documentation browser
-  - inspector
-  - variable "watcher"
-  - data visualization
-  - flame graph profiling
-- integration with Emacs and Slime or SLY, so you can control the browser-based tools from your favorite editor.
+- 使いやすいターミナルベース REPL（コード補完など）
+- ブラウザ REPL
+  - パッケージとシステムのブラウザ付き
+  - ドキュメントブラウザ
+  - インスペクタ
+  - 変数 "watcher"
+  - データ可視化
+  - flame graph プロファイリング
+- Emacs と Slime または SLY との連携により、お気に入りのエディタからブラウザベースのツールを制御できます。
 
-It comes with pre-built binaries. Try it out!
+ビルド済みバイナリが用意されています。試してみてください！
 
 <!-- epub-exclude-start -->
 
@@ -439,11 +375,11 @@ It comes with pre-built binaries. Try it out!
 
 <!-- epub-exclude-end -->
 
-### cl-repl - a simple readline-based ipython-like REPL
+### cl-repl - readline ベースのシンプルな ipython 風 REPL
 
-[cl-repl](https://github.com/lisp-maintainers/cl-repl) is an ipython-like REPL. It supports symbol completion, magic and shell commands, multi-line editing, editing command in a file and a simple debugger.
+[cl-repl](https://github.com/lisp-maintainers/cl-repl) は ipython 風の REPL です。シンボル補完、magic コマンドとシェルコマンド、複数行編集、ファイル内でのコマンド編集、シンプルなデバッガをサポートします。
 
-It is available as a binary.
+バイナリとして利用できます。
 
 
 <img src="assets/cl-repl.png"
@@ -454,10 +390,8 @@ It is available as a binary.
    pdf-include-end -->
 
 
-## Others
+## その他
 
-There are some more editors out there, more or less discontinued, and
-free versions of other Lisp vendors, such as Allegro CL.
+ほかにも、多少開発が止まっているものも含め、いくつかのエディタがあります。また Allegro CL など、ほかの Lisp ベンダーの無料版もあります。
 
-See also [CLOG](https://github.com/rabbibotton/clog), the Common Lisp
-Omnificent GUI, a web-based GUI builder that comes with a Lisp editor.
+関連項目として、Web ベースの GUI ビルダーで Lisp エディタも付属する Common Lisp Omnificent GUI、[CLOG](https://github.com/rabbibotton/clog) も参照してください。

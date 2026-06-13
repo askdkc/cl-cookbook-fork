@@ -1,62 +1,50 @@
 ---
-title: Debugging
+title: デバッグ
 ---
 
-You entered this new world of Lisp and now wonder: how can we debug
-what's going on? How is it more interactive than other platforms?
-What does the interactive debugger bring, apart from stack traces?
+Lisp という新しい世界に入ると、次の疑問が出てくるでしょう。何が起きているかをどうデバッグするのか？ ほかのプラットフォームよりどこが対話的なのか？ スタックトレース以外に、対話的デバッガは何をもたらすのか？
 
-## Print debugging
+## print デバッグ
 
-Well of course we can use the famous technique of "print
-debugging". Let's just recap a few print functions.
+もちろん有名な "print debugging" という手法は使えます。まずはいくつかの出力関数を簡単に振り返ります。
 
-`print` works, it prints a `read`able representation of its argument,
-which means what is `print`ed can be `read` back in by the Lisp
-reader. It accepts only one argument.
+`print` は使えます。引数の `read` 可能な表現を出力します。つまり、`print` されたものは Lisp リーダで読み戻せます。引数は 1 つだけ受け取ります。
 
-`princ` focuses on an *aesthetic* representation.
+`princ` は*見た目向け*の表現に重点を置きます。
 
-`(format t "~a" …)`, with the *aesthetic* directive, prints a string (in `t`, the standard output
-stream) and returns nil, whereas `format nil …` doesn't print anything
-and returns a string. With many format controls we can print several
-variables at once.
+`(format t "~a" …)` は、*見た目向け*ディレクティブにより文字列を（標準出力ストリームである `t` に）出力し、nil を返します。一方 `format nil …` は何も出力せず、文字列を返します。多くの format 制御を使えば、複数の変数を一度に出力できます。
 
-`print` has this useful debugging feature that it prints *and* returns
-the result form it was given as argument. You can intersperse `print`
-statements in the middle of your algorithm, it won't break it.
+`print` にはデバッグに便利な性質があります。引数として渡されたフォームを出力し、さらにその結果を返します。アルゴリズムの途中に `print` 文を挟んでも、処理は壊れません。
 
 ~~~lisp
 (+ 2 (print 40))
 ~~~
 
 
-## Logging
+## ロギング
 
-Logging is already a good evolution from print debugging ;)
+ロギングは、print デバッグからのよい進化です ;)
 
-[log4cl](https://github.com/sharplispers/log4cl/) is the popular,
-de-facto logging library although it isn't the only one. Download it:
+[log4cl](https://github.com/sharplispers/log4cl/) は人気のある、事実上の標準的なロギングライブラリです。ただし唯一の選択肢ではありません。ダウンロードします。
 
 ~~~lisp
 (ql:quickload "log4cl")
 ~~~
 
-and let's have a dummy variable:
+ダミー変数を用意します。
 
 ~~~lisp
 (defvar *foo* '(:a :b :c))
 ~~~
 
-We can use log4cl with its `log` nickname, then it is as simple to use as:
+log4cl は `log` ニックネームで使えます。すると、使い方は次のように単純です。
 
 ~~~lisp
 (log:info *foo*)
 ;; <INFO> [13:36:49] cl-user () - *FOO*: (:A :B :C)
 ~~~
 
-We can interleave strings and expressions, with or without `format`
-control strings:
+文字列と式を、`format` 制御文字列の有無にかかわらず混在させられます。
 
 ~~~lisp
 (log:info "foo is " *foo*)
@@ -65,49 +53,30 @@ control strings:
 ;; <INFO> [13:39:05] cl-user () - foo is ABC
 ~~~
 
-With its companion library `log4slime`, we can interactively change
-the log level:
+関連ライブラリ `log4slime` を使うと、ログレベルを対話的に変更できます。
 
-- globally
-- per package
-- per function
-- and by CLOS methods and CLOS hierarchy (before and after methods)
+- グローバルに
+- パッケージごとに
+- 関数ごとに
+- CLOS メソッドと CLOS 階層（before/after メソッド）ごとに
 
-It is very handy, when we have a lot of output, to turn off the
-logging of functions or packages we know to work, and thus narrowing
-our search to the right area. We can even save this configuration and
-re-use it in another image, be it on another machine.
+大量の出力があるとき、すでに正しく動いていると分かっている関数やパッケージのログを止め、探索範囲を正しい場所へ絞り込めるので非常に便利です。この設定を保存し、別のイメージ、別のマシン上でも再利用できます。
 
-We can do all this through commands, keyboard shortcuts and also through a
-menu or mouse clicks.
+これはコマンド、キーボードショートカット、メニューやマウスクリックから実行できます。
 
 !["changing the log level with log4slime"](assets/log4cl.png)
 
-We invite you to read log4cl's README.
+log4cl の README も読んでみてください。
 
-## Using the powerful REPL
+## 強力な REPL を使う
 
-Part of the joy of Lisp is the excellent REPL. Its existence usually
-delays the need to use other debugging tools, if it doesn't annihilate
-them for the usual routine.
+Lisp の楽しさの一部は、優れた REPL にあります。通常の作業では、REPL の存在によってほかのデバッグツールが必要になる時期が遅れます。場合によっては不要になることすらあります。
 
-As soon as we define a function, we can try it in the REPL. In Slime,
-compile a function with `C-c C-c` (the whole buffer with `C-c C-k`),
-switch to the REPL with `C-c C-z` and try it. Eventually enter the
-package you are working on with `(in-package :your-package)`
-or `C-c ~` (`slime-sync-package-and-default-directory`,
-which will also change the default working directory to the package definition's directory).
+関数を定義したら、すぐ REPL で試せます。Slime では、`C-c C-c` で関数をコンパイルし（バッファ全体は `C-c C-k`）、`C-c C-z` で REPL に切り替えて試します。必要に応じて `(in-package :your-package)`、または `C-c ~`（`slime-sync-package-and-default-directory`、パッケージ定義のディレクトリへデフォルト作業ディレクトリも変更します）で作業中のパッケージに入ります。
 
-The feedback is immediate. There is no need to recompile everything,
-nor to restart any process, nor to create a main function and define
-command line arguments for use in the shell (which we can of course do later on
-when needed).
+フィードバックは即座に得られます。すべてを再コンパイルする必要も、プロセスを再起動する必要も、main 関数を作ってシェル用のコマンドライン引数を定義する必要もありません（もちろん必要になれば後でできます）。
 
-We usually need to create some data to test our function(s). This is a
-subsequent art of the REPL existence and it may be a new discipline
-for newcomers. A trick is to write the test data alongside your
-functions but below a `#+nil` feature test (or safer, `+(or)`: it is still possible that someone pushed `NIL` to the `*features*` list) so that only you can
-manually compile them:
+関数をテストするために、何らかのデータを作ることがよくあります。これは REPL があることに伴う一つの技法で、初心者には新しい習慣かもしれません。コツは、テストデータを関数の近く、ただし `#+nil` feature test（またはより安全に `#+(or)`。誰かが `NIL` を `*features*` リストへ push している可能性は残るため）の下に書いておき、自分だけが手動でコンパイルできるようにすることです。
 
 ~~~lisp
 #+nil
@@ -116,20 +85,18 @@ manually compile them:
    (setf *test-data* (make-instance 'foo …)))
 ~~~
 
-When you load this file, `*test-data*` won't exist, but you can
-manually create it with `C-c C-c`.
+このファイルをロードしても `*test-data*` は存在しませんが、`C-c C-c` で手動作成できます。
 
-We can define tests functions like this.
+このようにテスト用関数を定義できます。
 
-Some do similarly inside `#| … |#` comments.
+`#| … |#` コメントの中で同様のことをする人もいます。
 
-All that being said, keep in mind to write unit tests when time comes ;)
+とはいえ、時期が来たらユニットテストを書くことを忘れないでください ;)
 
 
-## Inspect and describe
+## inspect と describe
 
-These two commands share the same goal, printing a description of an
-object, `inspect` being the interactive one.
+この 2 つのコマンドは、オブジェクトの説明を出力するという同じ目的を持ちます。`inspect` は対話的なものです。
 
 ~~~
 (inspect *foo*)
@@ -142,12 +109,9 @@ The object is a proper list of length 3.
 > q
 ~~~
 
-We can also, in editors that support it, right-click on any object in
-the REPL and `inspect` them (or `C-c I` on the object to inspect in Slime).
-We are presented a screen where we can
-dive deep inside the data structure and even change it.
+対応しているエディタでは、REPL 内の任意のオブジェクトを右クリックして `inspect` することもできます（Slime では調べたいオブジェクト上で `C-c I`）。データ構造の内部へ深く潜り、変更すらできる画面が表示されます。
 
-Let's have a quick look with a more interesting structure, an object:
+もう少し面白い構造、オブジェクトで簡単に見てみましょう。
 
 ~~~lisp
 (defclass foo ()
@@ -158,12 +122,11 @@ Let's have a quick look with a more interesting structure, an object:
 ;; #<FOO {100F2B6183}>
 ~~~
 
-We right-click on the `#<FOO` object and choose "inspect". We are
-presented an interactive pane (in Slime):
+`#<FOO` オブジェクトを右クリックし、"inspect" を選びます。対話的なペイン（Slime の場合）が表示されます。
 
 !["Slime's inspector, a textual window with buttons"](assets/slime-inspector.png)
 
-When we click or press enter on the line of slot A, we inspect it further:
+スロット A の行をクリックするか Enter を押すと、さらに詳しく調べられます。
 
 ```
 #<CONS {100F5E2A07}>
@@ -174,7 +137,7 @@ A proper list:
 2: :C
 ```
 
-In LispWorks, we can use a graphical inspector:
+LispWorks ではグラフィカルなインスペクタを使えます。
 
 !["The LispWorks inspector window"](assets/lispworks-graphical-inspector.png)
 
@@ -182,9 +145,7 @@ In LispWorks, we can use a graphical inspector:
 
 ## Trace
 
-[trace](http://www.lispworks.com/documentation/HyperSpec/Body/m_tracec.htm) allows us to see when a
-function was called, what arguments it received, and the value it
-returned.
+[trace](http://www.lispworks.com/documentation/HyperSpec/Body/m_tracec.htm) を使うと、関数がいつ呼ばれたか、どんな引数を受け取ったか、どんな値を返したかを確認できます。
 
 ~~~lisp
 (defun factorial (n)
@@ -193,8 +154,7 @@ returned.
     1))
 ~~~
 
-To start tracing a function, just call `trace` with the function name
-(or several function names):
+関数のトレースを始めるには、関数名（または複数の関数名）を指定して `trace` を呼ぶだけです。
 
 ~~~lisp
 (trace factorial)
@@ -213,76 +173,59 @@ To start tracing a function, just call `trace` with the function name
 (untrace factorial)
 ~~~
 
-To untrace all functions, just evaluate `(untrace)`.
+すべての関数のトレースを解除するには、`(untrace)` を評価します。
 
-To get a list of currently traced functions, evaluate `(trace)` with no arguments.
+現在トレースされている関数の一覧を得るには、引数なしで `(trace)` を評価します。
 
-In Slime we have the shortcut `C-c M-t` to trace or untrace a
-function.
+Slime では、関数をトレースまたはトレース解除するショートカット `C-c M-t` があります。
 
-If you don't see recursive calls, that may be because of the
-compiler's optimizations. Try this before defining the function to be
-traced:
+再帰呼び出しが見えない場合、コンパイラの最適化が原因かもしれません。トレースしたい関数を定義する前に、次を試してください。
 
 ~~~lisp
-(declaim (optimize (debug 3)))  ;; or C-u C-c C-c to compile with maximal debug settings.
+(declaim (optimize (debug 3)))  ;; 最大デバッグ設定でコンパイルするには C-u C-c C-c でもよい。
 ~~~
 
-The output is printed to `*trace-output*` (see the CLHS).
+出力は `*trace-output*` に出力されます（CLHS を参照）。
 
 
-### Trace options
+### Trace オプション
 
-`trace` accepts options. For example, you can use `:break t` to invoke
-the debugger at the start of the function, before it is called (more on break below):
+`trace` はオプションを受け取ります。たとえば `:break t` を使うと、関数が呼び出される前、関数開始時にデバッガを起動できます（break については後述）。
 
 ~~~lisp
 (trace factorial :break t)
 (factorial 2)
 ~~~
 
-We can define many things in one call to `trace`. For instance,
-options that appear before the first function name to trace are
-*global*, they affect all traced functions that we add afterwards. Here,
-`:break t` is set for every function that follows: `factorial`, `foo`
-and `bar`:
+`trace` の 1 回の呼び出しで多くのものを定義できます。たとえば、最初のトレース対象関数名より前に現れるオプションは*グローバル*で、その後に追加するすべてのトレース関数に影響します。ここでは、`:break t` が後続のすべての関数 `factorial`、`foo`、`bar` に設定されます。
 
 ~~~lisp
 (trace :break t factorial foo bar)
 ~~~
 
-On the contrary, if an option comes after a function name, it acts as
-a *local* option, only for its *preceding* function. That's how we first
-did. Below `foo` and `bar` come after, they are not affected by `:break`:
+逆に、オプションが関数名の後に来る場合、それは*ローカル*オプションとして、直前の関数にだけ作用します。最初に行ったのはこちらです。下では `foo` と `bar` は後に来るので、`:break` の影響を受けません。
 
 ~~~lisp
 (trace factorial :break t foo bar)
 ~~~
 
-But do you actually want to `break` *before* the function call or just
-*after* it? With `:break` as with many options, you can choose. These
-are the options for `:break`:
+しかし本当に関数呼び出しの*前*に `break` したいのでしょうか、それとも*後*でしょうか？ `:break` では、多くのオプションと同じく選べます。`:break` のオプションは次のとおりです。
 
 ```
-:break form  ;; before
+:break form  ;; 前
 :break-after form
-:break-all form ;; before and after
+:break-all form ;; 前と後
 ```
 
-`form` can be any form that evaluates to true.
+`form` は真に評価される任意のフォームです。
 
-Note that we explained the trace function of SBCL. Other
-implementations may have the same feature with another syntax and
-other option names.  For example, in LispWorks it is ":break-on-exit"
-instead of ":break-after", and we write `(trace (factorial :break t))`.
+ここで説明したのは SBCL の trace 関数です。ほかの処理系にも同様の機能があるかもしれませんが、構文やオプション名は異なる場合があります。たとえば LispWorks では ":break-after" ではなく ":break-on-exit" で、`(trace (factorial :break t))` と書きます。
 
-Below are some other options but first, a trick with `:break`.
+以下では、ほかのオプションをいくつか紹介します。その前に、`:break` を使った小技です。
 
-### Trace options: break
+### Trace オプション: break
 
-The argument to an option can be any form. Here's a trick, on SBCL, to
-get the break window when we are about to call `factorial`
-with 0. `(sb-debug:arg 0)` refers to `n`, the first argument.
+オプションの引数には任意のフォームを渡せます。SBCL で、`factorial` が 0 で呼び出されようとしているときに break ウィンドウを出す小技です。`(sb-debug:arg 0)` は最初の引数 `n` を指します。
 
 ~~~lisp
 CL-USER> (trace factorial :break (equal 0 (sb-debug:arg 0)))
@@ -290,7 +233,7 @@ CL-USER> (trace factorial :break (equal 0 (sb-debug:arg 0)))
 ;; (FACTORIAL)
 ~~~
 
-Running it again:
+もう一度実行します。
 
 ```
 CL-USER> (factorial 3)
@@ -311,13 +254,13 @@ Restarts:
 Backtrace:
   0: (FACTORIAL 1)
       Locals:
-        N = 1   <---------- before calling (factorial 0), n equals 1.
+        N = 1   <---------- (factorial 0) を呼ぶ前なので、n は 1。
 ```
 
 
-### Trace options: trace on conditions, trace if called from another function
+### Trace オプション: 条件付きトレース、別関数から呼ばれた場合のトレース
 
-`:condition` enables tracing only if the condition in `form` evaluates to true.
+`:condition` は、`form` 内の条件が真に評価される場合だけトレースを有効にします。
 
 ```
 :condition form
@@ -325,38 +268,26 @@ Backtrace:
 :condition-all form
 ```
 
-> If :condition is specified, then trace does nothing unless Form
-> evaluates to true at the time of the call. :condition-after is
-> similar, but suppresses the initial printout, and is tested when the
-> function returns. :condition-all tries both before and after.
+> :condition が指定された場合、呼び出し時に Form が真に評価されないかぎり trace は何もしません。:condition-after も同様ですが、最初の出力を抑制し、関数が戻るときにテストされます。:condition-all は前後の両方で試します。
 
-`:wherein` can be super useful:
+`:wherein` は非常に便利です。
 
 ```
 :wherein Names
 ```
 
-> If specified, Names is a function name or list of names. trace does nothing unless a call to one of those functions encloses the call to this function (i.e. it would appear in a backtrace.) Anonymous functions have string names like "DEFUN FOO".
+> 指定した場合、Names は関数名または名前のリストです。それらの関数のいずれかの呼び出しがこの関数の呼び出しを包んでいないかぎり（つまりバックトレースに現れないかぎり）、trace は何もしません。無名関数には "DEFUN FOO" のような文字列名があります。
 
 
 ```
 :report Report-Type
 ```
 
-> If Report-Type is trace (the default) then information is reported
-> by printing immediately. If Report-Type is nil, then the only effect
-> of the trace is to execute other options (e.g. print or
-> break). Otherwise, Report-Type is treated as a function designator
-> and, for each trace event, funcalled with 5 arguments: trace depth
-> (a non-negative integer), a function name or a function object, a
-> keyword (:enter, :exit or :non-local-exit), a stack frame, and a
-> list of values (arguments or return values).
+> Report-Type が trace（デフォルト）の場合、情報はただちに出力されます。Report-Type が nil の場合、trace の効果はほかのオプション（print や break など）を実行することだけです。それ以外の場合、Report-Type は関数指定子として扱われ、各 trace イベントごとに 5 つの引数で funcall されます。trace の深さ（非負整数）、関数名または関数オブジェクト、キーワード（:enter、:exit、:non-local-exit）、スタックフレーム、値（引数または戻り値）のリストです。
 
-See also `:print` to enrich the trace output.
+トレース出力を豊かにするには `:print` も参照してください。
 
-It is expected that implementations extend `trace` with non-standard
-options. And we didn't list all available options, so please refer to
-your implementation's documentation:
+処理系が `trace` を非標準オプションで拡張するのは普通のことです。ここでは利用可能なオプションをすべて挙げたわけではないので、使っている処理系のドキュメントを参照してください。
 
 - [SBCL trace](http://www.sbcl.org/manual/index.html#Function-Tracing)
 - [CCL trace](https://ccl.clozure.com/manual/chapter4.2.html)
@@ -364,9 +295,9 @@ your implementation's documentation:
 - [Allegro trace](https://franz.com/support/documentation/current/doc/debugging.htm#tracer-1)
 
 
-### Tracing method invocation
+### メソッド呼び出しのトレース
 
-In SBCL, we can use `(trace foo :methods t)` to trace the execution order of method combination (before, after, around methods). For example:
+SBCL では、`(trace foo :methods t)` を使うとメソッド結合（before、after、around メソッド）の実行順序をトレースできます。例:
 
 ~~~lisp
 (trace foo :methods t)
@@ -385,94 +316,85 @@ In SBCL, we can use `(trace foo :methods t)` to trace the execution order of met
 9
 ~~~
 
-It is also possible in CCL.
+CCL でも可能です。
 
-See the [CLOS](clos.html) section for a tad more information.
+もう少し情報が必要なら [CLOS](clos.html) セクションを参照してください。
 
-### Interactive Trace Dialog
+### 対話的 Trace Dialog
 
-Both SLIME and SLY provide an [interactive view for traces](https://slime.common-lisp.dev/doc/html/SLIME-Trace-Dialog.html#SLIME-Trace-Dialog) that features better visualization of traces, and also access to the arguments and return values in their real form, via inspectors, not just the printed representation.
+SLIME と SLY はどちらも、トレースをより見やすく表示し、引数と戻り値にも、単なる印字表現ではなくインスペクタ経由で実体の形式でアクセスできる[対話的なトレース表示](https://slime.common-lisp.dev/doc/html/SLIME-Trace-Dialog.html#SLIME-Trace-Dialog)を提供します。
 
 ![trace-dialog](trace-dialog.png "Trace dialog")
 
-How it works: (the following instructions are for SLIME)
+動作方法（以下の手順は SLIME 向けです）:
 
-1. Select the functions to trace using `M-x slime-trace-dialog-toggle-trace` bound to `C-c M-t`.
-2. Evaluate code that calls the traced functions.
-3. Open the trace dialog tool via `M-x slime-trace-dialog` bound to `C-c T`.
-4. The list of traced functions appear under `Traced specs`. Traces are fetched in batches. So use the the `[refresh]` button to update status information about tracing (number of available traces that can be fetched).
-5. Then use either the `[fetch next batch]` or `[fetch all]` buttons to fetch the traces. Traces appear under `Traced specs` after that, and you can use the SLIME inspector to visualize their data (arguments and return values).
-6. After more code that calls the traced functions is evaluated, repeat the process (go to step 4).
+1. `C-c M-t` に割り当てられた `M-x slime-trace-dialog-toggle-trace` で、トレースする関数を選びます。
+2. トレース対象関数を呼び出すコードを評価します。
+3. `C-c T` に割り当てられた `M-x slime-trace-dialog` で trace dialog ツールを開きます。
+4. トレース対象関数の一覧が `Traced specs` の下に表示されます。トレースはバッチで取得されます。そのため `[refresh]` ボタンで、トレース状況（取得可能なトレース数）を更新します。
+5. 次に `[fetch next batch]` または `[fetch all]` ボタンでトレースを取得します。その後、トレースは `Traced specs` の下に表示され、SLIME インスペクタでそのデータ（引数と戻り値）を可視化できます。
+6. トレース対象関数を呼び出すコードをさらに評価したら、この手順を繰り返します（ステップ 4 へ）。
 
-But, that flow can get a bit tedious, because of the separation between updating the status of the traces and fetching them. Sometimes it is better to just fetch the traces without updating the status first. We can do that invoking the command `M-x slime-trace-dialog-fetch-traces` bound to `G`. So, instead of steps 4 and 5, just press `G` to update the user interface.
+ただし、この流れは、トレース状態の更新と取得が分かれているため、少し面倒になることがあります。状態更新を先に行わず、そのままトレースを取得した方がよい場合もあります。これは `G` に割り当てられた `M-x slime-trace-dialog-fetch-traces` を呼び出すことでできます。つまり、ステップ 4 と 5 の代わりに `G` を押してユーザーインターフェイスを更新します。
 
-These are some of the Emacs commands bound to useful keys:
+便利なキーに割り当てられている Emacs コマンドの一部です。
 
 `g`
 `M-x slime-trace-dialog-fetch-status`
 
-    Update information on the trace collection and traced specs.
+    トレース収集と traced specs の情報を更新します。
 
 `G`
 `M-x slime-trace-dialog-fetch-traces`
 
-    Fetch the next batch of outstanding (not fetched yet) traces. With a C-u prefix argument, repeat until no more outstanding traces.
+    未取得のトレースの次のバッチを取得します。C-u prefix argument を付けると、未取得のトレースがなくなるまで繰り返します。
 
 `C-k`
 `M-x slime-trace-dialog-clear-fetched-traces`
 
-    Prompt for confirmation, then clear all traces, both fetched and outstanding.
+    確認を求めたうえで、取得済みと未取得の両方を含むすべてのトレースを消去します。
 
 
-Finally, the arguments and return values for each trace entry are interactive buttons. Clicking them opens the SLIME inspector on them. Invoking `M-RET` `M-x slime-trace-dialog-copy-down-to-repl` returns them to the REPL for manipulation . The number left of each entry indicates its absolute position in the calling order, which might differ from display order in case multiple threads call the same traced function.
+最後に、各トレースエントリの引数と戻り値は対話的なボタンです。クリックすると、それらに対して SLIME インスペクタが開きます。`M-RET` `M-x slime-trace-dialog-copy-down-to-repl` を呼び出すと、操作のため REPL に戻せます。各エントリの左側の数字は呼び出し順における絶対位置を示し、複数スレッドが同じトレース対象関数を呼ぶ場合には表示順と異なることがあります。
 
-`M-x slime-trace-dialog-hide-details-mode` hides arguments and return values so you can concentrate on the calling logic. Additionally, `M-x slime-trace-dialog-autofollow-mode` will automatically display additional detail about an entry when the cursor moves over it.
+`M-x slime-trace-dialog-hide-details-mode` は引数と戻り値を隠し、呼び出しロジックに集中できるようにします。また、`M-x slime-trace-dialog-autofollow-mode` はカーソルがエントリ上を移動したときに、そのエントリの追加詳細を自動表示します。
 
-## The interactive debugger
+## 対話的デバッガ
 
-Whenever an exceptional situation happens (see
-[error handling](error_handling.html)), or when you ask for it (using `step` or `break`),
-the interactive debugger pops up.
+例外的な状況が起きたとき（[エラー処理](error_handling.html)を参照）、または自分で要求したとき（`step` や `break` を使用）、対話的デバッガが表示されます。
 
-It presents the error message, the available actions (*restarts*),
-and the backtrace. A few remarks:
+そこにはエラーメッセージ、利用可能な操作（*restarts*）、バックトレースが表示されます。いくつか注意点があります。
 
-- the restarts are programmable, we can create our own.
-- in Slime, press `v` on a stack trace frame to view the corresponding
-  source file location.
-- hit Enter (or `t`) on a frame to toggle more details,
-- use `e` to evaluate some code from within that frame,
-- hit `r` to restart a given frame (see below).
-- we can explore the functionality with the menu that should appear
-  in our editor.
+- restarts はプログラム可能で、自分で作成できます。
+- Slime では、スタックトレースのフレーム上で `v` を押すと対応するソースファイル位置を表示できます。
+- フレーム上で Enter（または `t`）を押すと詳細表示を切り替えます。
+- `e` を使うと、そのフレーム内でコードを評価できます。
+- `r` を押すと、指定したフレームを再起動できます（後述）。
+- エディタに表示されるはずのメニューから、機能を探索できます。
 
-### Compile with maximum debugging information (`declaim` and `C-u` prefix)
+### 最大のデバッグ情報でコンパイルする（`declaim` と `C-u` prefix）
 
-Usually your compiler will optimize things out and this will reduce
-the amount of information available to the debugger. For example
-sometimes we can't see intermediate variables of computations. We can
-change the optimization choices with:
+通常、コンパイラはさまざまなものを最適化で取り除くため、デバッガで利用できる情報量が減ります。たとえば計算途中の変数が見えないことがあります。最適化の選択は次で変更できます。
 
 ~~~lisp
 (declaim (optimize (speed 0) (space 0) (debug 3)))
 ~~~
 
-and recompile our code. You can achieve the same with a handy shortcut: `C-u C-c C-c`: the form is compiled with maximum debug settings. You can on the contrary use a negative prefix argument (`M--`) to compile for speed. And use a numeric argument to set the setting to it (you should read the docstring of `slime-compile-defun`).
+そしてコードを再コンパイルします。同じことは便利なショートカット `C-u C-c C-c` でもできます。このフォームは最大デバッグ設定でコンパイルされます。逆に負の prefix argument（`M--`）を使うと速度優先でコンパイルできます。また数値引数を使うと、その設定値を指定できます（`slime-compile-defun` の docstring を読むとよいでしょう）。
 
-Likewise, you can apply maximum debug settings to all the code of your
-current buffer with `C-u C-c C-k`. Use the `M--` prefix for maximum speed.
+同様に、現在のバッファ全体へ最大デバッグ設定を適用するには `C-u C-c C-k` を使えます。最大速度には `M--` prefix を使います。
 
 
 ## Step
 
-[step](http://www.lispworks.com/documentation/HyperSpec/Body/m_step.htm) is an interactive command with similar scope than `trace`. This:
+[step](http://www.lispworks.com/documentation/HyperSpec/Body/m_step.htm) は `trace` と似た範囲を持つ対話的コマンドです。これは:
 
 ~~~lisp
-;; note: we copied factorial over to a file, to have more debug information.
+;; 注: より多くのデバッグ情報を得るため、factorial をファイルにコピーした。
 (step (factorial 3))
 ~~~
 
-gives an interactive pane with available actions (restarts) and the backtrace:
+利用可能な操作（restarts）とバックトレースを含む対話的ペインを表示します。
 
 ```
 Evaluating call:
@@ -503,77 +425,44 @@ Backtrace:
 
 ```
 
-*(again, be sure you compiled your function with maximum debug
-settings (see above). Otherwise, your compiler might do optimizations
-under the hood and you might not see useful information such as local
-variables, or you might not be able to step at all.)*
+*（繰り返しになりますが、関数は最大デバッグ設定でコンパイルしておいてください（上記参照）。そうでないと、コンパイラが内部で最適化を行い、ローカル変数のような有用な情報が見えなかったり、そもそもステップ実行できなかったりします。）*
 
-You have many options here. If you are using Emacs (or any other
-editor actually), keep in mind that you have a "SLDB" menu that shows
-you the available actions, in addition to the step window.
+ここには多くの選択肢があります。Emacs（実際にはほかのエディタでも）を使っているなら、step ウィンドウに加えて、利用可能な操作を表示する "SLDB" メニューがあることを覚えておいてください。
 
-- follow the restarts to **continue stepping**: continue the
-  execution, step out of this function, step into the function call
-  the point is on, step over to the next function call, or abort
-  everything. The shortcuts are:
+- restarts に従って**ステップ実行を続ける**: 実行を継続する、この関数から出る、ポイント上の関数呼び出しに入る、次の関数呼び出しまで進む、またはすべてを中止する。ショートカットは次のとおりです。
   - `c`: continue
   - `s`: step
   - `x`: step next
   - `o`: step out
 
-- **inspect the backtrace** and the source code. You can go to the
-  source file with `v`, on each stackframe (each line of the
-  backtrace). Press `Enter` or `t` ("toggle details") on the
-  stackframe to see more information, such as the function parameters
-  for this call. Use `n` and `p` to navigate, use `M-n` and `M-p` to
-  navigate to the next or previous stackframe *and* to open the
-  corresponding source file at the same time. The point will be placed
-  on the function being called.
+- **バックトレース**とソースコードを調べる。バックトレースの各スタックフレーム（各行）で `v` を押すとソースファイルへ移動できます。スタックフレーム上で `Enter` または `t`（"toggle details"）を押すと、この呼び出しの関数パラメータなど、より多くの情報を表示できます。`n` と `p` で移動し、`M-n` と `M-p` で次または前のスタックフレームへ移動しながら、対応するソースファイルも同時に開けます。ポイントは呼び出されている関数上に置かれます。
 
-- **evaluate code from within the context** of that stackframe. In
-  Slime, use `e` ("eval in frame" and `d` to pretty-pint the result) and
-  type a Lisp form. It will be executed in the context of the
-  stackframe the point is on. Look, you can even inspect variables and
-  have Slime open another inspector window. If you are on the first
-  frame (`0:`), press `i`, then "n" to inspect the intermediate
-  variable.
+- そのスタックフレームの**コンテキスト内でコードを評価する**。Slime では `e`（"eval in frame"、結果を pretty-print するには `d`）を使い、Lisp フォームを入力します。ポイントがあるスタックフレームのコンテキストで実行されます。変数を inspect して、Slime に別の inspector ウィンドウを開かせることすらできます。最初のフレーム（`0:`）上にいるなら、`i` を押し、次に "n" を押して中間変数を inspect します。
 
-- **resume execution** from where you want. Use `r` to restart the
-  frame the point is on. For example, go change the source code
-  (without quitting the interactive debugger), re-compile it, re-run
-  the frame to see if it works better. You didn't restart all the
-  program execution, you just restarted your program from a precise
-  point. Use `R` to return from a stackframe, by giving its return
-  value.
+- 好きな場所から**実行を再開する**。ポイントがあるフレームを再起動するには `r` を使います。たとえば、（対話的デバッガを終了せずに）ソースコードを変更し、再コンパイルし、そのフレームを再実行して改善されたか確認します。プログラム全体の実行を再起動したのではありません。プログラムを正確な一点から再起動しただけです。スタックフレームから戻るには `R` を使い、戻り値を与えます。
 
 <div class="info-box info" style="margin-bottom: 1em">
 <!-- if inside a <p> then bootstrap adds 10px padding to the bottom -->
-<strong>NB:</strong> let's think about it, <strong>this is awesome!</strong> We just restarted our program from any point in time. If we work with long-running computations, we don't need to restart it from the start. We can change, re-compile our erroneous code and resume execution from where it is needed to pass, no more.
+<strong>NB:</strong> 考えてみてください。<strong>これはすごいことです！</strong> プログラムを任意の時点から再起動したのです。長時間実行される計算を扱っている場合、最初からやり直す必要はありません。問題のあるコードを変更、再コンパイルし、通過に必要な地点から実行を再開できます。
 </div>
 
-Stepping is precious. However, if you find yourself inspecting the
-behaviour of a function a lot, it may be a sign that you need to
-simplify it and divide it in smaller pieces.
+ステップ実行は貴重です。ただし、ある関数の挙動を何度も調べているなら、その関数を単純化し、より小さな部品に分ける必要があるサインかもしれません。
 
-And again, **LispWorks** has a **graphical stepper**.
+そして繰り返しますが、**LispWorks** には**グラフィカルなステッパ**があります。
 
 
 <div class="info" style="background-color: #e7f3fe; border-left: 6px solid #2196F3; padding: 17px; margin-bottom: 1em;">
 <!-- if inside a <p> then bootstrap adds 10px padding to the bottom -->
-<strong>TIP:</strong> the <a href="https://github.com/mmontone/slime-breakpoints">slime-breakpoints</a> package adds stepping and breaking buttons to Slime too.
+<strong>TIP:</strong> <a href="https://github.com/mmontone/slime-breakpoints">slime-breakpoints</a> パッケージは、Slime にもステップ実行と break のボタンを追加します。
 </div>
 
 ![](assets/slime-breakpoints-toolbars.png)
 
-### Resume a program execution from anywhere in the stack (demo)
+### スタック内の任意の場所からプログラム実行を再開する（デモ）
 
-In [this video](https://www.youtube.com/watch?v=jBBS4FeY7XM) you will
-find a demo that shows the process explained above: how to fix a buggy
-function and how to **resume the program execution** from anywhere in the
-stack, without running everything from zero again. The video shows it
-with Emacs and Slime, the Lem editor, both with SBCL.
+[この動画](https://www.youtube.com/watch?v=jBBS4FeY7XM) では、上で説明した流れ、つまりバグのある関数を修正し、すべてをゼロから実行し直さずに、スタック内の任意の場所から**プログラム実行を再開する**方法のデモを見られます。この動画では Emacs と Slime、Lem エディタ、いずれも SBCL を使っています。
 
-They key point is to use `r` (`sldb-restart-frame`) on a stack frame to restart it.
+重要なのは、スタックフレーム上で `r`（`sldb-restart-frame`）を使って再起動することです。
 
 <!-- epub-exclude-start -->
 
@@ -584,47 +473,33 @@ They key point is to use `r` (`sldb-restart-frame`) on a stack frame to restart 
 
 ## Break
 
-A call to
-[break](http://www.lispworks.com/documentation/HyperSpec/Body/f_break.htm)
-makes the program enter the debugger, from which we can inspect the
-call stack, and do everything described above in the stepper.
+[break](http://www.lispworks.com/documentation/HyperSpec/Body/f_break.htm) を呼び出すと、プログラムはデバッガに入り、そこからコールスタックを調べ、ステッパで上に述べたすべてのことを実行できます。
 
 
-### Breakpoints in Slime
+### Slime のブレークポイント
 
-Look at the `SLDB` menu, it shows navigation keys and available
-actions. Of which:
+`SLDB` メニューを見てください。ナビゲーションキーと利用可能な操作が表示されます。その中には次のものがあります。
 
-- `e` (*sldb-eval-in-frame*) prompts for an expression and evaluates
-  it in the selected frame. This is how we can explore our
-  intermediate variables
-- `d` is similar with the addition of pretty printing the result
+- `e`（*sldb-eval-in-frame*）は式の入力を促し、選択されたフレームで評価します。これにより中間変数を探索できます。
+- `d` は似ていますが、結果を pretty printing します。
 
-Once we are in a frame and detect a suspicious behavior, we can even
-re-compile a function at runtime and resume the program execution from
-where it stopped (using the "step-continue" restart
-or using `r` ("restart frame") on a given stackframe).
+フレーム内に入り、不審な挙動を見つけたら、実行時に関数を再コンパイルし、停止した場所からプログラム実行を再開することもできます（"step-continue" restart を使うか、指定したスタックフレーム上で `r`（"restart frame"）を使います）。
 
-See also the [Slime-star](https://github.com/mmontone/slime-star) Emacs extension mentioned above to set breakpoints without code annotations.
+コード注釈なしでブレークポイントを設定するには、上で触れた [Slime-star](https://github.com/mmontone/slime-star) Emacs 拡張も参照してください。
 
-## Break when a condition occurs: `*break-on-signals*`
+## 条件発生時に break する: `*break-on-signals*`
 
-[*break-on-signals*](https://cl-community-spec.github.io/pages/002abreak_002don_002dsignals_002a.html)
-can be specially helpful when you see that an error (or any condition)
-occurred, but you didn't get the debugger, and you want to force the
-debugger to open *just before* the error (or any condition) is
-signaled.
+[*break-on-signals*](https://cl-community-spec.github.io/pages/002abreak_002don_002dsignals_002a.html) は、エラー（または任意の condition）が発生したことは分かるがデバッガが出ず、エラー（または任意の condition）が signal される*直前*にデバッガを強制的に開きたいとき、特に役立ちます。
 
-For example, you witness that a `print-object` method of a database
-record from a third-party library tells you something wrong happened:
+たとえば、サードパーティライブラリのデータベースレコードの `print-object` メソッドが、何か問題が起きたと知らせてくるとします。
 
     #<DB record: <<ERROR while printing the DB object>> >
 
-However, the library handled the error and you didn't get the interactive debugger.
+しかし、そのライブラリがエラーを処理してしまい、対話的デバッガは表示されませんでした。
 
-To debug this, you can set `*break-on-signals` to `'error` (or any symbol referring to an existing condition type).
+これをデバッグするには、`*break-on-signals` を `'error`（または既存の condition 型を指す任意のシンボル）に設定できます。
 
-This is the usual case: `*break-on-signals*` is NIL.
+通常は、`*break-on-signals*` は NIL です。
 
 ~~~lisp
 (ignore-errors
@@ -635,7 +510,7 @@ This is the usual case: `*break-on-signals*` is NIL.
 ;; #<SIMPLE-ERROR "Oh no!" {1205C6BC03}>  <-- second returned value, the condition object.
 ~~~
 
-Let's set `*break-on-signals*` to `'error`:
+`*break-on-signals*` を `'error` に設定してみます。
 
 ~~~lisp
 (let ((*break-on-signals* 'error))
@@ -644,7 +519,7 @@ Let's set `*break-on-signals*` to `'error`:
    (error 'simple-error :format-control "Oh no!")))
 ~~~
 
-Even though our `error` is surrounded by `ignore-errors`, we get the interactive debugger:
+`error` が `ignore-errors` に囲まれているにもかかわらず、対話的デバッガが表示されます。
 
 ```
 Oh no!
@@ -661,86 +536,54 @@ Backtrace:
  …
 ```
 
-from the debugger, we can inspect the stack trace, go to the line
-signaling the condition, fix it and resume execution.
+デバッガから、スタックトレースを調べ、condition を signal した行へ移動し、修正して実行を再開できます。
 
-When the condition signaled is an error, we don't enter the debugger a
-second time after we handled the break.
+signal された condition がエラーの場合、break を処理した後に 2 回目のデバッガには入りません。
 
 
-## Advise and watch
+## Advise と watch
 
-*advise* and *watch* are available in some
-implementations, like CCL
-([advise](https://ccl.clozure.com/manual/chapter4.3.html#Advising) and
-[watch](https://ccl.clozure.com/manual/chapter4.12.html#watched-objects))
-and LispWorks. They do exist in
-SBCL but are not exported. `advise` allows to modify a function without changing its
-source, or to do something before or after its execution, similar
-to CLOS method combination (before, after, around methods).
+*advise* と *watch* は、CCL（[advise](https://ccl.clozure.com/manual/chapter4.3.html#Advising) と [watch](https://ccl.clozure.com/manual/chapter4.12.html#watched-objects)）や LispWorks など、一部の処理系で利用できます。SBCL にも存在しますが、export されていません。`advise` を使うと、ソースを変更せずに関数を変更したり、実行前後に何かを行ったりできます。CLOS のメソッド結合（before、after、around メソッド）に似ています。
 
-`watch` will signal a condition when a thread attempts to write to an
-object being watched. It can be coupled with the display of the
-watched objects in a GUI.
-For a certain class of bugs (someone is changing this value, but I
-don't know who), this can be extremely helpful.
+`watch` は、監視中のオブジェクトへスレッドが書き込もうとしたときに condition を signal します。GUI 内で監視対象オブジェクトを表示する機能と組み合わせることもできます。ある種のバグ（誰かがこの値を変更しているが、誰か分からない）には、非常に役立つことがあります。
 
-## Cross-referencing
+## クロスリファレンス
 
-Your Lisp can tell you all the places where a function is referenced
-or called, where a global variable is set, where a macro is expanded,
-and so on. For example, `slime-who-calls` (`C-c C-w C-c` or the Slime > Cross-Reference menu) will show you all the places where a function is called.
+Lisp は、関数が参照または呼び出されているすべての場所、グローバル変数が set されている場所、マクロが展開されている場所などを教えてくれます。たとえば `slime-who-calls`（`C-c C-w C-c` または Slime > Cross-Reference メニュー）は、関数が呼び出されているすべての場所を表示します。
 
-- `slime-who-references`: global variable references
-- `slime-who-bind`: global variable bindings
-- `slime-who-sets`: global variable setters
-- `slime-who-specializes`: methods specialized on a symbol
-- `slime-who-macroexpands`: places where a macro is expanded
-- `slime-list-callees`: lists all the functions that are called inside a given function body.
-- `slime-list-callers`: lists all the functions that call a given function.
+- `slime-who-references`: グローバル変数参照
+- `slime-who-bind`: グローバル変数束縛
+- `slime-who-sets`: グローバル変数 setter
+- `slime-who-specializes`: シンボルに特殊化されたメソッド
+- `slime-who-macroexpands`: マクロが展開されている場所
+- `slime-list-callees`: 指定した関数本体内で呼び出されるすべての関数を一覧表示します。
+- `slime-list-callers`: 指定した関数を呼び出すすべての関数を一覧表示します。
 
-Calling such a cross-reference function opens a new buffer with the
-list of results. You can navigate between references, and also
-recompile all the listed functions and macros with the usual shortcuts
-(`C-c C-k`). This is specially useful when you just changed a macro
-and you want to recompile all the functions that are using this macro.
+このようなクロスリファレンス関数を呼び出すと、結果一覧を含む新しいバッファが開きます。参照間を移動でき、通常のショートカット（`C-c C-k`）で一覧された関数やマクロをすべて再コンパイルすることもできます。これは、マクロを変更したばかりで、そのマクロを使っているすべての関数を再コンパイルしたいときに特に便利です。
 
-See our Emacs page for a complete list of commands and their Slime shortcuts.
+コマンドと Slime ショートカットの完全な一覧は Emacs ページを参照してください。
 
 
-## SLY stepper and SLY stickers
+## SLY stepper と SLY stickers
 
-SLY has an improved
-[stepper](https://github.com/joaotavora/sly-stepper) and a unique
-feature, [stickers](https://joaotavora.github.io/sly/#Stickers). You
-mark a piece of code, you run your code, SLY captures the results for
-each sticker and lets you examine the program execution
-interactively. It allows to see what sticker was captured, or
-not, so we can see at a glance the code coverage of that function
-call.
+SLY には改良された [stepper](https://github.com/joaotavora/sly-stepper) と、独自機能である [stickers](https://joaotavora.github.io/sly/#Stickers) があります。コードの一部に印を付けてコードを実行すると、SLY は各 sticker の結果を取得し、プログラム実行を対話的に調べられるようにします。どの sticker が取得されたか、またはされなかったかを確認できるため、その関数呼び出しにおけるコードカバレッジを一目で把握できます。
 
-They are a non-intrusive alternative to `print` and `break`.
+これらは `print` と `break` に対する非侵入的な代替手段です。
 
-## Unit tests
+## ユニットテスト
 
-Last but not least, automatic testing of functions in isolation might
-be what you're looking for! See the [testing](testing.html) section and a list of
-[test frameworks and libraries](https://github.com/CodyReichert/awesome-cl#unit-testing).
+最後に、独立した関数の自動テストこそ探しているものかもしれません！ [testing](testing.html) セクションと [test frameworks and libraries](https://github.com/CodyReichert/awesome-cl#unit-testing) の一覧を参照してください。
 
 
-## Remote debugging
+## リモートデバッグ
 
-You can have your software running on a machine over the network,
-connect to it and debug it from home, from your development
-environment.
+ソフトウェアをネットワーク上のマシンで実行し、そこへ接続して、自宅や開発環境からデバッグできます。
 
-The steps involved are to start a **Swank server** on the remote machine (Swank is the backend companion of Slime), create an
-ssh tunnel and connect to the Swank server from our editor. Then we
-can browse and evaluate code on the running instance transparently.
+手順は、リモートマシン上で **Swank server**（Swank は Slime のバックエンド伴走役です）を起動し、ssh トンネルを作成し、エディタから Swank server に接続することです。すると実行中のインスタンス上で透過的にコードを閲覧、評価できます。
 
-To test this, let's define a function that prints forever.
+これを試すため、永久に出力する関数を定義しましょう。
 
-If needed, import the dependencies first:
+必要なら、まず依存関係を import します。
 
 ~~~lisp
 (ql:quickload '("swank" "bordeaux-threads"))
@@ -748,10 +591,9 @@ If needed, import the dependencies first:
 
 
 ~~~lisp
-;; a little common lisp swank demo
-;; while this program is running, you can connect to it from
-;; another terminal or machine
-;; and change the definition of doprint to print something else out!
+;; 小さな common lisp swank デモ
+;; このプログラムの実行中、別のターミナルやマシンから接続できる
+;; そして doprint の定義を変更し、別のものを出力させられる！
 
 (require :swank)
 (require :bordeaux-threads)
@@ -774,12 +616,11 @@ If needed, import the dependencies first:
 (runner)
 ~~~
 
-On the server, we can run this code with
+サーバ上では、このコードを次で実行できます。
 
     sbcl --load demo.lisp
 
-If you check with `(bt:all-threads)`, you'll see your Swank server running on port 4006, as well
-as the other thread ready to do stuff:
+`(bt:all-threads)` で確認すると、ポート 4006 で動作中の Swank server と、処理を行う準備ができた別スレッドが見えるはずです。
 
     (#<SB-THREAD:THREAD "do-stuff" RUNNING {10027CEDC3}>
      #<SB-THREAD:THREAD "Swank Sentinel" waiting on:
@@ -788,18 +629,15 @@ as the other thread ready to do stuff:
      #<SB-THREAD:THREAD "Swank 4006" RUNNING {10027CEB63}>
      #<SB-THREAD:THREAD "main thread" RUNNING {1007C40393}>)
 
-We do port forwarding on our development machine:
+開発マシン上でポートフォワーディングを行います。
 
     ssh -L4006:127.0.0.1:4006 username@example.com
 
-this will securely forward port 4006 on the server at example.com to
-our local computer's port 4006 (Swank only accepts connections from
-localhost).
+これにより、example.com のサーバ上のポート 4006 が、ローカルコンピュータのポート 4006 へ安全に転送されます（Swank は localhost からの接続だけを受け付けます）。
 
-We connect to the running Swank with `M-x slime-connect`, choosing localhost for the host
-and port 4006.
+実行中の Swank へ `M-x slime-connect` で接続し、ホストには localhost、ポートには 4006 を選びます。
 
-We can write new code:
+新しいコードを書けます。
 
 ~~~lisp
 (defun dostuff ()
@@ -807,20 +645,19 @@ We can write new code:
 (setf *counter* 0)
 ~~~
 
-and eval it as usual with `C-c C-c` or `M-x slime-eval-region` for instance. The output should change.
+そして通常どおり、たとえば `C-c C-c` や `M-x slime-eval-region` で評価します。出力が変わるはずです。
 
-That's how Ron Garret debugged the Deep Space 1 spacecraft from the earth
-in 1999:
+Ron Garret は 1999 年に、このようにして地球から Deep Space 1 探査機をデバッグしました。
 
-> We were able to debug and fix a race condition that had not shown up during ground testing. (Debugging a program running on a $100M piece of hardware that is 100 million miles away is an interesting experience. Having a read-eval-print loop running on the spacecraft proved invaluable in finding and fixing the problem.
+> 地上試験では現れなかった競合状態をデバッグし、修正できました。（1 億マイル離れた 1 億ドルのハードウェア上で動くプログラムをデバッグするのは興味深い経験です。探査機上で read-eval-print loop が動いていたことは、問題の発見と修正に非常に貴重でした。
 
 
-## References
+## 参考資料
 
-- ["How to understand and use Common Lisp"](https://successful-lisp.blogspot.com/p/httpsdrive.html), chap. 30, David Lamkins (book download from author's site)
+- ["How to understand and use Common Lisp"](https://successful-lisp.blogspot.com/p/httpsdrive.html)、第 30 章、David Lamkins（著者サイトから書籍をダウンロード）
 - [Malisper: debugging Lisp series](https://malisper.me/debugging-lisp-part-1-recompilation/)
 - [Two Wrongs: debugging Common Lisp in Slime](https://two-wrongs.com/debugging-common-lisp-in-slime.html)
 - [Slime documentation: connecting to a remote Lisp](https://common-lisp.net/project/slime/doc/html/Connecting-to-a-remote-lisp.html#Connecting-to-a-remote-lisp)
 - [cvberrycom: remotely modifying a running Lisp program using Swank](http://cvberry.com/tech_writings/howtos/remotely_modifying_a_running_program_using_swank.html)
 - [Ron Garret: Lisping at the JPL](http://www.flownet.com/gat/jpl-lisp.html#1994-1999%20-%20Remote%20Agent)
-- [the Remote Agent experiment: debugging code from 60 million miles away (youtube)](https://www.youtube.com/watch?v=_gZK0tW8EhQ&feature=youtu.be&t=4175) (["AMA" on reddit](https://www.reddit.com/r/lisp/comments/a7156w/lisp_and_the_remote_agent/))
+- [the Remote Agent experiment: debugging code from 60 million miles away (youtube)](https://www.youtube.com/watch?v=_gZK0tW8EhQ&feature=youtu.be&t=4175)（[reddit の "AMA"](https://www.reddit.com/r/lisp/comments/a7156w/lisp_and_the_remote_agent/)）

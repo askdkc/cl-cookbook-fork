@@ -1,32 +1,27 @@
 ---
-title: Numbers
+title: 数値
 ---
 
-Common Lisp has a rich set of numerical types, including integer,
-rational, floating point, and complex.
+Common Lisp には、integer、rational、floating point、complex など、豊富な数値型があります。
 
-Some sources:
+参考資料:
 
-* [`Numbers`][numbers] in Common Lisp the Language, 2nd Edition
+* Common Lisp the Language, 2nd Edition の [`Numbers`][numbers]
 * [`Numbers, Characters and Strings`][numbers-characters-strings]
-  in Practical Common Lisp
+  (Practical Common Lisp)
 
-## Introduction
+## はじめに
 
-### Integer types
+### integer 型
 
-Common Lisp provides a true integer type, called `bignum`, limited only by the total
-memory available (not the machine word size). For example this would
-overflow a 64 bit integer by some way:
+Common Lisp は `bignum` と呼ばれる真の integer 型を提供します。これは machine word size ではなく、利用可能な総 memory 量だけに制限されます。たとえば次の値は 64 bit integer を大きく overflow します。
 
 ~~~lisp
 * (expt 2 200)
 1606938044258990275541962092341162602522202993782792835301376
 ~~~
 
-For efficiency, integers can be limited to a fixed number of bits,
-called a `fixnum` type. The range of integers which can be represented
-is given by:
+効率のため、integer は固定 bit 数に制限できます。これは `fixnum` 型と呼ばれます。表現可能な integer の範囲は次で得られます。
 
 ~~~lisp
 * most-positive-fixnum
@@ -35,10 +30,9 @@ is given by:
 -4611686018427387904
 ~~~
 
-Functions which operate on or evaluate to integers include:
+integer を操作する、または integer を返す function には次のものがあります。
 
-* [`isqrt`][isqrt], which returns the greatest integer less than or equal to the
-  exact positive square root of natural.
+* [`isqrt`][isqrt] は、自然数の正確な正の平方根以下で最大の integer を返します。
 
 ~~~lisp
 * (isqrt 10)
@@ -47,11 +41,10 @@ Functions which operate on or evaluate to integers include:
 2
 ~~~
 
-* [`gcd`][gcd] to find the Greatest Common Denominator
-* [`lcm`][lcm] for the Least Common Multiple.
+* [`gcd`][gcd] は Greatest Common Denominator を求めます。
+* [`lcm`][lcm] は Least Common Multiple を求めます。
 
-Like other low-level programming languages, Common Lisp provides literal
-representation for hexadecimals and other radixes up to 36. For example:
+他の low-level programming language と同じく、Common Lisp は hexadecimal や 36 までの radix の literal 表記を提供します。例:
 
 ~~~lisp
 * #xFF
@@ -68,45 +61,28 @@ representation for hexadecimals and other radixes up to 36. For example:
 35
 ~~~
 
-### Rational types
+### rational 型
 
-Rational numbers of type [`ratio`][ratio] consist of two `bignum`s, the
-numerator and denominator. Both can therefore be arbitrarily large:
+[`ratio`][ratio] 型の rational number は、分子と分母という 2 つの `bignum` から構成されます。そのため、どちらも任意の大きさにできます。
 
 ~~~lisp
 * (/ (1+ (expt 2 100)) (expt 2 100))
 1267650600228229401496703205377/1267650600228229401496703205376
 ~~~
 
-It is a subtype of the [`rational`][rational] class, along with
-[`integer`][integer].
+これは [`integer`][integer] と同じく [`rational`][rational] class の subtype です。
 
-### Floating point types
+### floating point 型
 
-See [Common Lisp the Language, 2nd Edition, section 2.1.3][book-cl-2.1.3].
+[Common Lisp the Language, 2nd Edition, section 2.1.3][book-cl-2.1.3] を参照してください。
 
-Floating point types attempt to represent the continuous real numbers
-using a finite number of bits. This means that many real numbers
-cannot be represented, but are approximated. This can lead to some nasty
-surprises, particularly when converting between base-10 and the base-2
-internal representation. If you are working with floating point
-numbers, then reading [What Every Computer Scientist Should Know About
-Floating-Point Arithmetic][article-floating-point-arithmetic] is highly
-recommended.
+floating point 型は、連続した real number を有限個の bit で表そうとします。つまり多くの real number は正確には表現できず、近似されます。特に 10 進表現と内部の 2 進表現を相互変換するとき、これは厄介な驚きにつながることがあります。floating point number を扱うなら、[What Every Computer Scientist Should Know About Floating-Point Arithmetic][article-floating-point-arithmetic] を読むことを強く勧めます。
 
-The Common Lisp standard allows for several floating point types. In
-order of increasing precision these are: `short-float`,
-`single-float`, `double-float`, and `long-float`. Their precisions are
-implementation dependent, and it is possible for an implementation to
-have only one floating point precision for all types.
+Common Lisp standard は複数の floating point 型を許します。精度が低い順に `short-float`、`single-float`、`double-float`、`long-float` です。これらの精度は implementation dependent であり、すべての型が 1 つの floating point precision だけを持つ implementation もありえます。
 
-The constants [`short-float-epsilon`, `single-float-epsilon`,
-`double-float-epsilon` and `long-float-epsilon`][float-constants] give
-a measure of the precision of the floating point types, and are
-implementation dependent.
+定数 [`short-float-epsilon`, `single-float-epsilon`, `double-float-epsilon` and `long-float-epsilon`][float-constants] は floating point 型の精度の目安を与えるもので、implementation dependent です。
 
-ECL specifically bases its `long-float` on C's `long double`, and thus has
-higher precision:
+特に ECL は `long-float` を C の `long double` に基づけているため、より高い精度を持ちます。
 
 ```
 CL-USER> (lisp-implementation-type)
@@ -119,12 +95,9 @@ CL-USER> most-positive-long-float
 1.189731495357231765l4932
 ```
 
-#### Floating point literals
+#### floating point literal
 
-When reading floating point numbers, the default type is set by the special
-variable [`*read-default-float-format*`][read-default-float-format]. By default
-this is `SINGLE-FLOAT`, so if you want to ensure that a number is read as double
-precision then put a `d0` suffix at the end
+floating point number を読むとき、default の型は special variable [`*read-default-float-format*`][read-default-float-format] で設定されます。default は `SINGLE-FLOAT` なので、数値を double precision として確実に読ませたい場合は末尾に `d0` suffix を付けます。
 
 ~~~lisp
 * (type-of 1.24)
@@ -134,11 +107,9 @@ SINGLE-FLOAT
 DOUBLE-FLOAT
 ~~~
 
-Other suffixes are `s` (short), `f` (single float), `d` (double
-float), `l` (long float) and `e` (default; usually single float).
+他の suffix は `s` (short)、`f` (single float)、`d` (double float)、`l` (long float)、`e` (default、通常は single float) です。
 
-The default type can be changed, but note that this may break packages
-which assume `single-float` type.
+default の型は変更できますが、`single-float` 型を仮定している package を壊す可能性がある点に注意してください。
 
 ~~~lisp
 * (setq *read-default-float-format* 'double-float)
@@ -146,8 +117,7 @@ which assume `single-float` type.
 DOUBLE-FLOAT
 ~~~
 
-Note that unlike in some languages, appending a single decimal point
-to the end of a number does not make it a float:
+一部の language と違って、数値の末尾に decimal point を 1 つ付けても float にはならない点に注意してください。
 
 ~~~lisp
 * (type-of 10.)
@@ -157,19 +127,16 @@ to the end of a number does not make it a float:
 SINGLE-FLOAT
 ~~~
 
-#### Floating point errors
+#### floating point error
 
-If the result of a floating point calculation is too large then a floating
-point overflow occurs. By default in [SBCL][SBCL] (and other implementations)
-this results in an error condition:
+floating point calculation の結果が大きすぎる場合、floating point overflow が発生します。[SBCL][SBCL] (および他の implementation) では default で error condition になります。
 
 ~~~lisp
 * (exp 1000)
 ; Evaluation aborted on #<FLOATING-POINT-OVERFLOW {10041720B3}>.
 ~~~
 
-The error can be handled, or this behaviour can be
-changed, to return `+infinity`. In SBCL this is:
+この error は handle できます。また、この behaviour を変更して `+infinity` を返すようにもできます。SBCL では次のようにします。
 
 ~~~lisp
 * (sb-int:set-floating-point-modes :traps '(:INVALID :DIVIDE-BY-ZERO))
@@ -181,16 +148,15 @@ changed, to return `+infinity`. In SBCL this is:
 0.0
 ~~~
 
-The calculation now silently continues, without an error condition.
+これで計算は error condition なしに静かに続行されます。
 
-A similar functionality to disable floating overflow errors
-exists in [CCL][CCL]:
+floating overflow error を無効にする同様の機能は [CCL][CCL] にもあります。
 
 ~~~lisp
 * (set-fpu-mode :overflow nil)
 ~~~
 
-In SBCL the floating point modes can be inspected:
+SBCL では floating point mode を調べられます。
 
 ~~~lisp
 * (sb-int:get-floating-point-modes)
@@ -198,10 +164,9 @@ In SBCL the floating point modes can be inspected:
  :CURRENT-EXCEPTIONS NIL :ACCRUED-EXCEPTIONS NIL :FAST-MODE NIL)
 ~~~
 
-#### Arbitrary precision
+#### 任意精度
 
-For arbitrary high precision calculations there is the
-[computable-reals][computable-reals] library on QuickLisp:
+任意の高精度計算には、QuickLisp に [computable-reals][computable-reals] library があります。
 
 ~~~lisp
 * (ql:quickload :computable-reals)
@@ -214,7 +179,7 @@ For arbitrary high precision calculations there is the
 +1.00000000000000000000...
 ~~~
 
-The precision to print is set by `*PRINT-PREC*`, by default 20
+print する精度は `*PRINT-PREC*` で設定され、default は 20 です。
 
 ~~~lisp
 * (setq *PRINT-PREC* 50)
@@ -222,15 +187,11 @@ The precision to print is set by `*PRINT-PREC*`, by default 20
 +1.41421356237309504880168872420969807856967187537695...
 ~~~
 
-### Complex types
+### complex 型
 
-There are 5 types of complex number: The real and imaginary parts must
-be of the same type, and can be rational, or one of the floating point
-types (short, single, double or long).
+complex number には 5 種類があります。実部と虚部は同じ型でなければならず、rational またはいずれかの floating point 型 (short、single、double、long) にできます。
 
-Complex values can be created using the `#C` reader macro or the function
-[`complex`][complex]. The reader macro does not allow the use of expressions
-as real and imaginary parts:
+complex value は `#C` reader macro または function [`complex`][complex] で作成できます。reader macro では、実部と虚部に expression を使うことはできません。
 
 ~~~lisp
 * #C(1 1)
@@ -243,7 +204,7 @@ as real and imaginary parts:
 #C(3 5)
 ~~~
 
-If constructed with mixed types then the higher precision type will be used for both parts.
+異なる型を混ぜて構築した場合、両方の part により高精度の型が使われます。
 
 ~~~lisp
 * (type-of #C(1 1))
@@ -256,8 +217,7 @@ If constructed with mixed types then the higher precision type will be used for 
 (COMPLEX (DOUBLE-FLOAT 1.0d0 1.0d0))
 ~~~
 
-The real and imaginary parts of a complex number can be extracted using
-[`realpart` and `imagpart`][realpart-and-imaginary]:
+complex number の実部と虚部は [`realpart` and `imagpart`][realpart-and-imaginary] で取り出せます。
 
 ~~~lisp
 * (realpart #C(7 9))
@@ -266,10 +226,9 @@ The real and imaginary parts of a complex number can be extracted using
 9.5
 ~~~
 
-#### Complex arithmetic
+#### complex arithmetic
 
-Common Lisp's mathematical functions generally handle complex numbers,
-and return complex numbers when this is the true result. For example:
+Common Lisp の mathematical function は一般に complex number を扱え、本来の結果が complex number である場合は complex number を返します。例:
 
 ~~~lisp
 * (sqrt -1)
@@ -282,13 +241,11 @@ and return complex numbers when this is the true result. For example:
 #C(1.2984576 0.63496387)
 ~~~
 
-## Reading numbers from strings
+## string から number を読む
 
-The [`parse-integer`][parse-integer] function reads an integer from a string.
+[`parse-integer`][parse-integer] function は string から integer を読みます。
 
-The [parse-number][parse-number] library cannot evaluate arbitrary
-expressions, so it should be safer to use on untrusted input. It can
-also parse floats.
+[parse-number][parse-number] library は任意の expression を evaluate できないため、信頼できない input に対してより安全に使えるはずです。float も parse できます。
 
 ~~~lisp
 * (ql:quickload :parse-number)
@@ -299,8 +256,7 @@ also parse floats.
 6
 ~~~
 
-The [Serapeum][serapeum] library of course has a `parse-float`
-function too. You can even ask it the output type, for example, a double float:
+[Serapeum][serapeum] library にももちろん `parse-float` function があります。たとえば double float のように、出力の型を指定することもできます。
 
 ~~~lisp
 * (ql:quickload "serapeum")
@@ -309,41 +265,30 @@ function too. You can even ask it the output type, for example, a double float:
 ;;    ^^ double
 ~~~
 
-See the [strings section][strings] on converting between strings and numbers.
+string と number の相互変換については [strings section][strings] を参照してください。
 
-## Converting numbers
+## number の変換
 
-Most numerical functions automatically convert types as needed.
-The `coerce` function converts objects from one type to another,
-including numeric types.
+ほとんどの numerical function は必要に応じて型を自動変換します。`coerce` function は、numeric type を含む object をある型から別の型へ変換します。
 
-See [Common Lisp the Language, 2nd Edition, section 12.6][book-cl-12.6].
+[Common Lisp the Language, 2nd Edition, section 12.6][book-cl-12.6] を参照してください。
 
-### Convert float to rational
+### float を rational に変換する
 
-The [`rational` and `rationalize` functions][rational-and-rationalize] convert
-a real numeric argument into a rational. `rational` assumes that floating
-point arguments are exact; `rationalize` exploits the fact that floating point
-numbers are only exact to their precision, so can often find a simpler
-rational number.
+[`rational` and `rationalize` functions][rational-and-rationalize] は real numeric argument を rational に変換します。`rational` は floating point argument が正確だと仮定します。`rationalize` は floating point number がその精度の範囲でしか正確でないという事実を利用するため、より単純な rational number を見つけられることがよくあります。
 
-### Convert rational to integer
+### rational を integer に変換する
 
-If the result of a calculation is a rational number where the numerator
-is a multiple of the denominator, then it is automatically converted
-to an integer:
+計算結果が rational number で、その分子が分母の倍数である場合、自動的に integer に変換されます。
 
 ~~~lisp
 * (type-of (* 1/2 4))
 (INTEGER 0 4611686018427387903)
 ~~~
 
-## Rounding floating-point and rational numbers
+## floating-point number と rational number の丸め
 
-The [`ceiling`, `floor`, `round` and `truncate`][ceiling-functions] functions
-convert floating point or rational numbers to integers.  The difference
-between the result and the input is returned as the second value, so that the
-input is the sum of the two outputs.
+[`ceiling`, `floor`, `round` and `truncate`][ceiling-functions] function は floating point number または rational number を integer に変換します。結果と input の差が第 2 戻り値として返るため、input は 2 つの出力の和になります。
 
 ~~~lisp
 * (ceiling 1.42)
@@ -363,8 +308,7 @@ input is the sum of the two outputs.
 0.41999996
 ~~~
 
-There is a difference between `floor` and `truncate` for negative
-numbers:
+negative number では `floor` と `truncate` に違いがあります。
 
 ~~~lisp
 * (truncate -1.42)
@@ -380,9 +324,7 @@ numbers:
 -0.41999996
 ~~~
 
-Similar functions `fceiling`, `ffloor`, `fround` and `ftruncate`
-return the result as floating point, of the same type as their
-argument:
+類似の function `fceiling`、`ffloor`、`fround`、`ftruncate` は、argument と同じ型の floating point として結果を返します。
 
 ~~~lisp
 * (ftruncate 1.3)
@@ -396,17 +338,13 @@ SINGLE-FLOAT
 DOUBLE-FLOAT
 ~~~
 
-## Comparing numbers
+## number の比較
 
-See [Common Lisp the Language, 2nd Edition, Section 12.3][book-cl-12.3].
+[Common Lisp the Language, 2nd Edition, Section 12.3][book-cl-12.3] を参照してください。
 
-The `=` predicate returns `T` if all arguments are numerically equal.
-Note that comparison of floating point numbers includes some margin
-for error, due to the fact that they cannot represent all real
-numbers and accumulate errors.
+`=` predicate は、すべての argument が数値的に等しい場合に `T` を返します。floating point number の比較には、すべての real number を表現できず error が蓄積するという性質のため、ある程度の誤差の余地が含まれる点に注意してください。
 
-The constant [`single-float-epsilon`][single-float-epsilon] is the smallest
-number which will cause an `=` comparison to fail, if it is added to 1.0:
+定数 [`single-float-epsilon`][single-float-epsilon] は、1.0 に加えたとき `=` comparison が fail する最小の number です。
 
 ~~~lisp
 * (= (+ 1s0 5e-8) 1s0)
@@ -415,8 +353,7 @@ T
 NIL
 ~~~
 
-Note that this does not mean that a `single-float` is always precise
-to within `6e-8`:
+これは `single-float` が常に `6e-8` 以内の精度を持つという意味ではない点に注意してください。
 
 ~~~lisp
 * (= (+ 10s0 4e-7) 10s0)
@@ -425,10 +362,7 @@ T
 NIL
 ~~~
 
-Instead this means that `single-float` is precise to approximately
-seven digits. If a sequence of calculations are performed, then error
-can accumulate and a larger error margin may be needed. In this case
-the absolute difference can be compared:
+むしろ、これは `single-float` が約 7 桁の精度を持つという意味です。一連の計算を行うと error が蓄積し、より大きな error margin が必要になることがあります。この場合は絶対差を比較できます。
 
 ~~~lisp
 * (< (abs (- (+ 10s0 5e-7)
@@ -437,8 +371,7 @@ the absolute difference can be compared:
 T
 ~~~
 
-When comparing numbers with `=` mixed types are allowed. To test both
-numerical value and type use `eql`:
+`=` で number を比較するときは、型が混在していてもかまいません。数値と型の両方を test するには `eql` を使います。
 
 ~~~lisp
 * (= 3 3.0)
@@ -448,39 +381,33 @@ T
 NIL
 ~~~
 
-## Operating on a series of numbers
+## number の series を操作する
 
-Many Common Lisp functions operate on sequences, which can be either lists
-or vectors (1D arrays). See the section on
-[mapping][mapping].
+多くの Common Lisp function は sequence を操作します。sequence は list または vector (1D array) です。[mapping][mapping] の section を参照してください。
 
-Operations on multidimensional arrays are discussed in
-[this section][arrays].
+multidimensional array に対する operation は [this section][arrays] で説明しています。
 
-Libraries are available for defining and operating on lazy sequences,
-including "infinite" sequences of numbers. For example
+number の「infinite」sequence を含む lazy sequence を定義し操作する library もあります。例:
 
-* [Clazy][clazy] which is on QuickLisp.
-* [folio2][folio2] on QuickLisp. Includes an interface to the
-* [Series][series] package for efficient sequences.
+* [Clazy][clazy] は QuickLisp にあります。
+* [folio2][folio2] は QuickLisp にあります。効率的な sequence のための
+* [Series][series] package への interface を含みます。
 * [lazy-seq][lazy-seq].
 
-## Working with Roman numerals
+## Roman numeral を扱う
 
-The `format` function can convert numbers to roman numerals with the
-`~@r` directive:
+`format` function は `~@r` directive で number を roman numeral に変換できます。
 
 ~~~lisp
 * (format nil "~@r" 42)
 "XLII"
 ~~~
 
-There is a [gist by tormaroe][gist-tormaroe] for reading roman numerals.
+roman numeral を読むための [gist by tormaroe][gist-tormaroe] があります。
 
-## Generating random numbers
+## random number の生成
 
-The [`random`][random] function generates either integer or floating point
-random numbers, depending on the type of its argument.
+[`random`][random] function は、その argument の型に応じて integer または floating point の random number を生成します。
 
 ~~~lisp
 * (random 10)
@@ -494,16 +421,11 @@ SINGLE-FLOAT
 DOUBLE-FLOAT
 ~~~
 
-In SBCL a [Mersenne Twister][mersenne-twister] pseudo-random number generator
- is used. See section [7.13 of the SBCL manual][sbcl-7.13] for details.
+SBCL では [Mersenne Twister][mersenne-twister] pseudo-random number generator が使われています。詳細は [SBCL manual の 7.13][sbcl-7.13] section を参照してください。
 
-The random seed is stored in [`*random-state*`][random-state] whose internal
-representation is implementation dependent. The function
-[`make-random-state`][make-random-state] can be used to make new random
-states, or copy existing states.
+random seed は [`*random-state*`][random-state] に保存され、その内部表現は implementation dependent です。function [`make-random-state`][make-random-state] は、新しい random state を作成したり、既存の state を copy したりするために使えます。
 
-To use the same set of random numbers multiple times,
-`(make-random-state nil)` makes a copy of the current `*random-state*`:
+同じ random number の集合を複数回使うには、`(make-random-state nil)` で現在の `*random-state*` の copy を作成します。
 
 ~~~lisp
 * (dotimes (i 3)
@@ -516,20 +438,15 @@ To use the same set of random numbers multiple times,
 (8 3 9 2 1 8 0 0 4 1)
 ~~~
 
-This generates 10 random numbers in a loop, but each time the sequence
-is the same because the `*random-state*` special variable is dynamically
-bound to a copy of its state before the `let` form.
+これは loop 内で 10 個の random number を生成しますが、毎回 sequence は同じです。なぜなら `*random-state*` special variable が、`let` form の前でその state の copy に dynamic binding されるからです。
 
-Other resources:
+その他の資料:
 
-* The [random-state][random-state] package is available on QuickLisp, and
-  provides a number of portable random number generators.
+* [random-state][random-state] package は QuickLisp で利用でき、複数の portable random number generator を提供します。
 
-## Bit-wise Operation
+## bit-wise operation
 
-Common Lisp also provides many functions to perform bit-wise arithmetic
-operations. Some commonly used ones are listed below, together with their
-C/C++ equivalence.
+Common Lisp は bit-wise arithmetic operation を行うための function も多く提供しています。よく使われるものを、対応する C/C++ 表現と一緒に以下に示します。
 
 <style>
 table, th, td {
@@ -549,39 +466,39 @@ th {
     <tr>
       <th>Common Lisp</th>
       <th>C/C++</th>
-      <th>Description</th>
+      <th>説明</th>
     </tr>
   </thead>
   <tbody>
     <tr>
       <td>(logand a b c)</td>
       <td>a & b & c</td>
-      <td>Bit-wise AND of multiple operands</td>
+      <td>複数 operand の bit-wise AND</td>
     </tr>
     <tr>
       <td>(logior a b c)</td>
       <td>a | b | c</td>
-      <td>Bit-wise OR of multiple operands</td>
+      <td>複数 operand の bit-wise OR</td>
     </tr>
     <tr>
       <td>(lognot a)</td>
       <td>~a</td>
-      <td>Bit-wise NOT of single operands</td>
+      <td>単一 operand の bit-wise NOT</td>
     </tr>
     <tr>
       <td>(logxor a b c)</td>
       <td>a ^ b ^ c</td>
-      <td>Bit-wise exclusive or (XOR) of multiple operands</td>
+      <td>複数 operand の bit-wise exclusive or (XOR)</td>
     </tr>
     <tr>
       <td>(ash a 3)</td>
       <td>a << 3</td>
-      <td>Bit-wise left shift</td>
+      <td>bit-wise left shift</td>
     </tr>
     <tr>
       <td>(ash a -3)</td>
       <td>a >> 3</td>
-      <td>Bit-wise right shift</td>
+      <td>bit-wise right shift</td>
     </tr>
   </tbody>
 </table>
@@ -589,15 +506,14 @@ th {
 <br>
 <!-- epub-exclude-end -->
 
-Negative numbers are treated as two's-complements. If you have forgotten this,
-please refer to the [Wiki page][twos-complements].
+negative number は two's-complement として扱われます。忘れてしまった場合は [Wiki page][twos-complements] を参照してください。
 
-For example:
+例:
 
 ~~~lisp
 * (logior 1 2 4 8)
 15
-;; Explanation:
+;; 説明:
 ;;   0001
 ;;   0010
 ;;   0100
@@ -608,9 +524,9 @@ For example:
 * (logand 2 -3 4)
 0
 
-;; Explanation:
+;; 説明:
 ;;   0010 (2)
-;;   1101 (two's complement of -3)
+;;   1101 (-3 の two's complement)
 ;; & 0100 (4)
 ;; -------
 ;;   0000
@@ -618,7 +534,7 @@ For example:
 * (logxor 1 3 7 15)
 10
 
-;; Explanation:
+;; 説明:
 ;;   0001
 ;;   0011
 ;;   0111
@@ -628,28 +544,28 @@ For example:
 
 * (lognot -1)
 0
-;; Explanation:
+;; 説明:
 ;;   11 -> 00
 
 * (lognot -3)
 2
+;; 説明:
 ;;   101 -> 010
 
 * (ash 3 2)
 12
-;; Explanation:
+;; 説明:
 ;;   11 -> 1100
 
 * (ash -5 -2)
 -2
-;; Explanation
+;; 説明
 ;;   11011 -> 110
 ~~~
 
-Please see the [CLHS page][logand-functions] for a more detailed explanation
-or other bit-wise functions.
+より詳しい説明や他の bit-wise function については [CLHS page][logand-functions] を参照してください。
 
-## Appendix: the number tower
+## 付録: number tower
 
 <!-- epub-exclude-start -->
 <div style="text-align: center">
@@ -661,7 +577,7 @@ or other bit-wise functions.
 ![](numbertower.png)
    pdf-include-end -->
 
-*Types in bold, solid boxes are the ones you will typically use.*
+*太字で実線の box に入っている type は、通常よく使うものです。*
 
 
 [numbers]: https://www.cs.cmu.edu/Groups/AI/html/cltl/clm/node16.html#SECTION00610000000000000000

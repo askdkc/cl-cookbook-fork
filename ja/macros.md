@@ -1,26 +1,26 @@
 ---
-title: Macros
+title: マクロ
 ---
 
-The word _macro_ is used generally in computer science to mean a syntactic extension to a programming language. (Note: The name comes from the word "macro-instruction," which was a useful feature of many second-generation assembly languages. A macro-instruction looked like a single instruction, but expanded into a sequence of actual instructions. The basic idea has since been used many times, notably in the C preprocessor. The name "macro" is perhaps not ideal, since it connotes nothing relevant to what it names, but we're stuck with it.) Although many languages have a macro facility, none of them are as powerful as Lisp's. The basic mechanism of Lisp macros is simple, but has subtle complexities, so learning your way around it takes a bit of practice.
+コンピュータサイエンスでは、_macro_ という語は一般に、プログラミング言語への構文拡張を意味します。（注: この名前は、多くの第 2 世代アセンブリ言語で便利だった "macro-instruction" という語に由来します。macro-instruction は単一の命令のように見えますが、実際には一連の命令へ展開されます。この基本的な考え方は、その後 C プリプロセッサなどで何度も使われてきました。"macro" という名前は、指しているものとあまり関係がない響きなので理想的ではないかもしれませんが、私たちはこの名前と付き合っていくしかありません。）多くの言語にマクロ機能はありますが、Lisp のマクロほど強力なものはありません。Lisp マクロの基本機構は単純ですが、微妙な複雑さもあるため、使いこなすには少し練習が必要です。
 
-## How Macros Work
+## マクロの仕組み
 
-A macro is an ordinary piece of Lisp code that operates on _another piece of putative Lisp code,_ translating it into (a version closer to) executable Lisp. That may sound a bit complicated, so let's give a simple example. Suppose you want a version of [`setq`](http://www.lispworks.com/documentation/HyperSpec/Body/s_setq.htm) that sets two variables to the same value. So if you write
+マクロは、_別の Lisp コードらしきもの_ を操作し、それを実行可能な Lisp に（より近い形へ）変換する、普通の Lisp コードです。少し複雑に聞こえるかもしれないので、簡単な例を見てみましょう。2 つの変数を同じ値に設定する [`setq`](http://www.lispworks.com/documentation/HyperSpec/Body/s_setq.htm) の変種がほしいとします。つまり、次のように書いたとき、
 
 ~~~lisp
 (setq2 x y (+ z 3))
 ~~~
 
-when `z`=8 then both `x` and `y` are set to 11. (I can't think of any use for this, but it's just an example.)
+`z`=8 なら、`x` と `y` の両方が 11 に設定される、というものです。（これが何に役立つかは思いつきませんが、例として使います。）
 
-It should be obvious that we can't define `setq2` as a function. If `x`=50 and `y`=_-5_, this function would receive the values 50, _-5_, and 11; it would have no knowledge of what variables were supposed to be set. What we really want to say is, When you (the Lisp system) see:
+`setq2` を関数として定義できないことは明らかです。もし `x`=50 で `y`=_-5_ なら、この関数は 50、_-5_、11 という値を受け取るだけで、どの変数を設定すべきかを知ることができません。本当に言いたいのは、あなた（Lisp システム）が次を見たら、
 
 ```lisp
 (setq2 v1 v2 e)
 ```
 
-then treat it as equivalent to:
+次と同等に扱ってほしい、ということです。
 
 ```lisp
 (progn
@@ -28,40 +28,39 @@ then treat it as equivalent to:
   (setq v2 e))
 ```
 
-Actually, this isn't quite right, but it will do for now. A macro allows us to do precisely this, by specifying a program for transforming the input pattern <code>(setq2 <i>v<sub>1</sub></i> <i>v<sub>2</sub></i> <i>e</i>)</code> into the output pattern `(progn ...)`.
+厳密にはこれはまだ正しくありませんが、今のところは十分です。マクロを使うと、入力パターン <code>(setq2 <i>v<sub>1</sub></i> <i>v<sub>2</sub></i> <i>e</i>)</code> を出力パターン `(progn ...)` へ変換するプログラムを指定することで、まさにこれを実現できます。
 
-### Quote
+### クォート
 
-Here's how we could define the `setq2` macro:
+`setq2` マクロは次のように定義できます。
 
 ~~~lisp
 (defmacro setq2 (v1 v2 e)
   (list 'progn (list 'setq v1 e) (list 'setq v2 e)))
 ~~~
 
-It takes as parameters two variables and one expression.
+これは 2 つの変数と 1 つの式を引数として受け取ります。
 
-Then it returns a piece of code. In Lisp, because code is represented
-as lists, we can simply return a list that represents code.
+そしてコード片を返します。Lisp ではコードがリストで表現されるので、コードを表すリストをそのまま返せます。
 
-We also use the *quote*, a *special operator* (not a function nor a macro, but one of a few special operators forming the core of Lisp).
+ここでは *quote* も使っています。これは *special operator* です（関数でもマクロでもなく、Lisp の中核をなす少数の special operator の 1 つです）。
 
-Each *quoted* object evaluates to itself, aka it is returned as is:
+*quoted* なオブジェクトはそれ自身へ評価されます。つまり、そのまま返されます。
 
-- `(+ 1 2)` evaluates to `3` but `(quote (+ 1 2))` evaluates to `(+ 1 2)`
-- `(quote (foo bar baz))` evaluates to `(foo bar baz)`
-- `'` is a shortcut for `quote`: `(quote foo)` and `'foo` are equvalent - both evaluate to `foo`.
+- `(+ 1 2)` は `3` に評価されますが、`(quote (+ 1 2))` は `(+ 1 2)` に評価されます。
+- `(quote (foo bar baz))` は `(foo bar baz)` に評価されます。
+- `'` は `quote` の省略記法です。`(quote foo)` と `'foo` は等価で、どちらも `foo` に評価されます。
 
-So, our macro returns the following bits:
+したがって、このマクロは次の部品を返します。
 
-- the symbol `progn`,
-- a second list, that contains
-  - the symbol `setq`
-  - the variable `v1`: note that the variable is not evaluated inside the macro!
-  - the expression `e`: it is not evaluated either!
-- a second list, with `v2`.
+- symbol `progn`
+- 2 つ目のリスト。これは次を含みます。
+  - symbol `setq`
+  - 変数 `v1`: マクロ内ではこの変数は評価されないことに注意してください。
+  - 式 `e`: これも評価されません。
+- `v2` を含む 2 つ目のリスト。
 
-We can use it like this:
+次のように使えます。
 
 ```lisp
 (defparameter v1 1)
@@ -70,16 +69,12 @@ We can use it like this:
 ;; 3
 ```
 
-We can check, `v1` and `v2` were set to `3`.
+確認すると、`v1` と `v2` は `3` に設定されています。
 
 
 ### Macroexpand
 
-We must start writing a macro when we know what code we want to
-generate. Once we've begun writing one, it becomes very useful to
-check effectively what code does the macro generate. The function for
-that is `macroexpand`. It is a function, and we give it some code, as
-a list (so, we quote the code snippet we give it):
+マクロを書き始めるのは、生成したいコードが分かってからです。書き始めたら、そのマクロが実際にどんなコードを生成するか確認できると非常に便利です。そのための関数が `macroexpand` です。これは関数なので、展開したいコードをリストとして渡します（つまり、渡すコード片をクォートします）。
 
 ~~~lisp
 (macroexpand '(setq2 v1 v2 3))
@@ -87,9 +82,9 @@ a list (so, we quote the code snippet we give it):
 ;; T
 ~~~
 
-Yay, our macro expands to the code we wanted!
+よし、マクロは望んだコードへ展開されています。
 
-More interestingly:
+さらに興味深い例です。
 
 ~~~lisp
 (macroexpand '(setq2 v1 v2 (+ z 3)))
@@ -97,15 +92,12 @@ More interestingly:
 ;; T
 ~~~
 
-We can confirm that our expression `e`, here `(+ z 3)`, was not
-evaluated. We will see how to control the evaluation of arguments with
-the comma: `,`.
+ここで式 `e`、つまり `(+ z 3)` は評価されていないことを確認できます。引数の評価をカンマ `,` で制御する方法は後で見ます。
 
-### Note: Slime tips
+### 注: Slime の小技
 
-With Slime, you can call macroexpand by putting the cursor at
-the left of the parenthesis of the s-expr to expand and call the function``M-x
-slime-macroexpand-[1,all]``, or ``C-c M-m``:
+Slime では、展開したい s-expression の左括弧の位置にカーソルを置き、``M-x
+slime-macroexpand-[1,all]`` または ``C-c M-m`` を実行すると macroexpand を呼び出せます。
 
 ~~~lisp
 [|](setq2 v1 v2 3)
@@ -115,38 +107,34 @@ slime-macroexpand-[1,all]``, or ``C-c M-m``:
 ; (PROGN (SETQ V1 3) (SETQ V2 3))
 ~~~
 
-Another tip: on a macro name, type ``C-c C-w m`` (or ``M-x
-slime-who-macroexpands``) to get a new buffer with all the places
-where the macro was expanded. Then type the usual ``C-c C-k``
-(``slime-compile-and-load-file``) to recompile all of them.
+もう 1 つの小技です。マクロ名の上で ``C-c C-w m``（または ``M-x
+slime-who-macroexpands``）を入力すると、そのマクロが展開されたすべての場所を含む新しいバッファが得られます。その後、通常どおり ``C-c C-k``（``slime-compile-and-load-file``）を入力すれば、それらをすべて再コンパイルできます。
 
 
-### Macros VS functions
+### マクロ VS 関数
 
-Our macro is very close to the following function definition:
+このマクロは、次の関数定義にとても近いものです。
 
 ~~~lisp
 (defun setq2-function (v1 v2 e)
   (list 'progn (list 'setq v1 e) (list 'setq v2 e)))
 ~~~
 
-If we evaluated `(setq2-function 'x 'y '(+ z 3))` (note that each
-argument is *quoted*, so it isn't evaluated when we call the
-function), we would get
+`(setq2-function 'x 'y '(+ z 3))` を評価したとします（各引数は *quoted* されているので、関数呼び出し時には評価されません）。すると次が得られます。
 
 ```lisp
 (progn (setq x (+ z 3)) (setq y (+ z 3)))
 ```
 
-This is a perfectly ordinary Lisp computation, whose sole point of interest is that its output is a piece of executable Lisp code. What `defmacro` does is create this function implicitly and make sure that whenever an expression of the form `(setq2 x y (+ z 3))` is seen, `setq2-function` is called with the pieces of the form as arguments, namely `x`, `y`, and `(+ z 3)`. The resulting piece of code then replaces the call to `setq2`, and execution resumes as if the new piece of code had occurred in the first place. The macro form is said to _expand_ into the new piece of code.
+これは完全に普通の Lisp の計算であり、唯一面白い点は、その出力が実行可能な Lisp コード片だということです。`defmacro` が行うのは、この関数を暗黙に作り、`(setq2 x y (+ z 3))` という形の式が見つかるたびに、フォームの部品、すなわち `x`、`y`、`(+ z 3)` を引数として `setq2-function` を呼び出すようにすることです。得られたコード片は `setq2` の呼び出しを置き換え、最初からその新しいコード片がそこにあったかのように実行が続きます。マクロフォームは新しいコード片へ _expand_ すると言われます。
 
-### Evaluation context
+### 評価コンテキスト
 
-This is all there is to it, except, of course, for the myriad subtle consequences. The main consequence is that _run time for the `setq2` macro_ is _compile time for its context._ That is, suppose the Lisp system is compiling a function, and midway through it finds the expression `(setq2 x y (+ z 3))`. The job of the compiler is, of course, to translate source code into something executable, such as machine language or perhaps byte code. Hence it doesn't execute the source code, but operates on it in various mysterious ways. However, once the compiler sees the `setq2` expression, it must suddenly switch to executing the body of the `setq2` macro. As I said, this is an ordinary piece of Lisp code, which can in principle do anything any other piece of Lisp code can do. That means that when the compiler is running, the entire Lisp (run-time) system must be present.
+これがすべてです。ただし、もちろん、そこから非常に多くの微妙な帰結が生まれます。主な帰結は、_`setq2` マクロにとっての実行時_ が _そのコンテキストにとってのコンパイル時_ だということです。たとえば、Lisp システムがある関数をコンパイルしている途中で `(setq2 x y (+ z 3))` という式を見つけたとします。コンパイラの仕事は、ソースコードを機械語やバイトコードなどの実行可能なものへ変換することです。したがって、コンパイラはソースコードを実行するのではなく、いろいろな神秘的な方法でそれを処理します。しかし、`setq2` 式を見つけた瞬間、コンパイラは突然 `setq2` マクロ本体の実行へ切り替えなければなりません。先ほど述べたように、これは普通の Lisp コードなので、原理的には他の Lisp コードができることは何でもできます。つまり、コンパイラが動いているとき、Lisp の（実行時）システム全体が存在していなければならない、ということです。
 
-We'll stress this once more: at compile-time, you have the full language at your disposal.
+もう一度強調しておきます。コンパイル時には、言語全体を自由に使えます。
 
-Novices often make the following sort of mistake. Suppose that the `setq2` macro needs to do some complex transformation on its `e` argument before plugging it into the result. Suppose this transformation can be written as a Lisp procedure `some-computation`. The novice will often write:
+初心者はよく次のような間違いをします。`setq2` マクロが、その `e` 引数を結果に埋め込む前に何らかの複雑な変換をする必要があるとします。この変換は Lisp の手続き `some-computation` として書けるとします。初心者はしばしば次のように書きます。
 
 ~~~lisp
 (defmacro setq2 (v1 v2 e)
@@ -156,7 +144,7 @@ Novices often make the following sort of mistake. Suppose that the `setq2` macro
 (defmacro some-computation (exp) ...) ;; _Wrong!_
 ~~~
 
-The mistake is to suppose that once a macro is called, the Lisp system enters a "macro world," so naturally everything in that world must be defined using `defmacro`. This is the wrong picture. The right picture is that `defmacro` enables a step into the _ordinary Lisp world_, but in which the principal object of manipulation is Lisp code. Once that step is taken, one uses ordinary Lisp function definitions:
+間違いは、いったんマクロが呼び出されると Lisp システムが「マクロ世界」に入り、その世界のものは当然すべて `defmacro` で定義しなければならない、と考えることです。これは誤ったイメージです。正しいイメージは、`defmacro` によって _普通の Lisp 世界_ へ踏み込む、ただしそこで主に操作する対象が Lisp コードである、というものです。その段階に入ったら、通常の Lisp 関数定義を使います。
 
 ~~~lisp
 (defmacro setq2 (v1 v2 e)
@@ -166,22 +154,22 @@ The mistake is to suppose that once a macro is called, the Lisp system enters a 
 (defun some-computation (exp) ...) ;; _Right!_
 ~~~
 
-One possible explanation for this mistake may be that in other languages, such as C, invoking a preprocessor macro _does_ get you into a different world; you can't run an arbitrary C program. It might be worth pausing to think about what it might mean to be able to.
+この間違いの理由の 1 つは、C のような他の言語では、プリプロセッサマクロを起動すると実際に別世界へ入るからかもしれません。そこでは任意の C プログラムを実行することはできません。それが可能だとしたら何を意味するか、少し考えてみる価値はあるでしょう。
 
-Another subtle consequence is that we must spell out how the arguments to the macro get distributed to the hypothetical behind-the-scenes function (called `setq2-function` in my example). In most cases, it is easy to do so: In defining a macro, we use all the usual `lambda`-list syntax, such as `&optional`, `&rest`, `&key`, but what gets bound to the formal parameters are pieces of the macro form, not their values (which are mostly unknown, this being compile time for the macro form). So if we defined a macro thus:
+もう 1 つの微妙な帰結は、マクロの引数が舞台裏の仮想的な関数（この例では `setq2-function` と呼んだもの）へどのように分配されるかを、明確に書かなければならないことです。ほとんどの場合、これは簡単です。マクロ定義では `&optional`、`&rest`、`&key` など通常の `lambda` リスト構文をすべて使えます。ただし、仮引数に束縛されるのはマクロフォームの部品であって、それらの値ではありません（値はたいてい不明です。なぜなら、これはマクロフォームにとってのコンパイル時だからです）。したがって、次のようにマクロを定義したとします。
 
 ~~~lisp
 (defmacro foo (x &optional y &key (cxt 'null)) ...)
 ~~~
 
-then
+すると、
 
-- if we call it with `(foo a)`, the parameters' values are: `x=a`, `y=nil`, `cxt=null`.
-- calling  `(foo (+ a 1) (- y 1))` gives: `x=(+ a 1)`, `y=(- y 1)`, `cxt=null`.
-- and `(foo a b :cxt (zap zip))` gives: `x=a`, `y=b`, `cxt=(zap zip)`.
+- `(foo a)` と呼ぶと、パラメータの値は `x=a`、`y=nil`、`cxt=null` です。
+- `(foo (+ a 1) (- y 1))` と呼ぶと、`x=(+ a 1)`、`y=(- y 1)`、`cxt=null` です。
+- `(foo a b :cxt (zap zip))` では、`x=a`、`y=b`、`cxt=(zap zip)` です。
 
 
-Note that the values of the variables are the actual expressions `(+ a 1)` and `(zap zip)`. There is no requirement that these expressions' values be known, or even that they have values. The macro can do anything it likes with them. For instance, here's an even more useless variant of `setq`: <code>(setq-reversible <i>e<sub>1</sub></i> <i>e<sub>2</sub></i> <i>d</i>)</code> behaves like <code>(setq <i>e<sub>1</sub></i> <i>e<sub>2</sub></i>)</code> if <i>d=</i><code>:normal</code>, and behaves like <code>(setq <i>e<sub>2</sub></i> <i>e<sub>1</sub></i>)</code> if _d=_`:backward`. It could be defined thus:
+変数の値は、実際の式 `(+ a 1)` や `(zap zip)` であることに注意してください。これらの式の値が既知である必要はなく、値を持つ必要すらありません。マクロはそれらを好きなように扱えます。たとえば、さらに役に立たない `setq` の変種として <code>(setq-reversible <i>e<sub>1</sub></i> <i>e<sub>2</sub></i> <i>d</i>)</code> を考えます。これは <i>d=</i><code>:normal</code> なら <code>(setq <i>e<sub>1</sub></i> <i>e<sub>2</sub></i>)</code> のように振る舞い、_d=_`:backward` なら <code>(setq <i>e<sub>2</sub></i> <i>e<sub>1</sub></i>)</code> のように振る舞います。次のように定義できます。
 
 ~~~lisp
 (defmacro setq-reversible (e1 e2 direction)
@@ -191,7 +179,7 @@ Note that the values of the variables are the actual expressions `(+ a 1)` and `
     (t (error "Unknown direction: ~a" direction))))
 ~~~
 
-Here's how it expands:
+展開は次のようになります。
 
 ~~~lisp
 (macroexpand '(setq-reversible x y :normal))
@@ -202,16 +190,15 @@ T
 T
 ~~~
 
-And with a wrong direction:
+誤った direction を渡すと、
 
 ~~~lisp
 (macroexpand '(setq-reversible x y :other-way-around))
 ~~~
 
-We get an error and are prompted into the debugger!
+エラーになり、デバッガへ入ります。
 
-We'll see the backquote and comma mechanism in the next section, but
-here's a fix:
+バッククォートとカンマの仕組みは次の節で見ますが、修正版は次のとおりです。
 
 ~~~lisp
 (defmacro setq-reversible (v1 v2 direction)
@@ -219,61 +206,58 @@ here's a fix:
     (:normal (list 'setq v1 v2))
     (:backward (list 'setq v2 v1))
     (t `(error "Unknown direction: ~a" ,direction))))
-    ;; ^^ backquote                    ^^ comma: get the value inside the backquote.
+    ;; ^^ backquote                    ^^ comma: backquote の中で値を取り出す。
 
 (macroexpand '(SETQ-REVERSIBLE v1 v2 :other-way-around))
 ;; (ERROR "Unknown direction: ~a" :OTHER-WAY-AROUND)
 ;; T
 ~~~
 
-Now when we call `(setq-reversible v1 v2 :other-way-around)` we still get the
-error and the debugger, but at least not when using `macroexpand`.
+これで `(setq-reversible v1 v2 :other-way-around)` を呼ぶと、やはりエラーとデバッガは発生しますが、少なくとも `macroexpand` の時点では発生しません。
 
 <a name="2-backquote"></a>
 
-## Backquote and comma
+## バッククォートとカンマ
 
-Before taking another step, we need to introduce a piece of Lisp notation that is indispensable to defining macros, even though technically it is quite independent of macros. This is the _backquote facility_. As we saw above, the main job of a macro, when all is said and done, is to define a piece of Lisp code, and that means evaluating expressions such as `(list 'prog (list 'setq ...) ...)`. As these expressions grow in complexity, it becomes hard to read them and write them. What we find ourselves wanting is a notation that provides the skeleton of an expression, with some of the pieces filled in with new expressions. That's what backquote provides. Instead of the `list` expression given above, one writes
+次へ進む前に、マクロ定義に不可欠な Lisp 記法を導入する必要があります。ただし技術的には、これはマクロそのものからは独立しています。それが _backquote facility_ です。上で見たように、マクロの主な仕事は、結局のところ Lisp コード片を定義することです。つまり `(list 'prog (list 'setq ...) ...)` のような式を評価することになります。これらの式が複雑になるにつれ、読みにくく書きにくくなります。欲しくなるのは、式の骨組みを示し、その一部を新しい式で埋め込める記法です。バッククォートはそれを提供します。上の `list` 式の代わりに、次のように書けます。
 
 ~~~lisp
   `(progn (setq ,v1 ,e) (setq ,v2 ,e))
 ;;^ backquote   ^   ^         ^   ^ commas
 ~~~
 
-The backquote (`) character signals that in the expression that follows, every subexpression _not_ preceded by a comma is to be quoted, and every subexpression preceded by a comma is to be evaluated.
+バッククォート（`）文字は、それに続く式の中で、カンマが前についていないすべての部分式はクォートされ、カンマが前についているすべての部分式は評価される、ということを示します。
 
-You can think of it, and use it, as data interpolation:
+これはデータ補間として考え、使うことができます。
 
 ~~~lisp
 `(v1 = ,v1) ;; => (V1 = 3)
 ~~~
 
 
-That's mostly all there is to backquote. There are just two extra items to point out.
+バッククォートについては、ほとんどこれだけです。ただし、追加で 2 つ指摘しておくことがあります。
 
 #### Comma-splice ,@
 
-First, if you write "`,@e`" instead of "`,e`" then the value of _e_ is _spliced_ (or "joined", "combined", "interleaved") into the result. So if `v` equals `(oh boy)`, then
+まず、"`,e`" ではなく "`,@e`" と書くと、_e_ の値が結果に _spliced_（「結合」「合成」「差し込み」）されます。`v` が `(oh boy)` に等しいなら、
 
 ~~~lisp
 `(zap ,@v ,v)
 ~~~
 
-evaluates to
+は次のように評価されます。
 
 ~~~lisp
 (zap oh boy (oh boy))
-;;   ^^^^^ elements of v (two elements), spliced.
-;;          ^^ v itself (a list)
+;;   ^^^^^ v の要素（2 要素）が splice される。
+;;          ^^ v 自身（リスト）
 ~~~
 
-The second occurrence of `v` is replaced by its value. The first is replaced by the elements of its value. If `v` had had value `()`, it would have disappeared entirely: the value of `(zap ,@v ,v)` would have been `(zap ())`, which is the same as `(zap nil)`.
+2 番目の `v` はその値で置き換えられます。最初のものは、その値の要素で置き換えられます。もし `v` の値が `()` なら、それは完全に消えます。`(zap ,@v ,v)` の値は `(zap ())` になり、これは `(zap nil)` と同じです。
 
 #### Quote-comma ',
 
-When we are inside a backquote context and we want to print an
-expression literally, we have no choice but to use the combination of
-quote and comma:
+バッククォートの文脈にいて、式を文字どおり表示したいときは、quote と comma の組み合わせを使うしかありません。
 
 ~~~lisp
 (defmacro explain-exp (exp)
@@ -284,23 +268,23 @@ quote and comma:
 ;; (+ 2 3) = 5
 ~~~
 
-See by yourself:
+自分で確かめてみましょう。
 
 ~~~lisp
-;; Defmacro with no quote at all:
+;; quote をまったく使わない defmacro:
 (defmacro explain-exp (exp)
   (format t "~a = ~a" exp exp))
 (explain-exp v1)
 ;; V1 = V1
 
-;; OK, with a backquote and a comma to get the value of exp:
+;; backquote と comma で exp の値を取り出す:
 (defmacro explain-exp (exp)
-  ;; WRONG example
+  ;; 誤った例
   `(format t "~a = ~a" exp ,exp))
 (explain-exp v1)
 ;; => error: The variable EXP is unbound.
 
-;; We then must use quote-comma:
+;; そこで quote-comma を使う:
 (defmacro explain-exp (exp)
   `(format t "~a = ~a" ',exp ,exp))
 (explain-exp (+ 1 2))
@@ -308,13 +292,13 @@ See by yourself:
 ~~~
 
 
-#### Nested backquotes
+#### ネストしたバッククォート
 
-Second, one might wonder what happens if a backquote expression occurs inside another backquote. The answer is that the backquote becomes essentially unreadable and unwriteable; using nested backquote is usually a tedious debugging exercise. The reason, in my not-so-humble opinion, is that backquote is defined wrong. A comma pairs up with the innermost backquote when the default should be that it pairs up with the outermost. But this is not the place for a rant; consult your favorite Lisp reference for the exact behavior of nested backquote plus some examples.
+次に、バッククォート式の中に別のバッククォート式が現れたらどうなるのか、疑問に思うかもしれません。答えは、バッククォートが本質的に読めず書けないものになる、ということです。ネストしたバッククォートを使うのは、たいてい退屈なデバッグ作業になります。理由は、私のあまり謙虚ではない意見では、バッククォートの定義が間違っているからです。カンマは最も内側のバッククォートと対応しますが、本来のデフォルトは最も外側と対応すべきです。とはいえ、ここは愚痴を言う場所ではありません。ネストしたバッククォートの正確な振る舞いと例については、お気に入りの Lisp リファレンスを参照してください。
 
-#### Building lists with backquote
+#### バッククォートでリストを作る
 
-One problem with backquote is that once you learn it you tend to use for every list-building occasion. For instance, you might write
+バッククォートの問題の 1 つは、一度覚えると、リストを作るあらゆる場面で使いたくなることです。たとえば、次のように書くかもしれません。
 
 ~~~lisp
 (mapcan (lambda (x)
@@ -324,7 +308,7 @@ One problem with backquote is that once you learn it you tend to use for every l
         some-list)
 ~~~
 
-which yields `((a) 15 15)` when `some-list` = `(a 6 15)`. The problem is that [`mapcan`](http://www.lispworks.com/documentation/HyperSpec/Body/f_mapc_.htm) destructively alters the results returned by the [`lambda`](http://www.lispworks.com/documentation/HyperSpec/Body/s_lambda.htm)-expression. Can we be sure that the lists returned by that expression are "[fresh](http://www.lispworks.com/documentation/HyperSpec/Body/26_glo_f.htm#fresh)," that is, they are different (in the [`eq`](http://www.lispworks.com/documentation/HyperSpec/Body/f_eq.htm) sense) from the structures returned on other calls of that `lambda` expression? In the present case, close analysis will show that they must be fresh, but in general backquote is not obligated to return a fresh list every time (whether it does or not is implementation-dependent). If the example above got changed to
+これは `some-list` = `(a 6 15)` のとき `((a) 15 15)` を返します。問題は、[`mapcan`](http://www.lispworks.com/documentation/HyperSpec/Body/f_mapc_.htm) が [`lambda`](http://www.lispworks.com/documentation/HyperSpec/Body/s_lambda.htm) 式から返された結果を破壊的に変更することです。その式が返すリストが "[fresh](http://www.lispworks.com/documentation/HyperSpec/Body/26_glo_f.htm#fresh)"、つまりその `lambda` 式の他の呼び出しで返された構造とは（[`eq`](http://www.lispworks.com/documentation/HyperSpec/Body/f_eq.htm) の意味で）別物である、と確信できるでしょうか。今回の例では、綿密に調べれば fresh でなければならないことが分かります。しかし一般に、バッククォートは毎回 fresh なリストを返す義務を負いません（返すかどうかは実装依存です）。上の例が次のように変更されたとします。
 
 ~~~lisp
 (mapcan (lambda (x)
@@ -335,25 +319,9 @@ which yields `((a) 15 15)` when `some-list` = `(a 6 15)`. The problem is that [`
         some-list)
 ~~~
 
-then backquote may well treat `(low)` as if it were
-`'(low)`; the list will be allocated at load time, and every time the
-`lambda` is evaluated, that same chunk of storage will be returned. So
-if we evaluate the expression with `some-list` = `(a 6 15)`, we will
-get `((a) low 15 15)`, but as a side effect the constant `(low)` will
-get clobbered to become `(low 15 15)`. If we then evaluate the
-expression with, say, `some-list` = `(8 oops)`, the result will be
-`(low 15 15 (oops))`, and now the "constant" that started off as
-`'(low)` will be `(low 15 15 (oops))`. (Note: The bug exemplified here
-takes other forms, and has often bit newbies - as well as experienced
-programmers - in the ass. The general form is that a constant list is
-produced as the value of something that is later destructively
-altered. The first line of defense against this bug is never to
-destructively alter any list. For newbies, this is also the last line
-of defense. For those of us who imagine we're more sophisticated, the
-next line of defense is to think very carefully any time you use
-[`nconc`](http://www.lispworks.com/documentation/HyperSpec/Body/f_nconc.htm) or `mapcan`).
+このときバッククォートは `(low)` を `'(low)` のように扱うかもしれません。そのリストはロード時に割り当てられ、`lambda` が評価されるたびに同じ記憶領域の塊が返されます。したがって `some-list` = `(a 6 15)` で式を評価すると、`((a) low 15 15)` が得られますが、副作用として定数 `(low)` が破壊されて `(low 15 15)` になります。その後、たとえば `some-list` = `(8 oops)` で式を評価すると、結果は `(low 15 15 (oops))` になり、最初は `'(low)` だった「定数」は `(low 15 15 (oops))` になっています。（注: ここで例示したバグは他の形でも現れ、初心者だけでなく経験豊富なプログラマも何度も痛い目を見ています。一般形は、何かの値として生成された定数リストが、後で破壊的に変更されるというものです。このバグに対する第一の防衛線は、どんなリストも破壊的に変更しないことです。初心者にとっては、これが最後の防衛線でもあります。自分たちをもう少し洗練されていると思っている人にとって、次の防衛線は [`nconc`](http://www.lispworks.com/documentation/HyperSpec/Body/f_nconc.htm) や `mapcan` を使うたびに非常に注意深く考えることです。）
 
-To fix the bug, you can write `(map 'list ...)` instead of `mapcan`. However, if you are determined to use `mapcan`, write the expression this way:
+このバグを直すには、`mapcan` の代わりに `(map 'list ...)` と書けます。しかし、どうしても `mapcan` を使うなら、式を次のように書きます。
 
 ~~~lisp
 (mapcan (lambda (x)
@@ -364,21 +332,21 @@ To fix the bug, you can write `(map 'list ...)` instead of `mapcan`. However, if
         some-list)
 ~~~
 
-My personal preference is to use backquote _only_ to build S-expressions, that is, hierarchical expressions that consist of symbols, numbers, and strings, and that are not conceptualized as changing in length. For instance, I would never write
+個人的には、バッククォートは _S-expression_、つまり symbol、number、string からなる階層的な式で、長さが変化するものとして概念化されていないものを作る場合にだけ使うのが好みです。たとえば、私は次のようには書きません。
 
 ~~~lisp
 (setq sk `(,x ,@sk))
 ~~~
 
-If `sk` is being used as a stack, that is, it's going to be [`pop`](http://www.lispworks.com/documentation/HyperSpec/Body/m_pop.htm)ped in the normal course of things, I would write `(push x sk)`. If not, I would write `(setq sk (cons x sk))`.
+`sk` がスタックとして使われている、つまり通常の処理の中で [`pop`](http://www.lispworks.com/documentation/HyperSpec/Body/m_pop.htm) されるなら、私は `(push x sk)` と書きます。そうでなければ `(setq sk (cons x sk))` と書きます。
 
 <a name="LtohTOCentry-3"></a>
 
-## Getting Macros Right
+## マクロを正しく書く
 
-I said in the first section that my definition of `setq2` wasn't quite right, and now it's time to fix it.
+最初の節で、私の `setq2` の定義は厳密には正しくないと言いました。ここでそれを直します。
 
-Suppose we write `(setq2 x y (+ x 2))`, when `x`_=8_. Then according to the definition given above, this form will expand into
+`x`_=8_ のとき `(setq2 x y (+ x 2))` と書いたとします。上で与えた定義によれば、このフォームは次へ展開されます。
 
 ~~~lisp
 (progn
@@ -386,20 +354,20 @@ Suppose we write `(setq2 x y (+ x 2))`, when `x`_=8_. Then according to the defi
   (setq y (+ x 2)))
 ~~~
 
-so that `x` will have value 10 and `y` will have value 12. Indeed, here's its macroexpansion:
+そのため `x` は 10 になり、`y` は 12 になります。実際、マクロ展開は次のとおりです。
 
 ~~~lisp
 (macroexpand '(setq2 x y (+ x 2)))
 ;;(PROGN (SETQ X (+ X 2)) (SETQ Y (+ X 2)))
 ~~~
 
-Chances are that isn't what the macro is expected to do (although you never know). Another problematic case is `(setq2 x y (pop l))`, which causes `l` to be popped twice; again, probably not right.
+おそらくこれは、そのマクロに期待される動作ではありません（もちろん、そうでないとは限りませんが）。もう 1 つの問題例は `(setq2 x y (pop l))` です。これは `l` を 2 回 pop してしまいます。これもおそらく正しくありません。
 
-The solution is to evaluate the expression `e` just once, save it in a temporary variable, and then set `v1` and `v2` to it.
+解決策は、式 `e` を 1 回だけ評価し、一時変数に保存してから、`v1` と `v2` をそれに設定することです。
 
 ### Gensym
 
-To make temporary variables, we use the `gensym` function, which returns a fresh variable guaranteed to appear nowhere else. Here is what the macro should look like:
+一時変数を作るには、`gensym` 関数を使います。これは他のどこにも現れないことが保証された fresh な変数を返します。マクロは次のようになるべきです。
 
 ~~~lisp
 (defmacro setq2 (v1 v2 e)
@@ -409,56 +377,56 @@ To make temporary variables, we use the `gensym` function, which returns a fresh
               (setq ,v2 ,tempvar)))))
 ~~~
 
-Now `(setq2 x y (+ x 2))` expands to
+これで `(setq2 x y (+ x 2))` は次へ展開されます。
 
 ~~~lisp
 (let ((#:g2003 (+ x 2)))
   (progn (setq x #:g2003) (setq y #:g2003)))
 ~~~
 
-Here `gensym` has returned the symbol `#:g2003`, which prints in this funny way because it won't be recognized by the reader. (Nor is there any need for the reader to recognize it, since it exists only long enough for the code that contains it to be compiled.)
+ここで `gensym` は symbol `#:g2003` を返しています。このような妙な表示になるのは、reader がそれを認識しないからです。（それを reader が認識する必要もありません。なぜなら、その symbol はそれを含むコードがコンパイルされるまでの間だけ存在すればよいからです。）
 
-Exercise: Verify that this new version works correctly for the case `(setq2 x y (pop l1))`.
+練習: この新しい版が `(setq2 x y (pop l1))` の場合に正しく動作することを確認してください。
 
-Exercise: Try writing the new version of the macro without using backquote. If you can't do it, you have done the exercise correctly, and learned what backquote is for!
+練習: バッククォートを使わずに、この新しい版のマクロを書いてみてください。できなければ、その練習は正しくできています。そして、バッククォートが何のためにあるかを学んだことになります。
 
-The moral of this section is to think carefully about which expressions in a macro get evaluated and when. Be on the lookout for situations where the same expression gets plugged into the output twice (as `e` was in my original macro design). For complex macros, watch out for cases where the order that expressions are evaluated differs from the order in which they are written. This is sure to trip up some user of the macro - even if you are the only user.<a name="LtohTOCentry-4"></a>
+この節の教訓は、マクロ内のどの式がいつ評価されるかを慎重に考えることです。同じ式が出力に 2 回埋め込まれる状況（最初のマクロ設計における `e` のようなもの）に注意してください。複雑なマクロでは、式が評価される順序が、書かれている順序と異なる場合にも気をつけてください。これはマクロの利用者を必ずつまずかせます。たとえ利用者が自分だけであってもです。<a name="LtohTOCentry-4"></a>
 
-## What Macros are For
+## マクロは何のためにあるか
 
-Macros are for making syntactic extensions to Lisp. One often hears it said that macros are a bad idea, that users can't be trusted with them, and so forth. Balderdash. It is just as reasonable to extend a language syntactically as to extend it by defining your own procedures. It may be true that the casual reader of your code can't understand the code without seeing the macro definitions, but then the casual reader can't understand it without seeing function definitions either. Having [`defmethod`](http://www.lispworks.com/documentation/HyperSpec/Body/m_defmet.htm)s strewn around several files contributes far more to unclarity than macros ever have, but that's a different diatribe.
+マクロは Lisp に構文拡張を作るためのものです。マクロは悪い考えだ、ユーザーに任せてはいけない、などと言われることがあります。ばかげています。自分の手続きを定義して言語を拡張するのと同じくらい、構文的に言語を拡張するのは合理的です。たしかに、あなたのコードを気軽に読む人は、マクロ定義を見なければコードを理解できないかもしれません。しかし、関数定義を見なければ理解できないのも同じです。複数のファイルに散らばった [`defmethod`](http://www.lispworks.com/documentation/HyperSpec/Body/m_defmet.htm) の方が、マクロよりはるかに不明瞭さに寄与しますが、それは別の長話です。
 
-Before surveying what sorts of syntactic extensions I have found useful, let me point out what sorts of syntactic extensions are generally _not_ useful, or best accomplished using means other than macros. Some novices think macros are useful for open-coding functions. So, instead of defining
+私が有用だと思う構文拡張の種類を眺める前に、一般に _有用ではない_ 構文拡張、あるいはマクロ以外の手段で実現した方がよいものを指摘しておきます。初心者の中には、マクロは関数を open-code するために便利だと考える人がいます。たとえば、次のように定義する代わりに、
 
 ~~~lisp
 (defun sqone (x)
   (let ((y (+ x 1))) (* y y)))
 ~~~
 
-they might define
+次のように定義するかもしれません。
 
 ~~~lisp
 (defmacro sqone (x)
   `(let ((y (+ ,x 1))) (* y y)))
 ~~~
 
-So that `(sqone (* z 13))` might expand into
+すると `(sqone (* z 13))` は次へ展開されます。
 
 ~~~lisp
 (let ((y (+ (* z 13) 1)))
   (* y y))
 ~~~
 
-This is correct, but a waste of effort. For one thing, the amount of time saved is almost certainly negligible. If it's really important that `sqone` be expanded inline, one can put `(declaim (inline sqone))` before `sqone` is defined (although the compiler is not obligated to honor this declaration). For another, once `sqone` is defined as a macro, it becomes impossible to write `(mapcar #'sqone ll)`, or to do anything else with it except call it.
+これは正しいですが、労力の無駄です。第一に、節約される時間はほぼ確実に無視できます。本当に `sqone` をインライン展開することが重要なら、`sqone` を定義する前に `(declaim (inline sqone))` を置けます（ただし、コンパイラがこの宣言に従う義務はありません）。第二に、`sqone` をマクロとして定義すると、`(mapcar #'sqone ll)` と書くことも、それ以外に呼び出す以外のことをすることも不可能になります。
 
-But macros have a thousand and one legitimate uses. Why write `(lambda (x) ...)` when you can write `(^ (x) ...)`? Just define `^` as a macro:
+しかし、マクロには正当な用途が山ほどあります。`(^ (x) ...)` と書けるなら、なぜ `(lambda (x) ...)` と書くのでしょう。`^` をマクロとして定義すればよいのです。
 
 ```lisp
 (defmacro ^ (&rest body)
   `(lambda ,@body))
 ```
 
-Many people find `mapcar` and `mapcan` a bit too obscure, especially when used with large `lambda` expressions. Rather than write something like
+多くの人は、特に大きな `lambda` 式と一緒に使うとき、`mapcar` や `mapcan` は少し分かりにくいと感じます。次のようなものを書く代わりに、
 
 ~~~lisp
 (mapcar (lambda (x)
@@ -472,7 +440,7 @@ Many people find `mapcar` and `mapcan` a bit too obscure, especially when used w
         list)
 ~~~
 
-we might prefer to write
+次のように書きたいかもしれません。
 
 ~~~lisp
 (for (x :in list)
@@ -485,12 +453,12 @@ we might prefer to write
            ))))
 ~~~
 
-This macro might be defined thus:
+このマクロは次のように定義できます。
 
 ~~~lisp
 (defmacro for (listspec exp)
-  ;;           ^^ listspec = (x :in list), a list of length 3.
-  ;;                    ^^ exp = the rest of the code.
+  ;;           ^^ listspec = (x :in list), 長さ 3 のリスト。
+  ;;                    ^^ exp = 残りのコード。
   (cond
     ((and (= (length listspec) 3)
           (symbolp (first listspec))
@@ -501,13 +469,13 @@ This macro might be defined thus:
     (t (error "Ill-formed for spec: ~A" listspec)))))
 ~~~
 
-(This is a simplified version of a macro by Chris Riesbeck.)
+（これは Chris Riesbeck によるマクロの簡略版です。）
 
-It's worth stopping for a second to discuss the role the keyword `:in` plays in this macro. It serves as a sort of "local syntax marker," in that it has no meaning as far as Lisp is concerned, but does serve as a syntactic guidepost for the macro itself. I will refer to these markers as _guide symbols_. (Here its job may seem trivial, but if we generalized the `for` macro to allow multiple list arguments and an implicit `progn` in the body the `:in`s would be crucial in telling us where the arguments stopped and the body began.)
+このマクロで keyword `:in` が果たす役割について、少し立ち止まって考える価値があります。これは「局所的な構文マーカー」のように機能します。Lisp から見れば意味はありませんが、マクロ自身にとっては構文上の道しるべになります。このようなマーカーを _guide symbols_ と呼ぶことにします。（ここでの役割は些細に見えるかもしれませんが、`for` マクロを一般化して複数のリスト引数や本体内の暗黙の `progn` を許すなら、`:in` は引数がどこで終わり、本体がどこから始まるかを知らせる上で重要になります。）
 
-It is not strictly necessary for the guide symbols of a macro to be in the [keyword package](http://www.lispworks.com/documentation/HyperSpec/Body/11_abc.htm), but it is a good idea, for two reasons. First, they highlight to the reader that something idiosyncratic is going on. A form like `(for ((x in (foobar a b 'oof))) (something-hairy x (list x)))` looks a bit wrong already, because of the double parentheses before the `x`. But using "`:in`" makes it more obvious.
+マクロの guide symbol が [keyword package](http://www.lispworks.com/documentation/HyperSpec/Body/11_abc.htm) にあることは厳密には必要ではありませんが、2 つの理由から良い考えです。第一に、何か独自のことが起きていることを読み手に目立たせます。`(for ((x in (foobar a b 'oof))) (something-hairy x (list x)))` のようなフォームは、`x` の前の二重括弧のためにすでに少し奇妙に見えます。しかし "`:in`" を使うと、それがより明白になります。
 
-Second, notice that I wrote `(eq (second listspec) ':in)` in the macro definition to check for the presence of the guide symbol. If I had used `in` instead, I would have had to think about which package _my_ `in` lives in and which package the macro user's `in` lives in. One way to avoid trouble would be to write
+第二に、guide symbol の存在を確認するために、マクロ定義で `(eq (second listspec) ':in)` と書いたことに注意してください。もし `:in` ではなく `in` を使っていたら、_自分の_ `in` がどの package に住み、マクロ利用者の `in` がどの package に住むかを考えなければなりません。問題を避ける方法の 1 つは次のように書くことです。
 
 ~~~lisp
 (and (symbolp (second listspec))
@@ -516,29 +484,29 @@ Second, notice that I wrote `(eq (second listspec) ':in)` in the macro definitio
          ':in))
 ~~~
 
-Another would be to write
+もう 1 つは次のように書くことです。
 
 ~~~lisp
 (and (symbolp (second listspec))
      (string= (symbol-name (second listspec)) (symbol-name 'in)))
 ~~~
 
-which neither of which is particularly clear or aesthetic. The keyword package is there to provide a home for symbols whose home is not per se relevant to anything; you might as well use it. (Note: In ANSI Lisp, I could have written `"IN"` instead of `(symbol-name 'in)`, but there are Lisp implementations that do not convert symbols' names to uppercase. Since I think the whole uppercase conversion idea is an embarrassing relic, I try to write code that is portable to those implementations.)
+どちらも特に明快でも美しくもありません。keyword package は、ホームが本質的に関係ない symbol の置き場所を提供するためにあります。使えばよいのです。（注: ANSI Lisp では `(symbol-name 'in)` の代わりに `"IN"` と書けますが、symbol 名を大文字へ変換しない Lisp 実装もあります。大文字変換という考え全体は恥ずかしい遺物だと思っているので、私はそうした実装にも移植できるコードを書くようにしています。）
 
-Let's look at another example, both to illustrate a nice macro, and to provide an auxiliary function for some of the discussion below. One often wants to create new symbols in Lisp, and `gensym` is not always adequate for building them. Here is a description of an alternative facility called `build-symbol`:
+もう 1 つ例を見てみましょう。これは便利なマクロを示すと同時に、後の議論で使う補助関数を提供します。Lisp では新しい symbol を作りたいことがよくありますが、それらを構築するには `gensym` だけでは不十分なことがあります。`build-symbol` という代替機能の説明は次のとおりです。
 
-> <code>(build-symbol [(:package <em>p</em>)] <em>-pieces-</em>)</code> builds a symbol by concatenating the given _pieces_ and interns it as specified by _p_. For each element of _pieces_, if it is a ...
+> <code>(build-symbol [(:package <em>p</em>)] <em>-pieces-</em>)</code> は、指定された _pieces_ を連結して symbol を作り、_p_ によって指定された方法で intern します。_pieces_ の各要素について、それが ...
 >
-> *   ... string: The string is added to the new symbol's name.
-> *   ... symbol: The name of the symbol is added to the new symbol's name.
-> *   ... expression of the form <code>(:< <em>e</em>)</code>: _e_ should evaluate to a string, symbol, or number; the characters of the value of _e_ (as printed by `princ`) are concatenated into the new symbol's name.
-> *   ... expression of the form <code>(:++ <em>p</em>)</code>: _p_ should be a place expression (i.e., appropriate as the first argument to `setf`), whose value is an integer; the value is incremented by 1, and the new value is concatenated into the new symbol's name.
+> *   ... string: その string が新しい symbol 名へ追加されます。
+> *   ... symbol: その symbol の名前が新しい symbol 名へ追加されます。
+> *   ... <code>(:< <em>e</em>)</code> という形の式: _e_ は string、symbol、number のいずれかへ評価されるべきです。_e_ の値を `princ` で表示した文字列が新しい symbol 名へ連結されます。
+> *   ... <code>(:++ <em>p</em>)</code> という形の式: _p_ は place 式（つまり `setf` の第 1 引数として適切なもの）で、その値は整数であるべきです。その値は 1 増やされ、新しい値が新しい symbol 名へ連結されます。
 >
-> If the `:package` specification is omitted, it defaults to the value of `*package*`. If _p_ is `nil`, the symbol is interned nowhere. Otherwise, it should evaluate to a package designator (usually, a keyword whose name is the same of a package).
+> `:package` 指定が省略された場合、デフォルトは `*package*` の値です。_p_ が `nil` なら symbol はどこにも intern されません。そうでなければ、package designator（通常は package と同じ名前を持つ keyword）へ評価されるべきです。
 
-For example, `(build-symbol (:< x) "-" (:++ *x-num*))`, when `x` = `foo` and `*x-num*` = 8, sets `*x-num*` to 9 and evaluates to `FOO-9`. If evaluated again, the result will be `FOO-10`, and so forth.
+たとえば、`x` = `foo` で `*x-num*` = 8 のとき `(build-symbol (:< x) "-" (:++ *x-num*))` は、`*x-num*` を 9 に設定し、`FOO-9` に評価されます。もう一度評価すると、結果は `FOO-10` になり、以下同様です。
 
-Obviously, `build-symbol` can't be implemented as a function; it has to be a macro. Here is an implementation:
+明らかに、`build-symbol` は関数として実装できません。マクロでなければなりません。実装は次のとおりです。
 
 ~~~lisp
 (defmacro build-symbol (&rest list)
@@ -574,9 +542,9 @@ Obviously, `build-symbol` can't be implemented as a function; it has to be a mac
                    `(format nil "~a" ,x))))))
 ~~~
 
-(Another approach would be have `symstuff` return a single call of the form <code>(format nil <em>format-string -forms-</em>)</code>, where the _forms_ are derived from the _pieces_, and the _format-string_ consists of interleaved ~a's and strings.)
+（別の方法として、`symstuff` が <code>(format nil <em>format-string -forms-</em>)</code> という形の単一の呼び出しを返すようにしてもよいでしょう。このとき _forms_ は _pieces_ から導かれ、_format-string_ は ~a と string が交互に並んだものになります。）
 
-Sometimes a macro is needed only temporarily, as a sort of syntactic scaffolding. Suppose you need to define 12 functions, but they fall into 3 stereotyped groups of 4:
+ときには、マクロが一時的にだけ、構文上の足場のようなものとして必要になることがあります。12 個の関数を定義する必要があるが、それらが 4 個ずつの典型的な 3 グループに分かれているとします。
 
 ~~~lisp
 (defun make-a-zip (y z)
@@ -599,7 +567,7 @@ Sometimes a macro is needed only temporarily, as a sort of syntactic scaffolding
 (defun zep-deactivate (x) ...)
 ~~~
 
-Where the omitted pieces are the same in all similarly named functions. (That is, the "..." in `zep-deactivate` is the same code as the "..." in `zip-deactivate`, and so forth.) Here, for the sake of concreteness, if not plausibility, `zip`, `zap`, and `zep` are behaving like odd little data structures. The functions could be rather large, and it would get tedious keeping them all in sync as they are debugged. An alternative would be to use a macro:
+省略された部分は、同じような名前の関数ではすべて同じだとします。（つまり、`zep-deactivate` の "..." は `zip-deactivate` の "..." と同じコード、という具合です。）ここでは具体性のため、もっともらしさはともかく、`zip`、`zap`、`zep` は奇妙な小さなデータ構造のように振る舞っているとします。関数はかなり大きくなり得るので、デバッグしながらすべてを同期させ続けるのは退屈です。代替案はマクロを使うことです。
 
 ~~~lisp
 (defmacro odd-define (name buildargs)
@@ -618,7 +586,7 @@ Where the omitted pieces are the same in all similarly named functions. (That is
 (odd-define zep ())
 ~~~
 
-If all the uses of this macro are collected in this one place, it might be clearer to make it a local macro using [macrolet](http://www.lispworks.com/documentation/HyperSpec/Body/s_flet_.htm):
+このマクロの使用がすべてこの 1 か所にまとまっているなら、[macrolet](http://www.lispworks.com/documentation/HyperSpec/Body/s_flet_.htm) を使ってローカルマクロにした方が明快かもしれません。
 
 ~~~lisp
 (macrolet ((odd-define (name buildargs)
@@ -640,14 +608,14 @@ If all the uses of this macro are collected in this one place, it might be clear
 (odd-define zep ()))
 ~~~
 
-Finally, macros are essential for defining "command languages." A _command_ is a function with a short name for use by users in interacting with Lisp's read-eval-print loop. A short name is useful and possible because we want it to be easy to type and we don't care much whether the name clashes some other command; if two command names clash, we can change one of them.
+最後に、マクロは「コマンド言語」を定義するために不可欠です。_command_ は、ユーザーが Lisp の read-eval-print loop と対話するときに使う短い名前の関数です。短い名前が便利で可能なのは、タイプしやすくしたい一方で、その名前が他のコマンドと衝突するかどうかはあまり気にしないからです。2 つのコマンド名が衝突したら、片方を変えればよいのです。
 
-As an example, let's define a little command language for debugging macros. (You may actually find this useful.) There are just two commands, `ex` and `fi`. They keep track of a "current form," the thing to be macro-expanded or the result of such an expansion:
+例として、マクロをデバッグする小さなコマンド言語を定義してみましょう。（実際に便利だと感じるかもしれません。）コマンドは `ex` と `fi` の 2 つだけです。これらは「現在のフォーム」、つまり macro-expanded される対象またはその展開結果を追跡します。
 
-1.  <code>(ex [<em>form</em>])</code>: Apply `macroexpand-1` to _form_ (if supplied) or the current form, and make the result the current form. Then pretty-print the current form.
-2.  <code>(fi <em>s</em> [<em>k</em>])</code>: Find the _k_'th subexpression of the current form whose `car` is _s_. (_k_ defaults to 0.) Make that subexpression the current form and pretty-print it.
+1.  <code>(ex [<em>form</em>])</code>: _form_ が与えられていればそれに、そうでなければ現在のフォームに `macroexpand-1` を適用し、その結果を現在のフォームにします。その後、現在のフォームを pretty-print します。
+2.  <code>(fi <em>s</em> [<em>k</em>])</code>: 現在のフォームのうち、`car` が _s_ である _k_ 番目の部分式を探します。(_k_ のデフォルトは 0 です。) その部分式を現在のフォームにし、pretty-print します。
 
-Suppose you're trying to debug a macro `hair-squared` that expands into something complex containing a subform that is itself a macro form beginning with the symbol `odd-define`. You suspect there is a bug in the subform. You might issue the following commands:
+`hair-squared` というマクロをデバッグしようとしているとします。このマクロは複雑なものへ展開され、その中に symbol `odd-define` で始まるマクロフォームが含まれています。その部分フォームにバグがあると疑っています。次のコマンドを発行できます。
 
 ~~~lisp
 (ex (hair-squared ...))
@@ -663,9 +631,9 @@ Suppose you're trying to debug a macro `hair-squared` that expands into somethin
    ...)
 ~~~
 
-Once again, it is clear that `ex` and `fi` cannot be functions, although they could easily be made into functions if we were willing to type a quote before their arguments. But using "quote" often seems inappropriate in commands. For one thing, having to type it is a nuisance in a context where we are trying to save keystrokes, especially if the argument in question is always quoted. For another, in many cases it just seems inappropriate. If we had a command that took a symbol as one of its arguments and set it to a value, it would just be strange to write <code>(<em>command</em> 'x ...)</code> instead of <code>(<em>command</em> x ...)</code>, because we want to think of the command as a variant of `setq`.
+繰り返しますが、`ex` と `fi` は関数にはできないことが明らかです。ただし、引数の前に quote を打つことを厭わないなら、簡単に関数にできます。しかし、コマンドで "quote" をよく使うのは不適切に思えることがあります。第一に、キーストロークを節約しようとしている文脈でそれをタイプする必要があるのは面倒です。特に、その引数が常にクォートされるならなおさらです。第二に、多くの場合、単に不自然に見えます。引数の 1 つとして symbol を受け取り、それをある値に設定するコマンドがあるなら、<code>(<em>command</em> 'x ...)</code> と書くのは、<code>(<em>command</em> x ...)</code> と書くより奇妙です。なぜなら、そのコマンドを `setq` の変種として考えたいからです。
 
-Here is how `ex` and `fi` might be defined:
+`ex` と `fi` は次のように定義できます。
 
 ~~~lisp
 (defvar *current-form*)
@@ -686,35 +654,31 @@ Here is how `ex` and `fi` might be defined:
      (values)))
 ~~~
 
-The `ex` macro expands to a form containing a call to `macroexpand-1`, a built-in function that does one step of macro expansion to a form whose `car` is the name of a macro. (If given some other form, it returns the form unchanged.) `pprint` is a built-in function that pretty-prints its argument. Because we are using `ex` and `fi` at a read-eval-print loop, any value returned by their expansions will be printed. Here the expansion is executed for side effect, so we arrange to return no values at all by having the expansion return `(values)`.
+`ex` マクロは `macroexpand-1` への呼び出しを含むフォームへ展開されます。`macroexpand-1` は組み込み関数で、`car` がマクロ名であるフォームに対して、マクロ展開を 1 ステップ行います。（別のフォームが与えられた場合は、そのフォームを変更せずに返します。）`pprint` は引数を pretty-print する組み込み関数です。`ex` と `fi` は read-eval-print loop で使うので、展開が返す値はすべて印字されます。ここでは展開は副作用のために実行されるので、展開が `(values)` を返すようにして、値をまったく返さないようにします。
 
-In some Lisp implementations, read-eval-print loops routinely print results using `pprint`. In those implementations we could simplify `ex` and `fi` by having them print nothing, but just return the value of `*current-form*`, which the read-eval-print loop will then print prettily. Use your judgment.
+Lisp 実装によっては、read-eval-print loop が通常 `pprint` を使って結果を印字します。そのような実装では、`ex` と `fi` が何も印字せず、単に `*current-form*` の値を返すように単純化できます。read-eval-print loop がそれをきれいに印字してくれるからです。判断して使ってください。
 
-I leave the definition of `find-nth-occurrence` as an exercise. You might also want to define a command that just sets and prints the current form: <code>(cf <em>e</em>)</code>.
+`find-nth-occurrence` の定義は練習問題として残しておきます。現在のフォームを設定して印字するだけのコマンド <code>(cf <em>e</em>)</code> も定義したくなるかもしれません。
 
-One caution: In general, command languages will consist of a mixture of macros and functions, with convenience for their definer (and usually sole user) being the main consideration. If a command seems to "want" to evaluate some of its arguments sometimes, you have to decide whether to define two (or more) versions of it, or just one, a function whose arguments must be quoted to prevent their being evaluated. For the `cf` command mentioned in the previous paragraph, some users might prefer `cf` to be a function, some a macro.
+注意点を 1 つ。一般に、コマンド言語はマクロと関数の混合からなり、それを定義する人（そして普通は唯一の利用者）にとって便利であることが主な考慮事項になります。あるコマンドが、ときどき一部の引数を評価したがっているように見えるなら、そのコマンドを 2 つ（またはそれ以上）のバージョンとして定義するか、1 つの関数として定義して、評価を防ぐために引数をクォートしてもらうかを決める必要があります。前の段落で述べた `cf` コマンドについては、`cf` を関数にしたいユーザーもいれば、マクロにしたいユーザーもいるでしょう。
 
 ## define-symbol-macro, symbol-macrolet
 
-These two macros allow to define a symbol that will act as a
-"shortcut" for another, more complex form.
+これら 2 つのマクロは、別のより複雑なフォームへの「ショートカット」として振る舞う symbol を定義できるようにします。
 
-In the spec words, they "provide a mechanism for affecting the macro
-expansion of the indicated symbol".
+仕様の言葉では、これらは「指定された symbol のマクロ展開に影響を与える仕組みを提供する」ものです。
 
-`define-symbol-macro` affects the global environment (like
-`defparameter`, `defun` and all), `symbol-macrolet` is to be used for
-a local scope like `let`.
+`define-symbol-macro` はグローバル環境に影響します（`defparameter`、`defun` などと同様です）。`symbol-macrolet` は `let` のようにローカルスコープで使います。
 
-We gave an example in the Data Structures section. We use a struct:
+Data Structures の節で例を示しました。struct を使います。
 
 ~~~lisp
 (defstruct ship x-position y-position x-velocity y-velocity)
 ~~~
 
-Its slot accessors are `ship-x-position`, etc.
+その slot accessor は `ship-x-position` などです。
 
-We write a `move-ship` function, that has to access all the different structure slots:
+すべての異なる structure slot にアクセスしなければならない `move-ship` 関数を書きます。
 
 ~~~lisp
 (defun move-ship (ship)
@@ -725,10 +689,9 @@ We write a `move-ship` function, that has to access all the different structure 
    ship)
 ~~~
 
-but we find it too wordy: we'll use a local symbol macro so that `x`
-will expand to `ship-x-position`.
+しかし、これは冗長です。そこで、`x` が `ship-x-position` へ展開されるようにローカル symbol macro を使います。
 
-`symbol-macrolet` looks like this, its syntax is similar to `let`:
+`symbol-macrolet` は次のような形で、構文は `let` に似ています。
 
 ~~~lisp
 (symbol-macrolet ((x (ship-x-position ship))
@@ -736,38 +699,34 @@ will expand to `ship-x-position`.
     (use x and y here))
 ~~~
 
-let's use it in our function:
+関数の中で使ってみましょう。
 
 ~~~lisp
 (defun move-ship (ship)
-  (symbol-macrolet                   ;; <---- like a LET
-      ((x (ship-x-position ship))    ;; <---- a list of (symbol (expansion form))
+  (symbol-macrolet                   ;; <---- LET のようなもの
+      ((x (ship-x-position ship))    ;; <---- (symbol (expansion form)) のリスト
        (y (ship-y-position ship))
        (xv (ship-x-velocity ship))
        (yv (ship-y-velocity ship)))
-    (psetf x (+ x xv)                ;; <----- use x in the body
+    (psetf x (+ x xv)                ;; <----- 本体で x を使う
            y (+ y yv))
     ship))
 ~~~
 
-At compile-time, during the phase of macro-expansions, `x` witll be
-expanded to the form `(ship-x-position ship)`, and the function will
-be compiled with that form.
+コンパイル時、マクロ展開の段階で `x` はフォーム `(ship-x-position ship)` へ展開され、関数はそのフォームを使ってコンパイルされます。
 
-Read more on the [Community Spec](https://cl-community-spec.github.io/pages/symbol_002dmacrolet.html).
+詳しくは [Community Spec](https://cl-community-spec.github.io/pages/symbol_002dmacrolet.html) を読んでください。
 
 
-## See also
+## 関連項目
 
 * [A gentle introduction to Compile-Time Computing — Part 1](https://medium.com/@MartinCracauer/a-gentle-introduction-to-compile-time-computing-part-1-d4d96099cea0)
 * [Safely dealing with scientific units of variables at compile time (a gentle introduction to Compile-Time Computing — part 3)](https://medium.com/@MartinCracauer/a-gentle-introduction-to-compile-time-computing-part-3-scientific-units-8e41d8a727ca)
-* The following video, from the series ["Little bits of
-Lisp"](https://www.youtube.com/user/CBaggers/playlists) by
-[cbaggers](https://github.com/cbaggers/), is a two hours long talk on
-macros, showing simple to advanced concepts such as compiler macros:
+* 次の動画は、[cbaggers](https://github.com/cbaggers/) による ["Little bits of
+Lisp"](https://www.youtube.com/user/CBaggers/playlists) シリーズのものです。マクロについて 2 時間ほど話しており、compiler macro のような初歩から高度な概念までを示しています。
 [https://www.youtube.com/watch?v=ygKXeLKhiTI](https://www.youtube.com/watch?v=ygKXeLKhiTI)
-It also shows how to manipulate macros (and their expansion) in Emacs.
+Emacs でマクロ（とその展開）を操作する方法も示しています。
 
 [![video](assets/youtube-little-bits-lisp.jpg)](https://www.youtube.com/watch?v=ygKXeLKhiTI)
 
-* the article "Reader macros in Common Lisp": https://lisper.in/reader-macros
+* 記事 "Reader macros in Common Lisp": https://lisper.in/reader-macros

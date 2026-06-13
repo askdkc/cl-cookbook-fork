@@ -1,51 +1,39 @@
 ---
-title: Fundamentals of CLOS
+title: CLOS の基礎
 ---
 
 
-CLOS is the "Common Lisp Object System", arguably one of the most
-powerful object systems available in any language.
+CLOS は "Common Lisp Object System" の略で、どの言語でも利用できるオブジェクトシステムの中でも、おそらく最も強力なものの 1 つです。
 
-Some of its features include:
+その機能には次のようなものがあります。
 
-* it is **dynamic**, making it a joy to work with in a Lisp REPL. For
-  example, changing a class definition will update the existing
-  objects, given certain rules which we have control upon.
-* it supports **multiple dispatch** and **multiple inheritance**,
-* it is different from most object systems in that class and method
-  definitions are not tied together,
-* it has excellent **introspection** capabilities,
-* it is provided by a **meta-object protocol**, which provides a
-  standard interface to the CLOS, and can be used to create new object
-  systems.
+* **動的**であり、Lisp REPL で扱うのが楽しくなります。たとえば、クラス定義を変更すると、こちらで制御できる一定の規則に従って既存のオブジェクトが更新されます。
+* **multiple dispatch** と **multiple inheritance** をサポートします。
+* クラス定義とメソッド定義が結び付いていない点で、多くのオブジェクトシステムとは異なります。
+* 優れた **introspection** 機能を持ちます。
+* **meta-object protocol** によって提供されます。これは CLOS への標準インターフェイスを提供し、新しいオブジェクトシステムを作るためにも使えます。
 
-The functionality belonging to this name was added to the Common Lisp
-language between the publication of Steele's first edition of "Common
-Lisp, the Language" in 1984 and the formalization of the language as
-an ANSI standard ten years later.
+この名前に属する機能は、1984 年の Steele による "Common Lisp, the Language" 初版の出版から、その 10 年後に ANSI 標準として言語が正式化されるまでの間に Common Lisp 言語へ追加されました。
 
-This page aims to give a good understanding of how to use CLOS, but
-only a brief introduction to the MOP.
+このページは CLOS の使い方を十分に理解できるようにすることを目指しますが、MOP については簡単な導入にとどめます。
 
-To learn the subjects in depth, you will need two books:
+これらの主題を深く学ぶには、次の 2 冊が必要です。
 
 - [Object-Oriented Programming in Common Lisp: a Programmer's Guide to CLOS](http://www.communitypicks.com/r/lisp/s/17592186046723-object-oriented-programming-in-common-lisp-a-programmer), by Sonya Keene,
 - [the Art of the Metaobject Protocol](http://www.communitypicks.com/r/lisp/s/17592186045709-the-art-of-the-metaobject-protocol), by Gregor Kiczales, Jim des Rivières et al.
 
-But see also
+あわせて次も参照してください。
 
-- the introduction in [Practical Common Lisp](http://www.gigamonkeys.com/book/object-reorientation-generic-functions.html) (online), by Peter Seibel.
+- Peter Seibel による [Practical Common Lisp](http://www.gigamonkeys.com/book/object-reorientation-generic-functions.html) (online) の導入。
 -  [Common Lisp, the Language](https://www.cs.cmu.edu/Groups/AI/html/cltl/clm/node260.html#SECTION003200000000000000000)
-- and for reference, the complete [CLOS-MOP specifications](https://clos-mop.hexstreamsoft.com/).
+- リファレンスとして、完全な [CLOS-MOP specifications](https://clos-mop.hexstreamsoft.com/)。
 
 
-##  Classes and instances
+##  クラスとインスタンス
 
-### Diving in
+### まず試す
 
-Let's dive in with an example showing class definition, creation of
-objects, slot access, methods specialized for a given class, and
-inheritance.
+クラス定義、オブジェクト作成、スロットアクセス、特定クラスに特殊化したメソッド、継承を示す例から始めましょう。
 
 ~~~lisp
 (defclass person ()
@@ -86,11 +74,11 @@ inheritance.
 ;; T
 ~~~
 
-### Defining classes (defclass)
+### クラスの定義 (defclass)
 
-The macro used for defining new data types in CLOS is `defclass`.
+CLOS で新しいデータ型を定義するために使うマクロは `defclass` です。
 
-We used it like this:
+先ほどは次のように使いました。
 
 ~~~lisp
 (defclass person ()
@@ -102,8 +90,7 @@ We used it like this:
     :accessor lisper)))
 ~~~
 
-This gives us a CLOS type (or class) called `person` and two slots,
-named `name` and `lisper`.
+これにより、`person` という CLOS 型 (またはクラス) と、`name` および `lisper` という 2 つのスロットが得られます。
 
 ~~~lisp
 (class-of p1)
@@ -113,7 +100,7 @@ named `name` and `lisper`.
 PERSON
 ~~~
 
-The general form of `defclass` is:
+`defclass` の一般形は次のとおりです。
 
 ```
 (defclass <class-name> (list of super classes)
@@ -124,46 +111,44 @@ The general form of `defclass` is:
    :another-optional-class-option))
 ```
 
-So, our `person` class doesn't explicitly inherit from another class
-(it gets the empty parentheses `()`). However it still inherits by default from
-the class `t` and from `standard-object`. See below under
-"inheritance".
+つまり、私たちの `person` クラスは別のクラスを明示的には継承していません (空の括弧 `()` を受け取っています)。
+しかし、それでもデフォルトでクラス `t` と `standard-object` から継承しています。
+下の「継承」を参照してください。
 
-We could write a minimal class definition without slot options like this:
+スロットオプションなしの最小限のクラス定義は次のように書けます。
 
 ~~~lisp
 (defclass point ()
   (x y z))
 ~~~
 
-or even without slot specifiers: `(defclass point () ())`.
+あるいはスロット指定子すらなく、`(defclass point () ())` と書くこともできます。
 
-### Creating objects (make-instance)
+### オブジェクトの作成 (make-instance)
 
-We create instances of a class with `make-instance`:
+クラスのインスタンスは `make-instance` で作成します。
 
 ~~~lisp
 (defvar p1 (make-instance 'person :name "me" ))
 ~~~
 
-It is generally good practice to define a constructor:
+一般に、コンストラクタを定義するのはよい習慣です。
 
 ~~~lisp
 (defun make-person (name &key lisper)
   (make-instance 'person :name name :lisper lisper))
 ~~~
 
-This has the direct advantage that you can control the required
-arguments. You should now export the constructor from your package and
-not the class itself.
+これには、必要な引数を制御できるという直接的な利点があります。
+この時点では、クラス自体ではなく、コンストラクタをパッケージから export すべきです。
 
-### Slots
+### スロット
 
-#### A function that always works (slot-value)
+#### 常に使える関数 (slot-value)
 
-The function to access any slot anytime is `(slot-value <object> <slot-name>)`.
+任意のスロットへいつでもアクセスするための関数は `(slot-value <object> <slot-name>)` です。
 
-Given our `point` class above, which didn't define any slot accessors:
+上の `point` クラスはスロットアクセサを定義していませんでした。
 
 
 ```lisp
@@ -176,38 +161,35 @@ The object is a STANDARD-OBJECT of type POINT.
 2. Z: "unbound"
 ```
 
-We got an object of type `POINT`, but **slots are unbound by
-default**: trying to access them will raise an `UNBOUND-SLOT`
-condition:
+型 `POINT` のオブジェクトは得られましたが、**スロットはデフォルトでは unbound** です。
+アクセスしようとすると `UNBOUND-SLOT` condition が発生します。
 
 ~~~lisp
 (slot-value pt 'x) ;; => condition: the slot is unbound
 ~~~
 
 
-`slot-value` is `setf`-able:
+`slot-value` は `setf` できます。
 
 ~~~lisp
 (setf (slot-value pt 'x) 1)
 (slot-value pt 'x) ;; => 1
 ~~~
 
-#### Initial and default values (initarg, initform)
+#### 初期値とデフォルト値 (initarg, initform)
 
-- `:initarg :foo` is the keyword we can pass to `make-instance` to
-  give a value to this slot:
+- `:initarg :foo` は、このスロットに値を与えるために `make-instance` へ渡せるキーワードです。
 
 ~~~lisp
 (make-instance 'person :name "me")
 ~~~
 
-(again: slots are unbound by default)
+(繰り返しますが、スロットはデフォルトでは unbound です)
 
-- `:initform <val>` is the *default value* in case we didn't specify
- an initarg.  This form is evaluated each time it's needed, in the
- lexical environment of the `defclass`.
+- `:initform <val>` は、initarg を指定しなかった場合の *デフォルト値* です。
+  このフォームは、必要になるたびに `defclass` のレキシカル環境で評価されます。
 
-Sometimes we see the following trick to clearly require a slot:
+スロットを明確に必須にするため、次のようなテクニックを見ることがあります。
 
 ~~~lisp
 (defclass foo ()
@@ -220,11 +202,10 @@ Sometimes we see the following trick to clearly require a slot:
 ~~~
 
 
-#### Getters and setters (accessor, reader, writer)
+#### getter と setter (accessor, reader, writer)
 
-- `:accessor foo`: an accessor is both a **getter** and a
-  **setter**. Its argument is a name that will become a **generic
-  function**.
+- `:accessor foo`: accessor は **getter** であり **setter** でもあります。
+  その引数は **generic function** になる名前です。
 
 ~~~lisp
 (name p1) ;; => "me"
@@ -233,21 +214,20 @@ Sometimes we see the following trick to clearly require a slot:
 STANDARD-GENERIC-FUNCTION
 ~~~
 
-- `:reader` and `:writer` do what you expect. Only the `:writer` is `setf`-able.
+- `:reader` と `:writer` は期待どおりのことをします。`setf` できるのは `:writer` だけです。
 
-If you don't specify any of these, you can still use `slot-value`.
+これらのどれも指定しなくても、`slot-value` は使えます。
 
-You can give a slot more than one `:accessor`, `:reader` or `:initarg`.
+1 つのスロットに複数の `:accessor`、`:reader`、`:initarg` を与えることもできます。
 
 
-We introduce two macros to make the access to slots shorter in some situations:
+状況によってスロットへのアクセスを短く書くため、2 つのマクロを紹介します。
 
-1- `with-slots` allows to abbreviate several calls to slot-value. The
-first argument is a list of slot names. The second argument evaluates
-to a CLOS instance. This is followed by optional declarations and an
-implicit `progn`. Lexically during the evaluation of the body, an
-access to any of these names as a variable is equivalent to accessing
-the corresponding slot of the instance with `slot-value`.
+1- `with-slots` は、複数の slot-value 呼び出しを短く書けるようにします。
+第 1 引数はスロット名のリストです。
+第 2 引数は CLOS インスタンスへ評価されます。
+その後に省略可能な宣言と暗黙の `progn` が続きます。
+本体の評価中、レキシカルには、これらの名前を変数として参照することは、対応するインスタンスのスロットを `slot-value` で参照することと同じです。
 
 
 ~~~lisp
@@ -256,7 +236,7 @@ the corresponding slot of the instance with `slot-value`.
   (format t "got ~a, ~a~&" name lisper))
 ~~~
 
-or
+または
 
 ~~~lisp
 (with-slots ((n name)
@@ -265,9 +245,8 @@ or
   (format t "got ~a, ~a~&" n l))
 ~~~
 
-2- `with-accessors` is equivalent, but instead of a list of slots it
-takes a list of accessor functions. Any reference to the variable
-inside the macro is equivalent to a call to the accessor function.
+2- `with-accessors` も同様ですが、スロットのリストではなく accessor 関数のリストを取ります。
+マクロ内で変数を参照すると、accessor 関数の呼び出しと同じになります。
 
 ~~~lisp
 (with-accessors ((name        name)
@@ -277,18 +256,15 @@ inside the macro is equivalent to a call to the accessor function.
           (format t "name: ~a, lisper: ~a" name lisper))
 ~~~
 
-#### Class VS instance slots
+#### クラススロットとインスタンススロット
 
-`:allocation` specifies whether this slot is *local* or *shared*.
+`:allocation` は、このスロットが *local* か *shared* かを指定します。
 
-* a slot is *local* by default, that means it can be different for each instance of the class. In that case `:allocation` equals `:instance`.
+* スロットはデフォルトで *local* です。つまり、クラスのインスタンスごとに異なる値を持てます。この場合、`:allocation` は `:instance` です。
 
-* a *shared* slot will always be equal for all instances of the
-    class. We set it with `:allocation :class`.
+* *shared* スロットは、そのクラスのすべてのインスタンスで常に同じ値になります。これは `:allocation :class` で設定します。
 
-In the following example, note how changing the value of the class
-slot `species` of `p2` affects all instances of the
-class (whether or not those instances exist yet).
+次の例では、`p2` のクラススロット `species` の値を変更すると、そのクラスのすべてのインスタンス (それらがすでに存在しているかどうかにかかわらず) に影響することに注目してください。
 
 ~~~lisp
 (defclass person ()
@@ -298,7 +274,7 @@ class (whether or not those instances exist yet).
       :accessor species
       :allocation :class)))
 
-;; Note that the slot "lisper" was removed in existing instances.
+;; 既存のインスタンスからスロット "lisper" が削除されたことに注意。
 (inspect p1)
 ;; The object is a STANDARD-OBJECT of type PERSON.
 ;; 0. NAME: "me"
@@ -327,33 +303,33 @@ class (whether or not those instances exist yet).
 ;; HOMO-LISPER
 ~~~
 
-#### Slot documentation
+#### スロットのドキュメント
 
-Each slot accepts one `:documentation` option. To obtain its documentation via `documentation`, you need to obtain the slot object. This can be done compatibly using a library such as [closer-mop](https://github.com/pcostanza/closer-mop). For instance:
+各スロットは `:documentation` オプションを 1 つ受け取れます。
+`documentation` でそのドキュメントを取得するには、スロットオブジェクトを取得する必要があります。
+これは [closer-mop](https://github.com/pcostanza/closer-mop) のようなライブラリを使うと移植性のある形で行えます。例:
 
 ~~~lisp
 (closer-mop:class-direct-slots (find-class 'my-class))
-;; => list of slots (objects)
+;; => スロット (オブジェクト) のリスト
 (find 'my-slot * :key #'closer-mop:slot-definition-name)
-;; => find desired slot by name
-(documentation * t) ; obtain its documentation
+;; => 目的のスロットを名前で探す
+(documentation * t) ; そのドキュメントを取得する
 ~~~
 
-Note however that generally it may be better to document slot accessors instead, as a popular viewpoint is that slots are implementation details and not part of the public interface.
+ただし一般には、スロットではなくスロット accessor をドキュメント化するほうがよいかもしれません。
+スロットは実装詳細であり、公開インターフェイスの一部ではない、という見方が広くあります。
 
-#### Slot type
+#### スロット型
 
-The `:type` slot option may not do the job you expect it does. If you
-are new to the CLOS, we suggest you skip this section and use your own
-constructors to manually check slot types.
+`:type` スロットオプションは、期待どおりの仕事をしないかもしれません。
+CLOS に慣れていないなら、このセクションは飛ばし、自分のコンストラクタで手動でスロット型をチェックすることをおすすめします。
 
-Indeed, whether slot types are being checked or not is undefined. See the [Hyperspec](http://www.lispworks.com/documentation/HyperSpec/Body/m_defcla.htm#defclass).
+実際、スロット型がチェックされるかどうかは未定義です。[Hyperspec](http://www.lispworks.com/documentation/HyperSpec/Body/m_defcla.htm#defclass) を参照してください。
 
-Few implementations will do it. Clozure CL does it, SBCL does it since
-its version 1.5.9 (November, 2019) or when safety is high (`(declaim
-(optimise safety))`).
+これを行う実装は少数です。Clozure CL は行います。SBCL はバージョン 1.5.9 (2019 年 11 月) 以降、または safety が高い場合 (`(declaim (optimise safety))`) に行います。
 
-To do it otherwise, see [this Stack-Overflow answer](https://stackoverflow.com/questions/51723992/how-to-force-slots-type-to-be-checked-during-make-instance), and see also [quid-pro-quo](https://github.com/sellout/quid-pro-quo), a contract programming library.
+別の方法で行うには、[this Stack-Overflow answer](https://stackoverflow.com/questions/51723992/how-to-force-slots-type-to-be-checked-during-make-instance) を参照してください。また、契約プログラミングライブラリ [quid-pro-quo](https://github.com/sellout/quid-pro-quo) も参照してください。
 
 
 ### find-class, class-name, class-of
@@ -372,31 +348,28 @@ To do it otherwise, see [this Stack-Overflow answer](https://stackoverflow.com/q
 ;; T
 ~~~
 
-CLOS classes are also instances of a CLOS class, and we can find out
-what that class is, as in the example below:
+CLOS クラスもまた CLOS クラスのインスタンスであり、下の例のように、そのクラスが何かを調べられます。
 
 ~~~lisp
 (class-of (class-of my-point))
 ;; #<STANDARD-CLASS STANDARD-CLASS 20306534>
 ~~~
 
-<u>Note</u>: this is your first introduction to the MOP. You don't need that to get started !
+<u>Note</u>: これは MOP への最初の導入です。始めるだけなら必要ありません!
 
-The object `my-point` is an instance of the class named `point`, and the
-class named `point` is itself an instance of the class named
-`standard-class`. We say that the class named `standard-class` is
-the *metaclass* (i.e. the class of the class) of
-`my-point`. We can make good uses of metaclasses, as we'll see later.
+オブジェクト `my-point` は `point` という名前のクラスのインスタンスであり、`point` という名前のクラス自体は `standard-class` という名前のクラスのインスタンスです。
+`standard-class` という名前のクラスは、`my-point` の *metaclass* (つまりクラスのクラス) であると言います。
+後で見るように、metaclass はうまく活用できます。
 
 
 
-### Subclasses and inheritance
+### サブクラスと継承
 
-As illustrated above, `child` is a subclass of `person`.
+上で示したように、`child` は `person` のサブクラスです。
 
-All objects inherit from the class `standard-object` and `t`.
+すべてのオブジェクトはクラス `standard-object` と `t` から継承します。
 
-Every child instance is also an instance of `person`.
+すべての child インスタンスは `person` のインスタンスでもあります。
 
 ~~~lisp
 (type-of c1)
@@ -412,20 +385,18 @@ Every child instance is also an instance of `person`.
 ;; T
 ~~~
 
-The [closer-mop](https://github.com/pcostanza/closer-mop) library is *the*
-portable way to do CLOS/MOP operations.
+[closer-mop](https://github.com/pcostanza/closer-mop) ライブラリは、CLOS/MOP 操作を行うための移植性のある定番の方法です。
 
 
-A subclass inherits all of its parents' slots, and it can override any
-of their slot options. Common Lisp makes this process dynamic, great
-for REPL session, and we can even control parts of it (like, do
-something when a given slot is removed/updated/added, etc).
+サブクラスは親のすべてのスロットを継承し、そのスロットオプションを上書きできます。
+Common Lisp はこのプロセスを動的にしており、REPL セッションに適しています。
+さらに、その一部を制御することもできます (特定のスロットが削除、更新、追加されたときに何かをする、など)。
 
-The **class precedence list** of a `child` is thus:
+したがって、`child` の **class precedence list** は次のようになります。
 
     child <- person <-- standard-object <- t
 
-Which we can get with:
+これは次で取得できます。
 
 ~~~lisp
 (closer-mop:class-precedence-list (class-of c1))
@@ -436,44 +407,34 @@ Which we can get with:
 ;;  #<sb-pcl:system-class t>)
 ~~~
 
-However, the **direct superclass** of a `child` is only:
+しかし、`child` の **direct superclass** は次だけです。
 
 ~~~lisp
 (closer-mop:class-direct-superclasses (class-of c1))
 ;; (#<standard-class person>)
 ~~~
 
-We can further inspect our classes with
-`class-direct-[subclasses, slots, default-initargs]` and many more functions.
+さらに `class-direct-[subclasses, slots, default-initargs]` や多くの関数でクラスを調べられます。
 
-How slots are combined follows some rules:
+スロットの結合にはいくつかの規則があります。
 
-- `:accessor` and `:reader` are combined by the **union** of accessors
-   and readers from all the inherited slots.
+- `:accessor` と `:reader` は、継承したすべてのスロットからの accessor と reader の **union** によって結合されます。
 
-- `:initarg`: the **union** of initialization arguments from all the
-  inherited slots.
+- `:initarg`: 継承したすべてのスロットからの初期化引数の **union** です。
 
-- `:initform`: we get **the most specific** default initial value
-  form, i.e. the first `:initform` for that slot in the precedence
-  list.
+- `:initform`: **最も特定的な** デフォルト初期値フォーム、つまり precedence list 内でそのスロットに対して最初に現れる `:initform` が得られます。
 
-- `:allocation` is not inherited. It is controlled solely by the class
-  being defined and defaults to `:instance`.
+- `:allocation` は継承されません。定義中のクラスだけで制御され、デフォルトは `:instance` です。
 
 
-Last but not least, be warned that inheritance is fairly easy to
-misuse, and multiple inheritance is multiply so, so please take a
-little care. Ask yourself whether `foo` really wants to inherit from
-`bar`, or whether instances of `foo` want a slot containing a `bar`. A
-good general guide is that if `foo` and `bar` are "same sort of thing"
-then it's correct to mix them together by inheritance, but if they're
-really separate concepts then you should use slots to keep them apart.
+最後に重要な注意として、継承はかなり誤用しやすく、多重継承ではその危険がさらに増えます。少し注意してください。
+`foo` が本当に `bar` を継承したいのか、それとも `foo` のインスタンスが `bar` を含むスロットを持ちたいのかを自問してください。
+一般的な指針として、`foo` と `bar` が「同じ種類のもの」なら継承で混ぜるのは正しいですが、本当に別々の概念なら、スロットを使って分けておくべきです。
 
 
-### Multiple inheritance
+### 多重継承
 
-CLOS supports multiple inheritance.
+CLOS は多重継承をサポートします。
 
 
 ~~~lisp
@@ -481,33 +442,25 @@ CLOS supports multiple inheritance.
   ())
 ~~~
 
-The first class on the list of parent classes is the most specific
-one, `child`'s slots will take precedence over the `person`'s. Note
-that both `child` and `person` have to be defined prior to defining
-`baby` in this example.
+親クラスのリストで最初にあるクラスが最も特定的です。
+`child` のスロットは `person` のスロットより優先されます。
+この例では、`baby` を定義する前に `child` と `person` の両方が定義されている必要があることに注意してください。
 
 
-### Redefining and changing a class
+### クラスの再定義と変更
 
-This section briefly covers two topics:
+このセクションでは 2 つの話題を簡単に扱います。
 
-- redefinition of an existing class, which you might already have done
-  by following our code snippets, and what we do naturally during
-  development, and
-- changing an instance of one class into an instance of another,
-  a powerful feature of CLOS that you'll probably won't use very often.
+- 既存クラスの再定義。これはコード例を追っている間にすでに行ったかもしれず、開発中には自然に行うことです。
+- あるクラスのインスタンスを別のクラスのインスタンスに変えること。CLOS の強力な機能ですが、あまり頻繁には使わないでしょう。
 
-We'll gloss over the details. Suffice it to say that everything's
-configurable by implementing methods exposed by the MOP.
+詳細は軽く流します。MOP が公開するメソッドを実装することで、すべて設定可能だと言えば十分です。
 
-To redefine a class, simply evaluate a new `defclass` form. This then
-takes the place of the old definition, the existing class object is
-updated, and **all instances of the class** (and, recursively, its
-subclasses) **are lazily updated to reflect the new definition**. You don't
-have to recompile anything other than the new `defclass`, nor to
-invalidate any of your objects. Think about it for a second: this is awesome !
+クラスを再定義するには、新しい `defclass` フォームを評価するだけです。
+それが古い定義の代わりになり、既存のクラスオブジェクトが更新され、**そのクラスのすべてのインスタンス** (および再帰的にそのサブクラス) は **新しい定義を反映するよう遅延更新されます**。
+新しい `defclass` 以外を再コンパイルする必要も、オブジェクトを無効化する必要もありません。少し考えてみてください。これはすごいことです!
 
-For example, with our `person` class:
+たとえば、私たちの `person` クラスでは:
 
 ~~~lisp
 (defclass person ()
@@ -521,7 +474,7 @@ For example, with our `person` class:
 (setf p1 (make-instance 'person :name "me" ))
 ~~~
 
-Changing, adding, removing slots,...
+スロットの変更、追加、削除...
 
 ~~~lisp
 (lisper p1)
@@ -554,7 +507,7 @@ Changing, adding, removing slots,...
     :accessor age)))
 
 (age p1)
-;; => 18. Correct. This is the default initform for this new slot.
+;; => 18。正しい。この新しいスロットのデフォルト initform。
 
 (slot-value p1 'bwarf)
 ;; => "the slot bwarf is missing from the object #<person…>"
@@ -572,11 +525,11 @@ Changing, adding, removing slots,...
 ~~~
 
 
-To change the class of an instance, use `change-class`:
+インスタンスのクラスを変更するには `change-class` を使います。
 
 ~~~lisp
 (change-class p1 'child)
-;; we can also set slots of the new class:
+;; 新しいクラスのスロットも設定できる:
 (change-class p1 'child :can-walk-p nil)
 
 (class-of p1)
@@ -586,22 +539,22 @@ To change the class of an instance, use `change-class`:
 ;; T
 ~~~
 
-In the above example, I became a `child`, and I inherited the `can-walk-p` slot, which is true by default.
+上の例では、私は `child` になり、デフォルトで true である `can-walk-p` スロットを継承しました。
 
 
 ### Pretty printing
 
-Every time we printed an object so far we got an output like
+ここまでオブジェクトを表示するたびに、次のような出力が得られました。
 
     #<PERSON {1006234593}>
 
-which doesn't say much.
+これでは多くを語っていません。
 
-What if we want to show more information ? Something like
+もっと情報を表示したい場合はどうでしょうか。たとえば:
 
     #<PERSON me lisper: t>
 
-Pretty printing is done by specializing the generic `print-object` method for this class:
+Pretty printing は、このクラス向けに generic `print-object` method を特殊化することで行います。
 
 ~~~lisp
 (defmethod print-object ((obj person) stream)
@@ -612,19 +565,18 @@ Pretty printing is done by specializing the generic `print-object` method for th
           (format stream "~a, lisper: ~a" name lisper))))
 ~~~
 
-It gives:
+これは次を返します。
 
 ~~~lisp
 p1
 ;; #<PERSON me, lisper: T>
 ~~~
 
-`print-unreadable-object` prints the `#<...>`, that says to the reader
-that this object can not be read back in. Its `:type t` argument asks
-to print the object-type prefix, that is, `PERSON`. Without it, we get
-`#<me, lisper: T>`.
+`print-unreadable-object` は `#<...>` を出力します。これは、このオブジェクトを reader が読み戻せないことを示します。
+`:type t` 引数は、オブジェクト型のプレフィックス、つまり `PERSON` を出力するよう求めます。
+これがないと `#<me, lisper: T>` になります。
 
-We used the `with-accessors` macro, but of course for simple cases this is enough:
+ここでは `with-accessors` マクロを使いましたが、単純な場合はもちろん次で十分です。
 
 ~~~lisp
 (defmethod print-object ((obj person) stream)
@@ -632,25 +584,23 @@ We used the `with-accessors` macro, but of course for simple cases this is enoug
     (format stream "~a, lisper: ~a" (name obj) (lisper obj))))
 ~~~
 
-Caution: trying to access a slot that is not bound by default will
-lead to an error. Use `slot-boundp`.
+注意: デフォルトで束縛されていないスロットにアクセスしようとするとエラーになります。`slot-boundp` を使ってください。
 
 
-For reference, the following reproduces the default behaviour:
+参考までに、次はデフォルトの挙動を再現します。
 
 ~~~lisp
 (defmethod print-object ((obj person) stream)
   (print-unreadable-object (obj stream :type t :identity t)))
 ~~~
 
-Here, `:identity` to `t` prints the `{1006234593}` address.
+ここで `:identity` を `t` にすると `{1006234593}` というアドレスが出力されます。
 
-### Classes of traditional lisp types
+### 伝統的な Lisp 型のクラス
 
-Where we approach that we don't need CLOS objects to use CLOS.
+ここでは、CLOS を使うために CLOS オブジェクトが必要なわけではない、という点に近づきます。
 
-Generously, the functions introduced in the last section also work on
-lisp objects which are <u>not</u> CLOS instances:
+ありがたいことに、前のセクションで紹介した関数は、CLOS インスタンス<u>ではない</u> Lisp オブジェクトにも使えます。
 
 ~~~lisp
 (find-class 'symbol)
@@ -663,15 +613,10 @@ lisp objects which are <u>not</u> CLOS instances:
 ;; #<STANDARD-CLASS BUILT-IN-CLASS>
 ~~~
 
-We see here that symbols are instances of the system class
-`symbol`. This is one of 75 cases in which the language requires a
-class to exist with the same name as the corresponding lisp
-type. Many of these cases are concerned with CLOS itself (for
-example, the correspondence between the type `standard-class` and
-the CLOS class of that name) or with the condition system (which
-might or might not be built using CLOS classes in any given
-implementation). However, 33 correspondences remain relating to
-"traditional" lisp types:
+ここで、シンボルはシステムクラス `symbol` のインスタンスであることがわかります。
+これは、対応する Lisp 型と同じ名前のクラスが存在することを言語が要求する 75 個のケースの 1 つです。
+これらの多くは CLOS 自体 (たとえば型 `standard-class` と同名の CLOS クラスの対応) または condition system (実装によって CLOS クラスで構築されているかもしれないし、そうでないかもしれないもの) に関係しています。
+しかし、「伝統的な」Lisp 型に関係する対応が 33 個残っています。
 
 <style>
 table, th, td {
@@ -749,25 +694,20 @@ th {
 <br>
 <!-- epub-exclude-end -->
 
-Note that not all "traditional" lisp types are included in this
-list. (Consider: `atom`, `fixnum`, `short-float`, and any type not
-denoted by a symbol.)
+すべての「伝統的な」Lisp 型がこのリストに含まれるわけではないことに注意してください。
+(`atom`、`fixnum`、`short-float`、およびシンボルで表されない型を考えてみてください。)
 
 
-The presence of `t` is interesting. Just as every lisp
-object is of type `t`, every lisp object is also a member
-of the class named `t`. This is a simple example of
-membership of more then one class at a time, and it brings into
-question the issue of *inheritance*, which we will consider
-in some detail later.
+`t` が存在するのは興味深いことです。
+すべての Lisp オブジェクトが型 `t` であるのと同じように、すべての Lisp オブジェクトは `t` という名前のクラスのメンバーでもあります。
+これは同時に複数のクラスに属する単純な例であり、後である程度詳しく考える *inheritance* の問題を持ち出します。
 
 ~~~lisp
 (find-class t)
 ;; #<BUILT-IN-CLASS T 20305AEC>
 ~~~
 
-In addition to classes corresponding to lisp types, there is also a
-    CLOS class for every structure type you define:
+Lisp 型に対応するクラスに加えて、定義したすべての structure 型にも CLOS クラスがあります。
 
 ~~~lisp
 (defstruct foo)
@@ -777,26 +717,23 @@ FOO
 ;; #<STRUCTURE-CLASS FOO 21DE8714>
 ~~~
 
-The metaclass of a `structure-object` is the class `structure-class`. It is implementation-dependent whether
-the metaclass of a "traditional" lisp object is `standard-class`, `structure-class`, or `built-in-class`.
-Restrictions:
+`structure-object` の metaclass はクラス `structure-class` です。
+「伝統的な」Lisp オブジェクトの metaclass が `standard-class`、`structure-class`、`built-in-class` のどれであるかは実装依存です。
+制約:
 
-`built-in-class`: May not use `make-instance`, may not use `slot-value`, may not use `defclass` to modify, may not create subclasses.
+`built-in-class`: `make-instance` を使えず、`slot-value` を使えず、`defclass` で変更できず、サブクラスを作成できません。
 
-`structure-class`: May not use `make-instance`, might work with `slot-value` (implementation-dependent). Use `defstruct` to subclass application structure types. Consequences of modifying an existing `structure-class` are undefined: full recompilation may be necessary.
+`structure-class`: `make-instance` は使えません。`slot-value` は動くかもしれません (実装依存)。アプリケーションの structure 型をサブクラス化するには `defstruct` を使います。既存の `structure-class` を変更した結果は未定義です。完全な再コンパイルが必要になるかもしれません。
 
-`standard-class`: None of these restrictions.
+`standard-class`: これらの制約はありません。
 
-### Introspection
+### イントロスペクション
 
-We already saw some introspection functions.
+いくつかのイントロスペクション関数はすでに見ました。
 
-Your best option is to discover the
-[closer-mop](https://github.com/pcostanza/closer-mop) library and to
-keep the [CLOS & MOP specifications](https://clos-mop.hexstreamsoft.com/) at
-hand.
+最善の選択肢は、[closer-mop](https://github.com/pcostanza/closer-mop) ライブラリを知り、[CLOS & MOP specifications](https://clos-mop.hexstreamsoft.com/) を手元に置いておくことです。
 
-More functions:
+さらに多くの関数:
 
 ```
 closer-mop:class-default-initargs
@@ -837,13 +774,14 @@ closer-mop:standard-accessor-method
 ```
 
 
-### See also
+### 参考
 
-#### Slime export class symbols
+#### Slime によるクラスシンボルの export
 
-The command **M-x slime-export-class** will add the class symbols to the ":export" clause of your package definition. This way, you can export dozens of symbols all at once.
+コマンド **M-x slime-export-class** は、クラスシンボルをパッケージ定義の ":export" 節に追加します。
+これにより、多数のシンボルを一度に export できます。
 
-Imagine you have this class:
+次のクラスがあるとします。
 
 ~~~lisp
 (defclass test ()
@@ -851,28 +789,27 @@ Imagine you have this class:
    (bar :reader bar)))
 ~~~
 
-Using "M-x slime-export-class RET test RET" will export "test", "foot" and "bar".
+"M-x slime-export-class RET test RET" を使うと、"test"、"foot"、"bar" が export されます。
 
-Removing a slot from the class definition will alas not remove it from the export clause.
+残念ながら、クラス定義からスロットを削除しても export 節からは削除されません。
 
-This works also on structures (only on SBCL and Clozure CL).
+これは structure でも動作します (SBCL と Clozure CL のみ)。
 
 
-#### defclass/std: write shorter classes
+#### defclass/std: クラスを短く書く
 
-The library [defclass/std](https://github.com/EuAndreh/defclass-std)
-provides a macro to write shorter `defclass` forms.
+[defclass/std](https://github.com/EuAndreh/defclass-std) ライブラリは、より短い `defclass` フォームを書くためのマクロを提供します。
 
-By default, it adds an accessor, an initarg and an initform to `nil` to your slots definition:
+デフォルトでは、スロット定義に accessor、initarg、`nil` への initform を追加します。
 
-This:
+これは:
 
 ~~~lisp
 (defclass/std example ()
   ((slot1 slot2 slot3)))
 ~~~
 
-expands to:
+次へ展開されます。
 
 ~~~lisp
 (defclass example ()
@@ -890,14 +827,14 @@ expands to:
      :initform nil)))
 ~~~
 
-It does much more and it is very flexible, however it is seldom used
-by the Common Lisp community: use at your own risk©.
+これはもっと多くのことができ、非常に柔軟です。
+ただし Common Lisp コミュニティではあまり使われていません。自己責任で使ってください。
 
 
-## Methods
+## メソッド
 
-### Diving in
-Recalling our `person` and `child` classes from the beginning:
+### まず試す
+冒頭の `person` クラスと `child` クラスを思い出してください。
 
 ~~~lisp
 (defclass person ()
@@ -914,8 +851,7 @@ Recalling our `person` and `child` classes from the beginning:
 (setf c1 (make-instance 'child :name "Alice"))
 ~~~
 
-Below we create methods, we specialize them, we use method combination
-(before, after, around), and qualifiers.
+以下ではメソッドを作成し、特殊化し、method combination (before, after, around) と qualifier を使います。
 
 ~~~lisp
 (defmethod greet (obj)
@@ -1009,11 +945,11 @@ Below we create methods, we specialize them, we use method combination
 ;; -- after child
 
 ;;;;;;;;;;;;;;;;;
-;; Adding in &key
+;; &key の追加
 ;;;;;;;;;;;;;;;;;
 
-;; In order to add "&key" to our generic method, we need to remove its definition first.
-(fmakunbound 'greet)  ;; with Slime: C-c C-u (slime-undefine-function)
+;; generic method に "&key" を追加するには、まずその定義を削除する必要がある。
+(fmakunbound 'greet)  ;; Slime では: C-c C-u (slime-undefine-function)
 (defmethod greet ((obj person) &key talkative)
   (format t "Hello ~a~&" (name obj))
   (when talkative
@@ -1031,7 +967,7 @@ Below we create methods, we specialize them, we use method combination
     (format t "blah")))
 
 (greet p1 :talkative t) ;; ok
-(greet p1 :foo t) ;; still ok
+(greet p1 :foo t) ;; これも ok
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;
@@ -1072,25 +1008,21 @@ Below we create methods, we specialize them, we use method combination
 ~~~
 
 
-### Generic functions (defgeneric, defmethod)
+### Generic function (defgeneric, defmethod)
 
-A `generic function` is a lisp function which is associated
-with a set of methods and dispatches them when it's invoked. All
-the methods with the same function name belong to the same generic
-function.
+`generic function` は、一連のメソッドと関連付けられ、呼び出されたときにそれらを dispatch する Lisp 関数です。
+同じ関数名を持つすべてのメソッドは、同じ generic function に属します。
 
-The `defmethod` form is similar to a `defun`. It associates a body of
-code with a function name, but that body may only be executed if the
-types of the arguments match the pattern declared by the lambda list.
+`defmethod` フォームは `defun` に似ています。
+コード本体を関数名に関連付けますが、その本体は、引数の型がラムダリストで宣言されたパターンに一致する場合にだけ実行されます。
 
-They can have optional, keyword and `&rest` arguments.
+optional、keyword、`&rest` 引数を持てます。
 
-The `defgeneric` form defines the generic function. If we write a
-`defmethod` without a corresponding `defgeneric`, a generic function
-is automatically created (see examples).
+`defgeneric` フォームは generic function を定義します。
+対応する `defgeneric` なしで `defmethod` を書くと、generic function が自動的に作成されます (例を参照)。
 
-It is generally a good idea to write the `defgeneric`s. We can add a
-default implementation and even some documentation.
+一般に `defgeneric` を書くのはよい考えです。
+デフォルト実装やドキュメントを追加できます。
 
 ~~~lisp
 (defgeneric greet (obj)
@@ -1099,42 +1031,35 @@ default implementation and even some documentation.
     (format t "Hi")))
 ~~~
 
-The required parameters in the method's lambda list may take one of
-the following three forms:
+メソッドのラムダリストの必須パラメータは、次の 3 つの形式のいずれかを取れます。
 
-1- a simple variable:
+1- 単純な変数:
 
 ~~~lisp
 (defmethod greet (foo)
   ...)
 ~~~
 
-This method can take any argument, it is always applicable.
+このメソッドは任意の引数を取れ、常に applicable です。
 
-The variable `foo` is bound to the corresponding argument value, as
-usual.
+変数 `foo` は通常どおり対応する引数値に束縛されます。
 
-2- a variable and a **specializer**, as in:
+2- 変数と **specializer**。例:
 
 ~~~lisp
 (defmethod greet ((foo person))
   ...)
 ~~~
 
-In this case, the variable `foo` is bound to the corresponding
-argument only if that argument is of specializer class `person` *or a subclass*,
-like `child` (indeed, a "child" is also a "person").
+この場合、変数 `foo` は、その引数が specializer class `person` *またはそのサブクラス* (`child` など) である場合にのみ、対応する引数に束縛されます (実際、"child" も "person" です)。
 
-If any argument fails to match its
-specializer then the method is not *applicable* and it cannot be
-executed with those arguments.We'll get an error message like
-"there is no applicable method for the generic function xxx when
-called with arguments yyy".
+いずれかの引数がその specializer に一致しない場合、そのメソッドは *applicable* ではなく、それらの引数では実行できません。
+"there is no applicable method for the generic function xxx when called with arguments yyy" のようなエラーメッセージが出ます。
 
-**Only required parameters can be specialized**. We can't specialize on optional `&key` arguments.
+**特殊化できるのは必須パラメータだけです**。optional な `&key` 引数では特殊化できません。
 
 
-3- a variable and an **eql specializer**
+3- 変数と **eql specializer**
 
 ~~~lisp
 (defmethod feed ((obj child) (meal-type (eql :soup)))
@@ -1145,30 +1070,20 @@ called with arguments yyy".
 ;; "bwark"
 ~~~
 
-In place of a simple symbol (`:soup`), the eql specializer can be any
-lisp form. It is evaluated at the same time of the defmethod.
+単純なシンボル (`:soup`) の代わりに、eql specializer には任意の Lisp フォームを使えます。
+これは defmethod と同じタイミングで評価されます。
 
-You can define any number of methods with the same function name but
-with different specializers, as long as the form of the lambda list is
-*congruent* with the shape of the generic function. The system chooses
-the most *specific* applicable method and executes its body. The most
-specific method is the one whose specializers are nearest to the head
-of the `class-precedence-list` of the argument (classes on the left of
-the lambda list are more specific). A method with specializers is more
-specific to one without any.
+ラムダリストの形式が generic function の形と *congruent* である限り、同じ関数名で specializer の異なるメソッドをいくつでも定義できます。
+システムは最も *specific* な applicable method を選び、その本体を実行します。
+最も specific なメソッドとは、specializer が引数の `class-precedence-list` の先頭に最も近いものです (ラムダリストの左側にあるクラスほど specific です)。
+specializer を持つメソッドは、何も持たないメソッドより specific です。
 
 
-**Notes:**
+**注意:**
 
--   It is an error to define a method with the same function name as
-    an ordinary function. If you really want to do that, use the
-    shadowing mechanism.
+-   通常の関数と同じ関数名でメソッドを定義するのはエラーです。本当にそうしたい場合は shadowing 機構を使ってください。
 
--   To add or remove `keys` or `rest` arguments to an existing generic
-    method's lambda list, you will need to delete its declaration with
-    `fmakunbound` (or `C-c C-u` (slime-undefine-function) with the
-    cursor on the function in Slime) and start again. Otherwise,
-    you'll see:
+-   既存の generic method のラムダリストに `keys` や `rest` 引数を追加または削除するには、`fmakunbound` (または Slime で関数上にカーソルを置いて `C-c C-u` (slime-undefine-function)) で宣言を削除し、やり直す必要があります。そうしないと次のようになります。
 
 ```
 attempt to add the method
@@ -1179,39 +1094,29 @@ but the method and generic function differ in whether they accept
 &REST or &KEY arguments.
 ```
 
--   Methods can be redefined (exactly as for ordinary functions).
+-   メソッドは再定義できます (通常の関数とまったく同じです)。
 
--   The order in which methods are defined is irrelevant, although
-    any classes on which they specialize must already exist.
+-   メソッドが定義される順序は関係ありません。ただし、特殊化の対象になるクラスはすでに存在している必要があります。
 
--   An unspecialized argument is more or less equivalent to being
-    specialized on the class `t`. The only difference is that
-    all specialized arguments are implicitly taken to be "referred to" (in
-    the sense of `declare ignore`.)
+-   特殊化されていない引数は、だいたいクラス `t` に特殊化されていることと同等です。唯一の違いは、すべての特殊化された引数は暗黙に「参照された」ものとみなされることです (`declare ignore` の意味で)。
 
--   Each `defmethod` form generates (and returns) a CLOS
-    instance, of class `standard-method`.
+-   各 `defmethod` フォームは、クラス `standard-method` の CLOS インスタンスを生成し、返します。
 
-- An `eql` specializer won't work as is with strings. Indeed, strings
-need `equal` or `equalp` to be compared. But, we can assign our string
-to a variable and use the variable both in the `eql` specializer and
-for the function call.
+- `eql` specializer は文字列ではそのまま動きません。実際、文字列の比較には `equal` または `equalp` が必要です。ただし、文字列を変数に代入し、その変数を `eql` specializer と関数呼び出しの両方で使えます。
 
-- All the methods with the same function name belong to the same generic function.
+- 同じ関数名を持つすべてのメソッドは同じ generic function に属します。
 
-- All slot accessors and readers defined by `defclass` are methods. They can override or be overridden by other methods on the same generic function.
+- `defclass` で定義されたすべてのスロット accessor と reader はメソッドです。同じ generic function 上の他のメソッドを上書きしたり、上書きされたりできます。
 
 
-See more about [defmethod on the CLHS](http://www.lispworks.com/documentation/lw70/CLHS/Body/m_defmet.htm).
+[defmethod on the CLHS](http://www.lispworks.com/documentation/lw70/CLHS/Body/m_defmet.htm) も参照してください。
 
-### Multimethods
+### Multimethod
 
-Multimethods explicitly specialize more than one of the generic
-function's required parameters.
+Multimethod は、generic function の必須パラメータを複数明示的に特殊化します。
 
-They don't belong to a particular class. Meaning, we don't have to
-decide on the class that would be best to host this method, as we might
-have to in other languages.
+それらは特定のクラスに属しません。
+つまり、他の言語で必要になるかもしれないように、このメソッドを置くのに最適なクラスを決める必要はありません。
 
 ~~~lisp
 (defgeneric hug (a b)
@@ -1225,12 +1130,12 @@ have to in other languages.
   :person-child-hug)
 ~~~
 
-Read more on [Practical Common Lisp](http://www.gigamonkeys.com/book/object-reorientation-generic-functions.html#multimethods).
+詳しくは [Practical Common Lisp](http://www.gigamonkeys.com/book/object-reorientation-generic-functions.html#multimethods) を読んでください。
 
-### Controlling setters (setf-ing methods)
+### setter の制御 (setf-ing methods)
 
-In Lisp, we can define `setf` counterparts of functions or methods. We
-might want this to have more control on how to update an object.
+Lisp では、関数やメソッドに対応する `setf` 版を定義できます。
+これは、オブジェクトの更新方法をより細かく制御したい場合に使えます。
 
 ~~~lisp
 (defmethod (setf name) (new-val (obj person))
@@ -1241,20 +1146,21 @@ might want this to have more control on how to update an object.
 (setf (name p1) "james bond") ;; -> no rename
 ~~~
 
-If you know Python, this behaviour is provided by the `@property` decorator.
+Python を知っているなら、この挙動は `@property` デコレータで提供されるものです。
 
 
-### Dispatch mechanism and next methods
+### Dispatch 機構と next method
 
 
-When a generic function is invoked, the application cannot directly invoke a method. The dispatch mechanism proceeds as follows:
+generic function が呼び出されたとき、アプリケーションがメソッドを直接呼び出すことはできません。
+dispatch 機構は次のように進みます。
 
-1.  compute the list of applicable methods
-2.  if no method is applicable then signal an error
-3.  sort the applicable methods in order of specificity
-4.  invoke the most specific method.
+1.  applicable method のリストを計算する
+2.  applicable なメソッドがなければエラーを signal する
+3.  applicable method を specificity の順にソートする
+4.  最も specific なメソッドを呼び出す
 
-Our `greet` generic function has three applicable methods:
+私たちの `greet` generic function には 3 つの applicable method があります。
 
 ~~~lisp
 (closer-mop:generic-function-methods #'greet)
@@ -1263,21 +1169,16 @@ Our `greet` generic function has three applicable methods:
  #<STANDARD-METHOD GREET (T) {1008E6EBB3}>)
 ~~~
 
-During the execution of a method, the remaining applicable methods
-are still accessible, via the *local function*
-`call-next-method`. This function has lexical scope within
-the body of a method but indefinite extent. It invokes the next most
-specific method, and returns whatever value that method returned. It
-can be called with either:
+メソッドの実行中、残りの applicable method には *local function* `call-next-method` を介してアクセスできます。
+この関数はメソッド本体内でレキシカルスコープを持ちますが、indefinite extent を持ちます。
+次に specific なメソッドを呼び出し、そのメソッドが返した値をそのまま返します。
+次のいずれかで呼び出せます。
 
-*   no arguments, in which case the *next method* will
-    receive exactly the same arguments as this method did, or
+*   引数なし。この場合、*next method* はこのメソッドとまったく同じ引数を受け取ります。
 
-*   explicit arguments, in which case it is required that the
-    sorted set of methods applicable to the new arguments must be the same
-    as that computed when the generic function was first called.
+*   明示的な引数。この場合、新しい引数に applicable なメソッドのソート済み集合が、generic function が最初に呼ばれたときに計算されたものと同じでなければなりません。
 
-For example:
+例:
 
 ~~~lisp
 (defmethod greet ((obj child))
@@ -1292,106 +1193,73 @@ For example:
 ;; Hello Alice !
 ~~~
 
-Calling `call-next-method` when there is no next method
-signals an error. You can find out whether a next method exists by
-calling the local function `next-method-p` (which also has
-has lexical scope and indefinite extent).
+next method がないときに `call-next-method` を呼び出すとエラーが signal されます。
+next method が存在するかどうかは、local function `next-method-p` を呼び出して調べられます (これもレキシカルスコープと indefinite extent を持ちます)。
 
-Note finally that the body of every method establishes a block with the same name as the method’s generic function. If you `return-from` that name you are exiting the current method, not the call to the enclosing generic function.
+最後に、すべてのメソッド本体は、そのメソッドの generic function と同じ名前の block を確立することに注意してください。
+その名前に対して `return-from` すると、囲んでいる generic function の呼び出しではなく、現在のメソッドから抜けます。
 
 
-### Method qualifiers (before, after, around)
+### Method qualifier (before, after, around)
 
-In our "Diving in" examples, we saw some use of the `:before`, `:after` and `:around` *qualifiers*:
+「まず試す」の例で、`:before`、`:after`、`:around` *qualifier* の使い方をいくつか見ました。
 
 - `(defmethod foo :before (obj) (...))`
 - `(defmethod foo :after (obj) (...))`
 - `(defmethod foo :around (obj) (...))`
 
-By default, in the *standard method combination* framework provided by
-CLOS, we can only use one of those three qualifiers, and the flow of control is as follows:
+CLOS が提供する *standard method combination* フレームワークでは、デフォルトでこれら 3 つの qualifier のどれか 1 つだけを使えます。
+制御の流れは次のとおりです。
 
-- a **before-method** is called, well, before the applicable primary
-  method. If they are many before-methods, **all** are called. The
-  most specific before-method is called first (child before person).
-- the most specific applicable **primary method** (a method without
-  qualifiers) is called (only one).
-- all applicable **after-methods** are called. The most specific one is
-  called *last* (after-method of person, then after-method of child).
+- **before-method** は、文字どおり applicable な primary method の前に呼ばれます。before-method が複数ある場合は **すべて** 呼ばれます。最も specific な before-method が最初に呼ばれます (person より child が先)。
+- 最も specific な applicable **primary method** (qualifier のないメソッド) が呼ばれます (1 つだけ)。
+- applicable な **after-method** がすべて呼ばれます。最も specific なものは *最後* に呼ばれます (person の after-method、その後 child の after-method)。
 
-**The generic function returns the value of the primary method**. Any
-values of the before or after methods are ignored. They are used for
-their side effects.
+**generic function は primary method の値を返します**。
+before method や after method の値は無視されます。
+それらは副作用のために使われます。
 
-And then we have **around-methods**. They are wrappers around the core
-mechanism we just described. They can be useful to catch return values
-or to set up an environment around the primary method (set up a catch,
-a lock, timing an execution,…).
+そして **around-method** があります。
+これは今説明した中核機構を包む wrapper です。
+返り値を捕まえたり、primary method の周囲に環境を用意したりするのに便利です (catch、lock、実行時間計測など)。
 
-If the dispatch mechanism finds an around-method, it calls it and
-returns its result. If the around-method has a `call-next-method`, it
-calls the next most applicable around-method. It is only when we reach
-the primary method that we start calling the before and after-methods.
+dispatch 機構が around-method を見つけると、それを呼び出して結果を返します。
+around-method に `call-next-method` があれば、次に applicable な around-method を呼び出します。
+primary method に到達して初めて、before-method と after-method の呼び出しを始めます。
 
-Thus, the full dispatch mechanism for generic functions is as follows:
+したがって、generic function の完全な dispatch 機構は次のようになります。
 
-1.  compute the applicable methods, and partition them into
-    separate lists according to their qualifier;
-2.  if there is no applicable primary method then signal an
-    error;
-3.  sort each of the lists into order of specificity;
-4.  execute the most specific `:around` method and
-    return whatever that returns;
-5.  if an `:around` method invokes
-    `call-next-method`, execute the next most specific
-    `:around` method;
-6.  if there were no `:around` methods in the first
-    place, or if an `:around` method invokes
-    `call-next-method` but there are no further
-    `:around` methods to call, then proceed as follows:
+1.  applicable method を計算し、qualifier に従って別々のリストへ分ける。
+2.  applicable な primary method がなければエラーを signal する。
+3.  各リストを specificity の順にソートする。
+4.  最も specific な `:around` method を実行し、それが返すものを返す。
+5.  `:around` method が `call-next-method` を呼び出した場合、次に specific な `:around` method を実行する。
+6.  最初から `:around` method がなかった場合、または `:around` method が `call-next-method` を呼び出したが、呼び出すべき後続の `:around` method がない場合、次のように進む。
 
-    a.  run all the `:before` methods, in order,
-            ignoring any return values and not permitting calls to
-            `call-next-method` or
-            `next-method-p`;
+    a.  すべての `:before` method を順に実行する。返り値は無視し、`call-next-method` や `next-method-p` の呼び出しは許可しない。
 
-    b.  execute the most specific primary method and return
-            whatever that returns;
+    b.  最も specific な primary method を実行し、それが返すものを返す。
 
-    c.  if a primary method invokes `call-next-method`,
-            execute the next most specific primary method;
+    c.  primary method が `call-next-method` を呼び出した場合、次に specific な primary method を実行する。
 
-    d.  if a primary method invokes `call-next-method`
-            but there are no further primary methods to call then signal an
-            error;
+    d.  primary method が `call-next-method` を呼び出したが、呼び出すべき後続の primary method がない場合はエラーを signal する。
 
-    e.  after the primary method(s) have completed, run all the
-            `:after` methods, in **<u>reverse</u>**
-            order, ignoring any return values and not permitting calls to
-            `call-next-method` or
-            `next-method-p`.
+    e.  primary method の完了後、すべての `:after` method を **<u>逆</u>** 順で実行する。返り値は無視し、`call-next-method` や `next-method-p` の呼び出しは許可しない。
 
-Think of it as an onion, with all the `:around`
-    methods in the outermost layer, `:before` and
-    `:after` methods in the middle layer, and primary methods
-    on the inside.
+玉ねぎのように考えるとよいでしょう。最も外側の層にすべての `:around` method があり、中間層に `:before` と `:after` method があり、内側に primary method があります。
 
 
-### Other method combinations
+### その他の method combination
 
-The default method combination type we just saw is named `standard`,
-but other method combination types are available, and no need to say
-that you can define your own.
+先ほど見たデフォルトの method combination type は `standard` という名前ですが、他の method combination type も利用でき、もちろん自分で定義することもできます。
 
-The built-in types are:
+組み込み型は次のとおりです。
 
     progn + list nconc and max or append min
 
-You notice that these types are named after a lisp operator. Indeed,
-what they do is they define a framework that combines the applicable
-primary methods inside a call to the lisp operator of that name. For
-example, using the `progn` combination type is equivalent to calling **all**
-the primary methods one after the other:
+これらの型は Lisp operator にちなんで名付けられていることに気づくでしょう。
+実際、それらが行うのは、その名前の Lisp operator 呼び出しの内側で applicable な primary method を結合するフレームワークを定義することです。
+たとえば、`progn` combination type を使うことは、**すべての** primary method を順に呼び出すことと同等です。
 
 ~~~lisp
 (progn
@@ -1400,12 +1268,9 @@ the primary methods one after the other:
   (method-3 args))
 ~~~
 
-Here, unlike the standard mechanism, all the primary methods
-applicable for a given object are called, the most specific
-first.
+ここでは standard 機構と異なり、与えられたオブジェクトに applicable なすべての primary method が、最も specific なものから呼び出されます。
 
-To change the combination type, we set the `:method-combination`
-option of `defgeneric` and we use it as the methods' qualifier:
+combination type を変更するには、`defgeneric` の `:method-combination` オプションを設定し、それをメソッドの qualifier として使います。
 
 ~~~lisp
 (defgeneric foo (obj)
@@ -1415,7 +1280,7 @@ option of `defgeneric` and we use it as the methods' qualifier:
    (...))
 ~~~
 
-An example with **progn**:
+**progn** の例:
 
 ~~~lisp
 (defgeneric dishes (obj)
@@ -1434,11 +1299,10 @@ An example with **progn**:
 ;; - clean and dry.
 
 (greet c1)
-;; ur so cute  --> only the most applicable method was called.
+;; ur so cute  --> 最も applicable なメソッドだけが呼ばれた。
 ~~~
 
-Similarly, using the `list` type is equivalent to returning the list
-of the values of the methods.
+同様に、`list` 型を使うことは、メソッドの値のリストを返すことと同等です。
 
 ~~~lisp
 (list
@@ -1462,7 +1326,7 @@ of the values of the methods.
 ;; (:toys :books :foo)
 ~~~
 
-**Around methods** are accepted:
+**Around method** は受け付けられます。
 
 ~~~lisp
 (defmethod tidy :around (obj)
@@ -1477,25 +1341,20 @@ of the values of the methods.
 ;; that's too much !
 ~~~
 
-Note that these operators don't support `before`, `after` and `around`
-methods (indeed, there is no room for them anymore). They do support
-around methods, where `call-next-method` is allowed, but they don't
-support calling `call-next-method` in the primary methods (it would
-indeed be redundant since all primary methods are called, or clunky to
-*not* call one).
+これらの operator は `before`、`after`、`around` method をサポートしないことに注意してください (実際、それらを入れる余地がもうありません)。
+around method はサポートされ、そこでは `call-next-method` が許可されますが、primary method 内で `call-next-method` を呼び出すことはサポートされません。
+すべての primary method が呼ばれるため、それは冗長ですし、あるものを *呼ばない* ほうがぎこちなくなります。
 
-CLOS allows us to define a new operator as a method combination type, be
-it a lisp function, macro or special form. We'll let you refer to the
-books if you feel the need.
+CLOS では、Lisp 関数、マクロ、special form のいずれであっても、新しい operator を method combination type として定義できます。
+必要を感じたら、書籍を参照してください。
 
-### Debugging: tracing method combination
+### デバッグ: method combination の trace
 
-It is possible to [trace](http://www.xach.com/clhs?q=trace) the method
-combination, but this is implementation dependent.
+method combination を [trace](http://www.xach.com/clhs?q=trace) することは可能ですが、これは実装依存です。
 
-In SBCL, we can use `(trace foo :methods t)`. See [this post by an SBCL core developer](http://christophe.rhodes.io/notes/blog/posts/2018/sbcl_method_tracing/).
+SBCL では `(trace foo :methods t)` を使えます。[this post by an SBCL core developer](http://christophe.rhodes.io/notes/blog/posts/2018/sbcl_method_tracing/) を参照してください。
 
-For example, given a generic:
+たとえば、次の generic があるとします。
 
 ~~~lisp
 (defgeneric foo (x)
@@ -1512,7 +1371,7 @@ For example, given a generic:
  'double)
 ~~~
 
-Let's trace it:
+これを trace します。
 
 ~~~lisp
 (trace foo :methods t)
@@ -1531,15 +1390,13 @@ Let's trace it:
 9
 ~~~
 
-### Difference between defgeneric and defmethod: redefinition
+### defgeneric と defmethod の違い: 再定義
 
-There is a difference between declaring methods inside a `defgeneric`
-body or by writing multiple `defmethod`s: the two methods handle
-re-definition of methods differently. `defgeneric` will delete methods
-that are not in its body anymore.
+`defgeneric` 本体の中でメソッドを宣言する場合と、複数の `defmethod` を書く場合には違いがあります。
+この 2 つの方法は、メソッドの再定義を異なる形で扱います。
+`defgeneric` は、本体内にもう存在しないメソッドを削除します。
 
-Below we define a new generic function, using two `defmethod` that
-specialize on `person` and `child`:
+以下では、`person` と `child` に特殊化した 2 つの `defmethod` を使って、新しい generic function を定義します。
 
 ~~~lisp
 (defmethod goodbye ((p person))
@@ -1549,16 +1406,15 @@ specialize on `person` and `child`:
   (format t "love you lil' one <3~&"))
 ~~~
 
-You can try them with `(goodbye (make-instance 'person :name "you"))`.
+`(goodbye (make-instance 'person :name "you"))` で試せます。
 
-Now, later in your work session, you decide that you don't need the
-one specializing on `child` any more. You delete its source code. But
-**the method still exists in the image**. You have to programmatically
-remove the method, see below.
+さて、作業セッションの後半で、`child` に特殊化したものはもう不要だと判断したとします。
+そのソースコードを削除します。
+しかし、**そのメソッドはまだ image 内に存在します**。
+下で見るように、プログラム的にメソッドを削除する必要があります。
 
-Had you used `defgeneric`, all the methods would have been updated,
-added or deleted. We have defined the `tidy` generic function already
-with three methods:
+`defgeneric` を使っていれば、すべてのメソッドは更新、追加、削除されていたでしょう。
+すでに 3 つのメソッドを持つ `tidy` generic function を定義しました。
 
 ~~~lisp
 (defgeneric tidy (obj)
@@ -1571,10 +1427,10 @@ with three methods:
     :toys))
 ~~~
 
-It works for any object type, a person or a child. Try it on a string:
-`(tidy "tidy what?")`, it works.
+これは person や child など任意のオブジェクト型で動作します。
+文字列で試してください: `(tidy "tidy what?")`。動作します。
 
-Now remove this declaration from the `defgeneric`:
+次に、この宣言を `defgeneric` から削除します。
 
 
 ~~~lisp
@@ -1588,7 +1444,7 @@ Now remove this declaration from the `defgeneric`:
     :toys))
 ~~~
 
-Try to call it again: you get a "no applicable method" error:
+もう一度呼び出してみると、"no applicable method" エラーが出ます。
 
 ```
 There is no applicable method for the generic function
@@ -1597,62 +1453,52 @@ when called with arguments
   ("tidy what?").
 ```
 
-This might or might not be important to you during development, but
-knowing this can help you keep your lisp image in sync with your
-source code. Otherwise, you can remove an old method when it gets on
-your way.
+開発中にこれが重要かどうかは場合によりますが、知っておくと Lisp image をソースコードと同期した状態に保つ助けになります。
+そうでなければ、古いメソッドが邪魔になったときに削除できます。
 
-### Removing a method
+### メソッドの削除
 
-First, we need to find the method object:
+まず、メソッドオブジェクトを探す必要があります。
 
 ~~~lisp
 (find-method #'goodbye nil (list (find-class 'child)))
 ;; => #<STANDARD-METHOD GOODBYE (CHILD) {10073EFD73}>
 ~~~
 
-`find-method` takes as arguments: a function reference, a qualifier
-(like before, after or around), and a list of class specializers.
+`find-method` は引数として、関数参照、qualifier (before、after、around など)、class specializer のリストを取ります。
 
-Once you found the method, use `remove-method`.
+メソッドが見つかったら、`remove-method` を使います。
 
-You could use `(fmakunbound 'goodbye)`, but this makes *all* methods
-unbound.
+`(fmakunbound 'goodbye)` を使うこともできますが、これは *すべての* メソッドを unbound にします。
 
 
 ## MOP
 
-We gather here some examples that make use of the framework provided
-by the meta-object protocol, the configurable object system that rules
-Lisp's object system. We touch advanced concepts so, new reader, don't
-worry: you don't need to understand this section to start using the
-Common Lisp Object System.
+ここでは、meta-object protocol が提供するフレームワークを使う例をいくつか集めます。
+これは Lisp のオブジェクトシステムを支配する、設定可能なオブジェクトシステムです。
+高度な概念に触れるので、初めて読む人も心配しないでください。
+Common Lisp Object System を使い始めるために、このセクションを理解する必要はありません。
 
-We won't explain much about the MOP here, but hopefully sufficiently
-to make you see its possibilities or to help you understand how some
-CL libraries are built. We invite you to read the books referenced in
-the introduction.
+ここでは MOP について多くは説明しませんが、その可能性が見えたり、一部の CL ライブラリがどのように作られているかを理解する助けになる程度には説明できればと思います。
+導入部で参照した書籍を読むことをおすすめします。
 
 
-### Metaclasses
+### Metaclass
 
-Metaclasses are needed to control the behaviour of other classes.
+metaclass は他のクラスの挙動を制御するために必要です。
 
-*As announced, we won't talk much. See also Wikipedia for [metaclasses](https://en.wikipedia.org/wiki/Metaclass) or [CLOS](https://en.wikipedia.org/wiki/Common_Lisp_Object_System)*.
+*予告したとおり、ここでは多くを語りません。[metaclasses](https://en.wikipedia.org/wiki/Metaclass) や [CLOS](https://en.wikipedia.org/wiki/Common_Lisp_Object_System) については Wikipedia も参照してください*。
 
-The standard metaclass is `standard-class`:
+標準の metaclass は `standard-class` です。
 
 ~~~lisp
 (class-of p1) ;; #<STANDARD-CLASS PERSON>
 ~~~
 
-But we'll change it to one of our own, so that we'll be able to
-**count the creation of instances**. This same mechanism could be used
-to auto increment the primary key of a database system (this is
-how the Postmodern or Mito libraries do), to log the creation of objects,
-etc.
+しかし、これを自分たちのものに変更し、**インスタンスの作成を数えられる** ようにします。
+同じ仕組みは、データベースシステムの主キーを自動インクリメントするため (Postmodern や Mito ライブラリはこのようにしています)、オブジェクト作成をログに記録するため、などに使えます。
 
-Our metaclass inherits from `standard-class`:
+私たちの metaclass は `standard-class` を継承します。
 
 ~~~lisp
 (defclass counted-class (standard-class)
@@ -1660,8 +1506,8 @@ Our metaclass inherits from `standard-class`:
 #<STANDARD-CLASS COUNTED-CLASS>
 
 (unintern 'person)
-;; this is necessary to change the metaclass of person.
-;; or (setf (find-class 'person) nil)
+;; person の metaclass を変更するために必要。
+;; または (setf (find-class 'person) nil)
 ;; https://stackoverflow.com/questions/38811931/how-to-change-classs-metaclass#38812140
 
 (defclass person ()
@@ -1670,13 +1516,13 @@ Our metaclass inherits from `standard-class`:
     :accessor name))
   (:metaclass counted-class)) ;; <- metaclass
 ;; #<COUNTED-CLASS PERSON>
-;;   ^^^ not standard-class anymore.
+;;   ^^^ もう standard-class ではない。
 ~~~
 
-The `:metaclass` class option can appear only once.
+`:metaclass` クラスオプションは 1 回だけ現れます。
 
-Actually you should have gotten a message asking to implement
-`validate-superclass`. So, still with the `closer-mop` library:
+実際には、`validate-superclass` を実装するよう求めるメッセージが出たはずです。
+そこで、引き続き `closer-mop` ライブラリを使います。
 
 ~~~lisp
 (defmethod closer-mop:validate-superclass ((class counted-class)
@@ -1684,7 +1530,7 @@ Actually you should have gotten a message asking to implement
   t)
 ~~~
 
-Now we can control the creation of new `person` instances:
+これで新しい `person` インスタンスの作成を制御できます。
 
 ~~~lisp
 (defmethod make-instance :after ((class counted-class) &key)
@@ -1692,19 +1538,19 @@ Now we can control the creation of new `person` instances:
 ;; #<STANDARD-METHOD MAKE-INSTANCE :AFTER (COUNTED-CLASS) {1007718473}>
 ~~~
 
-See that an `:after` qualifier is the safest choice, we let the
-standard method run as usual and return a new instance.
+`:after` qualifier が最も安全な選択であることに注目してください。
+標準メソッドを通常どおり実行させ、新しいインスタンスを返させます。
 
-The `&key` is necessary, remember that `make-instance` is given initargs.
+`&key` は必要です。`make-instance` には initarg が渡されることを思い出してください。
 
-Now testing:
+ではテストします。
 
 ~~~lisp
 (defvar p3 (make-instance 'person :name "adam"))
 #<PERSON {1007A8F5B3}>
 
 (slot-value p3 'counter)
-;; => error. No, our new slot isn't on the person class.
+;; => error。新しいスロットは person クラス上にはない。
 (slot-value (find-class 'person) 'counter)
 ;; 1
 
@@ -1714,27 +1560,24 @@ Now testing:
 ;; 2
 ~~~
 
-It's working.
+動作しています。
 
 
-### Controlling the initialization of instances (initialize-instance)
+### インスタンス初期化の制御 (initialize-instance)
 
-To further control the creation of object instances, we can specialize the method
-`initialize-instance`. It is called by `make-instance`, just after
-a new instance was created but wasn't initialized yet with the
-default initargs and initforms.
+オブジェクトインスタンスの作成をさらに制御するには、`initialize-instance` メソッドを特殊化できます。
+これは `make-instance` によって、新しいインスタンスが作成された直後、ただしデフォルトの initarg と initform でまだ初期化されていない時点で呼び出されます。
 
-It is recommended (Keene) to create an after method, since creating a
-primary method would prevent slots' initialization.
+primary method を作るとスロットの初期化を妨げるため、after method を作ることが推奨されています (Keene)。
 
 ~~~lisp
 (defmethod initialize-instance :after ((obj person) &key)
-;; note the &key in the arglist:                    ^^^^
+;; arglist の &key に注意:                    ^^^^
   (do something with obj))
 ~~~
 
-A typical example would be to validate the initial values. Here we'll
-check that the person's name is longer than 3 characters:
+典型的な例は初期値の検証です。
+ここでは person の名前が 3 文字より長いことをチェックします。
 
 ~~~lisp
 (defmethod initialize-instance :after ((obj person) &key)
@@ -1742,7 +1585,7 @@ check that the person's name is longer than 3 characters:
     (assert (>= (length name) 3))))
 ~~~
 
-So this call doesn't work anymore:
+そのため、この呼び出しはもう動きません。
 
 ~~~lisp
 (make-instance 'person :name "me")
@@ -1750,22 +1593,20 @@ So this call doesn't work anymore:
 ;;   [Condition of type SIMPLE-ERROR]
 ~~~
 
-We are prompted into the interactive debugger and we are given a
-choice of restarts (continue, retry, abort).
+interactive debugger に入り、restart (continue、retry、abort) の選択肢が提示されます。
 
-So while we're at it, here's an assertion that uses the debugger
-features to offer to change "name". We give `assert` a list of places
-that can be changed from the debugger:
+ついでに、debugger 機能を使って "name" を変更する選択肢を提供する assertion を示します。
+debugger から変更できる place のリストを `assert` に渡します。
 
 ~~~lisp
 (defmethod INITIALIZE-INSTANCE :after ((obj person) &key)
   (with-slots (name) obj
     (assert (>= (length name) 3)
-            (name)  ;; <-- list of places
+            (name)  ;; <-- place のリスト
             "The value of name is ~a. It should be longer than 3 characters." name)))
 ~~~
 
-We get:
+次のようになります。
 
 ```
 The value of name is me. It should be longer than 3 characters.
@@ -1773,50 +1614,43 @@ The value of name is me. It should be longer than 3 characters.
 
 Restarts:
  0: [CONTINUE] Retry assertion with new value for NAME.
-                               ^^^^^^^^^^^^ our new restart
+                               ^^^^^^^^^^^^ 新しい restart
  1: [RETRY] Retry SLIME REPL evaluation request.
  2: [*ABORT] Return to SLIME's top level.
 ```
 
 
-Another rationale. The CLOS implementation of
-    `make-instance` is in two stages: allocate the new object,
-    and then pass it along with all the `make-instance` keyword
-    arguments, to the generic function
-    `initialize-instance`. Implementors and application writers
-    define `:after` methods on
-    `initialize-instance`, to initialize the slots of the
-    instance. The system-supplied primary method does this with regard to
-    (a) `:initform` and `:initarg` values supplied
-    with the class was defined and (b) the keywords passed through from
-    `make-instance`. Other methods can extend this behaviour as
-    they see fit. For example, they might accept an additional keyword
-    which invokes a database access to fill certain slots. The lambda list
-    for `initialize-instance` is:
+別の説明です。CLOS の `make-instance` 実装は 2 段階です。
+新しいオブジェクトを割り当て、それからそのオブジェクトとすべての `make-instance` キーワード引数を generic function `initialize-instance` に渡します。
+実装者やアプリケーション作者は、インスタンスのスロットを初期化するために `initialize-instance` 上に `:after` method を定義します。
+システムが提供する primary method は、(a) クラス定義時に与えられた `:initform` と `:initarg` の値、および (b) `make-instance` から渡されたキーワードに関してこれを行います。
+他のメソッドは必要に応じてこの挙動を拡張できます。
+たとえば、特定のスロットを埋めるためのデータベースアクセスを呼び出す追加キーワードを受け付けるかもしれません。
+`initialize-instance` のラムダリストは次のとおりです。
 
 ~~~
 initialize-instance instance &rest initargs &key &allow-other-keys
 ~~~
 
-### Controlling the update of instances (update-instance-for-redefined-class)
+### インスタンス更新の制御 (update-instance-for-redefined-class)
 
-Suppose you created a "circle" class, with coordinates and a
-diameter. Later on, you decide to replace the diameter by a
-radius. You want all the existing objects to be cleverly updated:
-the radius should have the diameter value, divided by 2. Use
-`update-instance-for-redefined-class`.
+座標と直径を持つ "circle" クラスを作ったとします。
+後で、直径を半径に置き換えることにしました。
+既存のすべてのオブジェクトを賢く更新したいとします。
+半径は直径の値を 2 で割った値になるべきです。
+`update-instance-for-redefined-class` を使います。
 
-Its parameters are:
+そのパラメータは次のとおりです。
 
-- instance:	the object instance that is being updated
-- added-slots:	a list of added slots
-- discarded-slots: a list of discarded slots
-- property-list: a plist that captured the slot names and values of all the discarded-slots with values in the original instance.
-- initargs: an initialization argument list. `&key` catches them below.
+- instance: 更新中のオブジェクトインスタンス
+- added-slots: 追加されたスロットのリスト
+- discarded-slots: 破棄されたスロットのリスト
+- property-list: 元のインスタンスで値を持っていたすべての discarded-slots のスロット名と値を捕捉した plist
+- initargs: 初期化引数リスト。下では `&key` がそれらを受け取ります。
 
-and it returns an object.
+そしてオブジェクトを返します。
 
-We actually don't call the method direcly, but we use a `:before` method:
+実際にはこのメソッドを直接呼ぶのではなく、`:before` method を使います。
 
 ~~~lisp
 (defmethod update-instance-for-redefined-class
@@ -1826,83 +1660,74 @@ We actually don't call the method direcly, but we use a `:before` method:
     (setf (radius obj) (/ diameter 2))))
 ~~~
 
-Here's how to try it. Start with a `circle` class:
+試し方は次のとおりです。`circle` クラスから始めます。
 
 ~~~lisp
 (defclass circle ()
   ((diameter :accessor diameter :initform 9)))
 ~~~
 
-and create a circle object:
+そして circle オブジェクトを作成します。
 
 ~~~lisp
 (make-instance 'circle)
 ~~~
 
-inspect it or check its diameter value.
+それを inspect するか、diameter の値を確認します。
 
-Now write and compile a new class definition:
+次に新しいクラス定義を書いてコンパイルします。
 
 ~~~lisp
 (defclass circle ()
   ((radius :accessor radius)))
 ~~~
 
-Nothing happens yet, you don't see the output of our "plist values" print.
+まだ何も起こらず、"plist values" の print 出力は見えません。
 
-Inspect or `describe` the object: now it will be updated, and you'll
-find the `radius` slot.
+そのオブジェクトを inspect するか `describe` してください。そこで更新され、`radius` スロットが見つかります。
 
-Existing objects are updated lazily.
+既存オブジェクトは遅延更新されます。
 
-See more on the [HyperSpec](https://www.lispworks.com/documentation/HyperSpec/Body/f_upda_1.htm)
-or on the [Community Spec](https://cl-community-spec.github.io/pages/update_002dinstance_002dfor_002dredefined_002dclass.html).
+詳しくは [HyperSpec](https://www.lispworks.com/documentation/HyperSpec/Body/f_upda_1.htm) または [Community Spec](https://cl-community-spec.github.io/pages/update_002dinstance_002dfor_002dredefined_002dclass.html) を参照してください。
 
-### Controlling the update of instances to new classes (update-instance-for-different-class)
+### 新しいクラスへのインスタンス更新の制御 (update-instance-for-different-class)
 
-Now imagine you are working with the `circle` class, but you realize
-you only need a `surface` kind of objects. You will discard the circle
-class altogether, but you want your existing objects to be updated -to
-this new class, and compute new slots intelligently. Use
-`update-instance-for-different-class`.
+今度は `circle` クラスで作業しているが、必要なのは `surface` 種のオブジェクトだけだと気づいたとします。
+circle クラスを完全に捨てる一方で、既存オブジェクトをこの新しいクラスへ更新し、新しいスロットを賢く計算したいとします。
+`update-instance-for-different-class` を使います。
 
-See more on the [HyperSpec](https://www.lispworks.com/documentation/HyperSpec/Body/f_update.htm) or on the [Community Spec](https://cl-community-spec.github.io/pages/update_002dinstance_002dfor_002ddifferent_002dclass.html).
+詳しくは [HyperSpec](https://www.lispworks.com/documentation/HyperSpec/Body/f_update.htm) または [Community Spec](https://cl-community-spec.github.io/pages/update_002dinstance_002dfor_002ddifferent_002dclass.html) を参照してください。
 
-### Finding methods matching qualifiers and types
+### qualifier と型に一致するメソッドを探す
 
-You want to check if a method exists with a given set of *qualifiers*
-(such as the `:around` method) and, most importantly, *specializers* (the
-type(s) the method dispatches on.
+指定した *qualifier* の集合 (`:around` method など) と、より重要な *specializer* (そのメソッドが dispatch する型) を持つメソッドが存在するかを確認したいとします。
 
-For example, in this chapter we specialized the `print-object` method
-for a `person` object:
+たとえば、この章では `person` オブジェクト向けに `print-object` メソッドを特殊化しました。
 
 ```lisp
 (defmethod print-object ((obj person) stream)
 ```
 
-Now, in our program that uses some introspection, we want to see if
-such a function exists, and get a reference to it.
+今、イントロスペクションを使うプログラムで、そのような関数が存在するかを確認し、その参照を取得したいとします。
 
-Use `find-method`:
+`find-method` を使います。
 
 ~~~lisp
 (find-method #'print-object nil '(person t))
-;;          ^^^ a function object, not only a symbol
+;;          ^^^ シンボルだけでなく関数オブジェクト
 ;; => <STANDARD-METHOD COMMON-LISP:PRINT-OBJECT (PERSON T) {1204FA0B83}>
 ~~~
 
-The first argument, `nil`, is a list of qualifiers. We are not
-interested in the `:around`, `:before` or `:after` methods, so we keep
-it `nil`. We could use `'(:around)`, as a list.
+第 1 引数 `nil` は qualifier のリストです。
+`:around`、`:before`、`:after` method には関心がないので `nil` のままにします。
+リストとして `'(:around)` を使うこともできます。
 
-The second argument is a list of the method's arguments'
-types. `print-object` takes 2 arguments, a person and a stream. We can
-use `'(t t)` to get a reference to the generic function. We use
-`'(person t)` to get a reference to the method that specializes on a
-person, and on any stream.
+第 2 引数はメソッド引数の型のリストです。
+`print-object` は person と stream の 2 つの引数を取ります。
+generic function への参照を得るには `'(t t)` を使えます。
+person と任意の stream に特殊化したメソッドへの参照を得るには `'(person t)` を使います。
 
-If no such method exists, `find-method` signals an error:
+そのようなメソッドが存在しない場合、`find-method` はエラーを signal します。
 
 ```
 There is no method on
@@ -1912,9 +1737,9 @@ qualifiers and specializers
 condition of type simple-error
 ```
 
-unless you set its last optional argument `errorp` to `nil`.
+最後の optional 引数 `errorp` を `nil` に設定しない限り、そうなります。
 
 
-### Final words
+### 最後に
 
-See (much) more in the books!
+さらに多くのことは書籍を参照してください!

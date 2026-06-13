@@ -1,80 +1,72 @@
 ---
-title: Database Access and Persistence
+title: データベースアクセスと永続化
 ---
 
-The
 [Database section on the Awesome-cl list](https://github.com/CodyReichert/awesome-cl#database)
-is a resource listing popular libraries to work with different kind of
-databases. We can group them roughly in four categories:
+は、さまざまな種類のデータベースを扱うための人気ライブラリを一覧したリソースです。
+おおまかに 4 つのカテゴリに分類できます。
 
-- wrappers to one database engine (cl-sqlite, postmodern, cl-redis,…),
-- interfaces to several DB engines (clsql, sxql,…),
-- persistent object databases (bknr.datastore (see chap. 21 of "Common Lisp Recipes"), ubiquitous,…),
+- 1 つのデータベースエンジン向けのラッパー (cl-sqlite, postmodern, cl-redis, …),
+- 複数の DB エンジン向けのインターフェイス (clsql, sxql, …),
+- 永続オブジェクトデータベース (bknr.datastore ("Common Lisp Recipes" の 21 章を参照), ubiquitous, …),
 - [Object Relational Mappers](https://en.wikipedia.org/wiki/Object-relational_mapping) (Mito),
 
-and other DB-related tools (pgloader).
+そのほかの DB 関連ツール (pgloader) もあります。
 
-We'll begin with an overview of Mito. If you must work with an
-existing DB, you might want to have a look at [cl-dbi](https://github.com/fukamachi/cl-dbi) and [clsql](https://clsql.kpe.io/manual/). If you
-don't need a SQL database and want automatic persistence of Lisp
-objects, you also have a choice of libraries.
+まず Mito の概要から始めます。既存の DB を扱う必要があるなら、
+[cl-dbi](https://github.com/fukamachi/cl-dbi) や [clsql](https://clsql.kpe.io/manual/) を見てみるとよいでしょう。
+SQL データベースが不要で、Lisp オブジェクトの自動永続化が欲しい場合にも、いくつかのライブラリを選べます。
 
 
-## The Mito ORM and SxQL
+## Mito ORM と SxQL
 
-Mito is in Quicklisp:
+Mito は Quicklisp にあります。
 
 ~~~lisp
 (ql:quickload "mito")
 ~~~
 
-Mito will load another system on the fly depending on your database's
-driver. These systems are:
+Mito は、使うデータベースドライバに応じて別のシステムをその場でロードします。
+それらのシステムは次のとおりです。
 
     :dbd-sqlite3
     :dbd-mysql
     :dbd-postgres
 
-You can "quickload" one of them now, or let Mito (actually cl-dbi) do it
-when required.
+これらのどれかをあらかじめ "quickload" してもよいですし、必要になったときに Mito (実際には cl-dbi) に任せてもかまいません。
 
-But if you build an executable of your program, and if you plan on
-using it on a machine where Quicklisp is not installed, you must
-reference the required additional system into your .asd system
-definition.
+ただし、プログラムの実行ファイルをビルドし、それを Quicklisp がインストールされていないマシンで使う予定なら、
+必要な追加システムを .asd システム定義から参照しておく必要があります。
 
 
-### Overview
+### 概要
 
 [Mito](https://github.com/fukamachi/mito) is "an ORM for Common Lisp
-with migrations, relationships and PostgreSQL support".
+with migrations, relationships and PostgreSQL support" です。
 
-- it **supports MySQL, PostgreSQL and SQLite3**,
-- when defining a model, it adds an `id` (serial primary key),
-  `created_at` and `updated_at` fields by default like Ruby's
-  ActiveRecord or Django,
-- handles DB **migrations** for the supported backends,
-- permits DB **schema versioning**,
-- is tested under SBCL and CCL.
+- **MySQL、PostgreSQL、SQLite3 をサポート**します。
+- モデルを定義すると、Ruby の ActiveRecord や Django のように、デフォルトで `id` (serial primary key)、
+  `created_at`、`updated_at` フィールドを追加します。
+- サポートするバックエンド向けの DB **マイグレーション**を扱います。
+- DB **スキーマのバージョン管理**ができます。
+- SBCL と CCL でテストされています。
 
-As an ORM, it allows to write class definitions, to specify relationships, and
-provides functions to query the database. For custom queries, it relies on
-[SxQL](https://github.com/fukamachi/sxql), an SQL generator that provides the
-same interface for several backends.
+ORM として、クラス定義を書き、リレーションを指定でき、データベースを問い合わせるための関数を提供します。
+カスタムクエリには [SxQL](https://github.com/fukamachi/sxql) を使います。
+SxQL は複数のバックエンドに同じインターフェイスを提供する SQL ジェネレータです。
 
-Working with Mito generally involves these steps:
+Mito を使う作業は、一般に次の手順になります。
 
-- connecting to the DB
-- writing [CLOS](clos.html) classes to define models
-- running migrations to create or alter tables
-- creating objects, saving same in the DB,
+- DB に接続する
+- モデルを定義するために [CLOS](clos.html) クラスを書く
+- テーブルを作成または変更するためにマイグレーションを実行する
+- オブジェクトを作成し、DB に保存する
 
-and iterating.
+そして、この流れを繰り返します。
 
-### Connecting to a DB
+### DB への接続
 
-Mito provides the function `connect-toplevel` to establish a
-connection to RDBMs:
+Mito は RDBMS への接続を確立するために `connect-toplevel` 関数を提供します。
 
 ~~~lisp
 (mito:connect-toplevel :mysql
@@ -83,22 +75,22 @@ connection to RDBMs:
                        :password "c0mon-1isp")
 ~~~
 
-The driver type can be of `:mysql`, `:sqlite3` and `:postgres`.
+ドライバ種別には `:mysql`、`:sqlite3`、`:postgres` を指定できます。
 
-With sqlite you don't need the username and password:
+sqlite ではユーザー名とパスワードは不要です。
 
 ~~~lisp
 (mito:connect-toplevel :sqlite3 :database-name "myapp")
 ~~~
 
-As usual, you need to create the MySQL or PostgreSQL database beforehand.
-Refer to their documentation.
+通常どおり、MySQL や PostgreSQL のデータベースは事前に作成しておく必要があります。
+それぞれのドキュメントを参照してください。
 
-Connecting sets `mito:*connection*` to the new connection and returns it.
+接続すると `mito:*connection*` に新しい接続が設定され、その接続が返されます。
 
-Disconnect with `disconnect-toplevel`.
+切断には `disconnect-toplevel` を使います。
 
-You might make good use of a wrapper function:
+ラッパー関数を用意すると便利でしょう。
 
 ~~~lisp
 (defun connect ()
@@ -106,38 +98,40 @@ You might make good use of a wrapper function:
   (mito:connect-toplevel :sqlite3 :database-name "myapp"))
 ~~~
 
-### Connecting to an in-memory DB (SQLite)
+### インメモリ DB への接続 (SQLite)
 
-To connect to a `sqlite3` in-memory database, you use the ":memory:"
-string as the DB name. It has a special meaning for SQLite.
+`sqlite3` のインメモリデータベースに接続するには、DB 名として ":memory:" 文字列を使います。
+これは SQLite にとって特別な意味を持ちます。
 
 ~~~lisp
 (mito:connect-toplevel :sqlite3 :database-name ":memory:")
 ~~~
 
-This doesn't create a file on disk, and the DB will be even
-faster. But you'll loose all the data when you close the
-connection. It is consequently specially useful for unit-tests, to
-load data for temporary analytics, etc.
+これはディスク上にファイルを作成せず、DB もさらに高速になります。
+ただし、接続を閉じるとすべてのデータを失います。
+そのため、ユニットテストや一時的な分析用データのロードなどに特に便利です。
 
-You can read more about [in-memory SQLite databases here](https://www.sqlite.org/inmemorydb.html).
+詳しくは [in-memory SQLite databases here](https://www.sqlite.org/inmemorydb.html) を参照してください。
 
-### Models
+### モデル
 
-#### Defining models
+#### モデルの定義
 
-In Mito, you can define a class which corresponds to a database table with the `deftable` macro:
+Mito では、`deftable` マクロでデータベーステーブルに対応するクラスを定義できます。
 
 ~~~lisp
 (mito:deftable user ()
   ((name :col-type (:varchar 64))
    (email :col-type (or (:varchar 128) :null))))
 ~~~
-Alternatively, you can specify `(:metaclass mito:dao-table-class)` in a regular class definition.
+あるいは、通常のクラス定義で `(:metaclass mito:dao-table-class)` を指定することもできます。
 
-The `deftable` macro automatically adds some slots: a primary key named `id` if there's no primary key, and `created_at` and `updated_at` for recording timestamps. Specifying `(:auto-pk nil)` and `(:record-timestamps nil)` in the `deftable` form will disable these behaviours. A `deftable` class will also come with initializers, named after the slot, and accessors, of form `<class-name>-<slot-name>`, for each named slot. For example, for the `name` slot in the above table definition, the initarg `:name` will be added to the constuctor, and the accessor `user-name` will be created.
+`deftable` マクロはいくつかのスロットを自動的に追加します。主キーがない場合は `id` という名前の主キーを追加し、タイムスタンプ記録用に `created_at` と `updated_at` も追加します。
+`deftable` フォームで `(:auto-pk nil)` と `(:record-timestamps nil)` を指定すると、これらの挙動を無効にできます。
+`deftable` クラスには、名前付きスロットごとに、スロット名にちなんだ初期化引数と `<class-name>-<slot-name>` 形式のアクセサも用意されます。
+たとえば上のテーブル定義の `name` スロットでは、コンストラクタに initarg `:name` が追加され、アクセサ `user-name` が作成されます。
 
-You can inspect the new class:
+新しいクラスは調べられます。
 
 ~~~lisp
 (mito.class:table-column-slots (find-class 'user))
@@ -148,7 +142,7 @@ You can inspect the new class:
 ;    #<MITO.DAO.COLUMN:DAO-TABLE-COLUMN-CLASS MITO.DAO.MIXIN::UPDATED-AT>)
 ~~~
 
-The class inherits `mito:dao-class` implicitly.
+このクラスは暗黙に `mito:dao-class` を継承します。
 
 ~~~lisp
 (find-class 'user)
@@ -158,22 +152,20 @@ The class inherits `mito:dao-class` implicitly.
 ;=> (#<STANDARD-CLASS MITO.DAO.TABLE:DAO-CLASS>)
 ~~~
 
-This may be useful when you define methods which can be applied for
-all table classes.
+これは、すべてのテーブルクラスに適用できるメソッドを定義するときに便利かもしれません。
 
-For more information on using the Common Lisp Object System, see the
-[clos](clos.html) page.
+Common Lisp Object System の使い方について詳しくは [clos](clos.html) ページを参照してください。
 
 
-#### Creating the tables
+#### テーブルの作成
 
-After defining the models, you must create the tables:
+モデルを定義したら、テーブルを作成する必要があります。
 
 ~~~lisp
 (mito:ensure-table-exists 'user)
 ~~~
 
-So a helper function:
+そこで、ヘルパー関数を用意します。
 
 ~~~lisp
 (defun ensure-tables ()
@@ -181,17 +173,17 @@ So a helper function:
 ~~~
 
 
-See
+ほかの方法については
 [Mito's documentation](https://github.com/fukamachi/mito#generating-table-definitions)
-for a couple more ways.
+も参照してください。
 
-When you alter the model you'll need to run a DB migration, see the next section.
+モデルを変更したら DB マイグレーションを実行する必要があります。次のセクションを参照してください。
 
-#### Fields
+#### フィールド
 
-##### Fields types
+##### フィールド型
 
-Field types are:
+フィールド型は次のとおりです。
 
 `(:varchar <integer>)`, `text`,
 
@@ -201,18 +193,18 @@ Field types are:
 
 `:bytea`,
 
-##### Optional fields
+##### オプションフィールド
 
-Use `(or <real type> :null)`:
+`(or <real type> :null)` を使います。
 
 ~~~lisp
    (email :col-type (or (:varchar 128) :null))
 ~~~
 
 
-##### Field constraints
+##### フィールド制約
 
-`:unique-keys` can be used like so:
+`:unique-keys` は次のように使えます。
 
 ~~~lisp
 (mito:deftable user ()
@@ -221,18 +213,18 @@ Use `(or <real type> :null)`:
   (:unique-keys email))
 ~~~
 
-We already saw `:primary-key`.
+`:primary-key` はすでに見ました。
 
-You can change the table name with `:table-name`.
+`:table-name` でテーブル名を変更できます。
 
-#### Relationships
+#### リレーション
 
-You can define a relationship by specifying  a foreign class with `:col-type`:
+`:col-type` に外部クラスを指定することでリレーションを定義できます。
 
 ~~~lisp
 (mito:deftable tweet ()
   ((status :col-type :text)
-   ;; This slot refers to USER class
+   ;; このスロットは USER クラスを参照する
    (user :col-type user))
 
 (table-definition (find-class 'tweet))
@@ -245,7 +237,7 @@ You can define a relationship by specifying  a foreign class with `:col-type`:
 ;    )>)
 ~~~
 
-Now you can create or retrieve a `TWEET` by a `USER` object, not a `USER-ID`.
+これで `USER-ID` ではなく `USER` オブジェクトによって `TWEET` を作成または取得できます。
 
 ~~~lisp
 (defvar *user* (mito:create-dao 'user :name "Eitaro Fukamachi"))
@@ -254,36 +246,33 @@ Now you can create or retrieve a `TWEET` by a `USER` object, not a `USER-ID`.
 (mito:find-dao 'tweet :user *user*)
 ~~~
 
-Mito doesn't add foreign key constraints for referring tables.
+Mito は参照先テーブルに外部キー制約を追加しません。
 
-##### One-to-one
+##### 一対一
 
-A one-to-one relationship is simply represented with a simple foreign
-key on a slot (as `:col-type user` in the `tweet` class). Besides, we
-can add a unicity constraint, as with `(:unique-keys email)`.
+一対一のリレーションは、スロット上の単純な外部キーで表されます (`tweet` クラスの `:col-type user` など)。
+さらに、`(:unique-keys email)` のように一意性制約を追加できます。
 
-##### One-to-many, many-to-one
+##### 一対多、多対一
 
-The tweet example above shows a one-to-many relationship between a user and
-his tweets: a user can write many tweets, and a tweet belongs to only
-one user.
+上の tweet の例は、ユーザーとその tweet の一対多リレーションを示しています。
+1 人のユーザーは多くの tweet を書けますが、1 つの tweet は 1 人のユーザーだけに属します。
 
-The relationship is defined with a foreign key on the "many" side
-linking back to the "one" side. Here the `tweet` class defines a
-`user` foreign key, so a tweet can only have one user. You didn't need
-to edit the `user` class.
+このリレーションは、「多」側に置いた外部キーで「一」側へ戻るリンクとして定義します。
+ここでは `tweet` クラスが `user` 外部キーを定義しているため、tweet は 1 人のユーザーだけを持てます。
+`user` クラスを編集する必要はありませんでした。
 
-A many-to-one relationship is actually the contrary of a one-to-many.
-You have to put the foreign key on the appropriate side.
+多対一リレーションは、実際には一対多の逆です。
+適切な側に外部キーを置く必要があります。
 
-##### Many-to-many
+##### 多対多
 
-A many-to-many relationship needs an intermediate table, which will be
-the "many" side for the two tables it is the intermediary of.
+多対多リレーションには中間テーブルが必要です。
+この中間テーブルは、仲介する 2 つのテーブルそれぞれに対する「多」側になります。
 
-And, thanks to the join table, we can store more information about the relationship.
+そして join table のおかげで、リレーションに関する追加情報を保存できます。
 
-Let's define a `book` class:
+`book` クラスを定義してみます。
 
 ~~~lisp
 (mito:deftable book ()
@@ -291,9 +280,8 @@ Let's define a `book` class:
      (ean :col-type (or (:varchar 128) :null))))
 ~~~
 
-A user can have many books, and a book (as the title, not the physical
-copy) is likely to be in many people's library. Here's the
-intermediate class:
+ユーザーは多くの本を持てます。また、本 (物理的なコピーではなくタイトルとしての本) は多くの人のライブラリに含まれ得ます。
+中間クラスは次のようになります。
 
 ~~~lisp
 (mito:deftable user-books ()
@@ -301,25 +289,24 @@ intermediate class:
      (book :col-type book)))
 ~~~
 
-Each time we want to add a book to a user's collection (say in
-a `add-book` function), we create a new `user-books` object.
+ユーザーのコレクションに本を追加したいときは毎回 (`add-book` 関数内などで)、新しい `user-books` オブジェクトを作成します。
 
-But someone may very well own many copies of one book. This is an
-information we can store in the join table:
+ただし、誰かが同じ本を複数冊所有していることも十分あり得ます。
+これは join table に保存できる情報です。
 
 ~~~lisp
 (mito:deftable user-books ()
     ((user :col-type user)
      (book :col-type book)
-    ;; Set the quantity, 1 by default:
+    ;; 数量を設定する。デフォルトは 1:
      (quantity :col-type :integer)))
 ~~~
 
 
-#### Inheritance and mixin
+#### 継承と mixin
 
-A subclass of DAO-CLASS is allowed to be inherited. This may be useful
-when you need classes which have similar columns:
+DAO-CLASS のサブクラスは継承できます。
+似たカラムを持つクラスが必要なときに便利です。
 
 ~~~lisp
 (mito:deftable user ()
@@ -342,9 +329,8 @@ when you need classes which have similar columns:
 ;    )>)
 ~~~
 
-If you need a 'template' for tables which aren't related to any
-database tables, you can use `DAO-TABLE-MIXIN` in a `defclass` form. The `has-email`
-class below will not create a table.
+どのデータベーステーブルにも関連しないテーブル用の「テンプレート」が必要な場合は、`defclass` フォームで `DAO-TABLE-MIXIN` を使えます。
+下の `has-email` クラスはテーブルを作成しません。
 
 ~~~lisp
 (defclass has-email ()
@@ -370,14 +356,14 @@ class below will not create a table.
 ;   )>)
 ~~~
 
-See more examples of use in [mito-auth](https://github.com/fukamachi/mito-auth/).
+使用例は [mito-auth](https://github.com/fukamachi/mito-auth/) にさらにあります。
 
 
-#### Troubleshooting
+#### トラブルシューティング
 
 ##### "Cannot CHANGE-CLASS objects into CLASS metaobjects."
 
-If you get the following error message:
+次のエラーメッセージが出た場合:
 
 ~~~
 Cannot CHANGE-CLASS objects into CLASS metaobjects.
@@ -386,40 +372,38 @@ See also:
   The Art of the Metaobject Protocol, CLASS [:initialization]
 ~~~
 
-it is certainly because you first wrote a class definition and *then*
-added the Mito metaclass and tried to evaluate the class definition
-again.
+おそらく、最初にクラス定義を書き、その*後で* Mito のメタクラスを追加して、クラス定義をもう一度評価しようとしたためです。
 
-If this happens, you must remove the class definition from the current package:
+この場合、現在のパッケージからクラス定義を取り除く必要があります。
 
 ~~~lisp
 (setf (find-class 'foo) nil)
 ~~~
 
-or, with the Slime inspector, click on the class and find the "remove" button.
+または Slime inspector でクラスをクリックし、"remove" ボタンを探します。
 
-More info [here](https://stackoverflow.com/questions/38811931/how-to-change-classs-metaclass).
+詳細は [here](https://stackoverflow.com/questions/38811931/how-to-change-classs-metaclass) にあります。
 
-### Migrations
+### マイグレーション
 
-We can run database migrations manually, as shown below, or we can
-automatically run migrations after a change to the model
-definitions. To enable automatic migrations, set `mito:*auto-migration-mode*` to `t`.
+データベースマイグレーションは、下に示すように手動で実行できます。
+また、モデル定義の変更後に自動でマイグレーションを実行することもできます。
+自動マイグレーションを有効にするには、`mito:*auto-migration-mode*` を `t` に設定します。
 
-The first step is to create the tables, if needed:
+最初の手順は、必要ならテーブルを作成することです。
 
 ~~~lisp
 (ensure-table-exists 'user)
 ~~~
 
-then alter the tables:
+次にテーブルを変更します。
 
 ~~~lisp
 (mito:migrate-table 'user)
 ~~~
 
-You can check the SQL generated code with `migration-expressions
-'class`. For example, we create the `user` table:
+生成される SQL コードは `migration-expressions 'class` で確認できます。
+たとえば、`user` テーブルを作成します。
 
 ~~~lisp
 (ensure-table-exists 'user)
@@ -432,14 +416,14 @@ You can check the SQL generated code with `migration-expressions
 ;   ) () [0 rows] | MITO.DAO:ENSURE-TABLE-EXISTS
 ~~~
 
-There are no changes from the previous user definition:
+前の user 定義から変更はありません。
 
 ~~~lisp
 (mito:migration-expressions 'user)
 ;=> NIL
 ~~~
 
-Now let's add a unique `email` field:
+では、一意な `email` フィールドを追加しましょう。
 
 ~~~lisp
 (mito:deftable user ()
@@ -448,7 +432,7 @@ Now let's add a unique `email` field:
   (:unique-keys email))
 ~~~
 
-The migration will run the following code:
+マイグレーションは次のコードを実行します。
 
 ~~~lisp
 (mito:migration-expressions 'user)
@@ -456,7 +440,7 @@ The migration will run the following code:
 ;    #<SXQL-STATEMENT: CREATE UNIQUE INDEX unique_user_email ON user (email)>)
 ~~~
 
-so let's apply it:
+では適用します。
 
 ~~~lisp
 (mito:migrate-table 'user)
@@ -467,11 +451,11 @@ so let's apply it:
 ~~~
 
 
-### Queries
+### クエリ
 
-#### Creating objects
+#### オブジェクトの作成
 
-We can create user objects with the regular `make-instance`:
+通常の `make-instance` で user オブジェクトを作成できます。
 
 ~~~lisp
 (defvar me
@@ -479,7 +463,7 @@ We can create user objects with the regular `make-instance`:
 ;=> USER
 ~~~
 
-To save it in DB, use `insert-dao`:
+DB に保存するには `insert-dao` を使います。
 
 ~~~lisp
 (mito:insert-dao me)
@@ -487,63 +471,61 @@ To save it in DB, use `insert-dao`:
 ;=> #<USER {10053C4453}>
 ~~~
 
-Do the two steps above at once:
+上の 2 つの手順を一度に実行します。
 
 ~~~lisp
 (mito:create-dao 'user :name "Eitaro Fukamachi" :email "e.arrows@gmail.com")
 ~~~
 
-We advise you don't export the `user` symbol but use a helper function
-to create a user instead.
+`user` シンボルを export せず、代わりに user を作成するヘルパー関数を使うことをおすすめします。
 
 ~~~lisp
 (defun make-user (&key name)
   (make-instance 'user :name name))
 ~~~
 
-It is good practice anyway to encapsulate all database-related operations in,
-say, a `models` package and file.
+いずれにせよ、データベース関連の操作はすべて、たとえば `models` パッケージとファイルにカプセル化するのがよい習慣です。
 
 
-#### Updating fields
+#### フィールドの更新
 
 ~~~lisp
 (setf (slot-value me 'name) "nitro_idiot")
 ;=> "nitro_idiot"
 ~~~
 
-and save it:
+そして保存します。
 
 ~~~lisp
 (mito:save-dao me)
 ~~~
 
-#### Deleting
+#### 削除
 
 ~~~lisp
 (mito:delete-dao me)
 ;-> ;; DELETE FROM `user` WHERE (`id` = ?) (1) [0 rows] | MITO.DAO:DELETE-DAO
 
-;; or:
+;; または:
 (mito:delete-by-values 'user :id 1)
 ;-> ;; DELETE FROM `user` WHERE (`id` = ?) (1) [0 rows] | MITO.DAO:DELETE-DAO
 ~~~
 
-#### Get the primary key value
+#### 主キー値の取得
 
 ~~~lisp
 (mito:object-id me)
 ;=> 1
 ~~~
 
-#### Count
+#### カウント
 
 ~~~lisp
 (mito:count-dao 'user)
 ;=> 1
 ~~~
 
-#### Find one
+#### 1 件検索
 
 ~~~lisp
 (mito:find-dao 'user :id 1)
@@ -551,7 +533,7 @@ and save it:
 ;=> #<USER {10077C6073}>
 ~~~
 
-So here's a possibility of generic helpers to find an object by a given key:
+指定したキーでオブジェクトを検索する汎用ヘルパーの例を示します。
 
 ~~~lisp
 (defgeneric find-user (key-name key-value)
@@ -566,11 +548,11 @@ keys."))
                           (sxql:where (:= :name key-value)))))
 ~~~
 
-#### Find all
+#### 全件検索
 
-Use the macro `select-dao`.
+`select-dao` マクロを使います。
 
-Get a list of all users:
+すべてのユーザーのリストを取得します。
 
 ~~~lisp
 (mito:select-dao 'user)
@@ -579,27 +561,26 @@ Get a list of all users:
 ~~~
 
 
-#### Find by relationship
+#### リレーションによる検索
 
-As seen above:
+上で見たとおりです。
 
 ~~~lisp
 (mito:find-dao 'tweet :user *user*)
 ~~~
 
-#### Custom queries
+#### カスタムクエリ
 
-It is with `select-dao` that you can write more precise queries by
-giving it [SxQL](https://github.com/fukamachi/sxql) statements.
+`select-dao` に [SxQL](https://github.com/fukamachi/sxql) 文を渡すことで、より精密なクエリを書けます。
 
-Example:
+例:
 
 ~~~lisp
 (select-dao 'tweet
     (where (:like :status "%Japan%")))
 ~~~
 
-another:
+別の例:
 
 ~~~lisp
 (select (:id :name :sex)
@@ -609,7 +590,7 @@ another:
   (order-by (:desc :age)))
 ~~~
 
-You can compose your queries with regular Lisp code:
+通常の Lisp コードでクエリを組み立てられます。
 
 ~~~lisp
 (defun find-tweets (&key user)
@@ -619,36 +600,36 @@ You can compose your queries with regular Lisp code:
     (order-by :object-created)))
 ~~~
 
-`select-dao` is a macro that expands to the right thing©.
+`select-dao` は適切なものへ展開されるマクロです。
 
 <div class="info-box info">
-<strong>Note:</strong> if you didn't <code>use</code> SXQL, then write <code>(sxql:where …)</code> and <code>(sxql:order-by …)</code>.
+<strong>Note:</strong> SXQL を <code>use</code> していない場合は、<code>(sxql:where …)</code> や <code>(sxql:order-by …)</code> と書きます。
 </div>
 <!-- epub-exclude-start -->
 <br>
 <!-- epub-exclude-end -->
 
-#### Composing queries
+#### クエリの合成
 
-You can compose your queries with [SxQL's query composer](https://github.com/fukamachi/sxql/blob/master/COMPOSER.md).
+[SxQL's query composer](https://github.com/fukamachi/sxql/blob/master/COMPOSER.md) でクエリを合成できます。
 
-Below, `->` is SxQL's threading macro. It is the primary interface for
-chaining queries. It takes an initial value, and threads it through a
-series of transformations.
+以下の `->` は SxQL の threading macro です。
+クエリを連鎖させるための主要なインターフェイスです。
+初期値を受け取り、それを一連の変換へ通していきます。
 
-We can define a basic query. Here, we select active users:
+基本クエリを定義できます。ここでは active なユーザーを選択します。
 
 ```lisp
-(use-package :sxql)  ;; we import all sxql symbols.
+(use-package :sxql)  ;; sxql の全シンボルを import する。
 
 (defvar *base-query*
   (-> (from :users)
       (where (:= :active 1))))
 ```
 
-We gave a name to this query: `*base-query*`.
+このクエリに `*base-query*` という名前を付けました。
 
-Now, we can extend it. Below, we filter by admin users:
+これを拡張できます。以下では admin ユーザーでフィルタします。
 
 ```lisp
 (defvar *admin-users*
@@ -657,8 +638,8 @@ Now, we can extend it. Below, we filter by admin users:
       (order-by :name)))
 ```
 
-We can also add Lisp conditionals to build queries dynamically. The
-`->` macro skips expressions that evaluate to `nil`.
+Lisp の条件式を追加して、クエリを動的に構築することもできます。
+`->` マクロは `nil` に評価される式をスキップします。
 
 ```lisp
 (defun find-users (&key active role min-age search)
@@ -673,29 +654,24 @@ We can also add Lisp conditionals to build queries dynamically. The
         (where (:like :name (format nil "%~A%" search))))
       (order-by :name)))
 
-;; Usage
+;; 使用例
 (find-users :active t :role "admin" :min-age 18)
 ;=> SELECT * FROM users WHERE (((active = ?) AND (role = ?)) AND (age >= ?)) ORDER BY name
 ;   (1 "admin" 18)
 ```
 
-SxQL offers nice ways to build and compose your SQL queries. Please
-read more in its documentation.
+SxQL は SQL クエリを構築・合成するための便利な方法を提供します。
+詳しくはドキュメントを読んでください。
 
 
-#### More custom queries
+#### さらにカスタムクエリ
 
-We give an example on how you can compose SxQL expressions with
-regular Lisp s-expressions manipulation.
+通常の Lisp S 式操作で SxQL 式を合成する例を示します。
 
-Imagine you receive a `query` string, maybe composed of
-space-separated words, and you want to search for books that have
-either one of these words in their title or in their author's
-name. Searching for "alice adventure" would return a book that has
-"adventure" in its title and "alice" in its author name, or both in the
-title.
+空白区切りの単語で構成されているかもしれない `query` 文字列を受け取り、それらの単語のいずれかをタイトルまたは著者名に含む本を検索したいとします。
+"alice adventure" を検索すると、タイトルに "adventure" があり著者名に "alice" がある本、または両方がタイトルにある本が返ります。
 
-For the example sake, an author is a string, not a link to another table:
+例を単純にするため、author は別テーブルへのリンクではなく文字列とします。
 
 ~~~lisp
 (mito:deftable book ()
@@ -704,7 +680,7 @@ For the example sake, an author is a string, not a link to another table:
      (ean :col-type (or (:varchar 128) :null))))
 ~~~
 
-You want to add a clause that searches on both fields for each word.
+各単語について両方のフィールドを検索する句を追加したいとします。
 
 ~~~lisp
 (defun find-books (&key query (order :desc))
@@ -723,14 +699,14 @@ and the author fields."
        (sxql:order-by `(,order :created-at))))
 ~~~
 
-By the way, we are still using a `LIKE` statement, but with a non-small dataset you'll want to use your database's full text search engine.
+ちなみに、ここではまだ `LIKE` 文を使っていますが、小さくないデータセットではデータベースの全文検索エンジンを使いたくなるでしょう。
 
 
-#### Clauses
+#### 句
 
-See the [SxQL documentation](https://github.com/fukamachi/sxql#sql-clauses).
+[SxQL documentation](https://github.com/fukamachi/sxql#sql-clauses) を参照してください。
 
-Examples:
+例:
 
 ~~~lisp
 (select-dao 'foo
@@ -753,10 +729,10 @@ Examples:
 (limit 0 10)
 ~~~
 
-and `join`s, etc.
+ほかにも `join` などがあります。
 
 
-#### Operators
+#### 演算子
 
 ~~~lisp
 :not
@@ -774,10 +750,9 @@ and `join`s, etc.
 :raw
 ~~~
 
-### Triggers
+### トリガー
 
-Since `insert-dao`, `update-dao` and `delete-dao` are defined as generic
-functions, you can define `:before`, `:after` or `:around` methods to those, like regular [method combination](clos.html#qualifiers-and-method-combination).
+`insert-dao`、`update-dao`、`delete-dao` は generic function として定義されているため、通常の [method combination](clos.html#qualifiers-and-method-combination) と同じように、それらに対して `:before`、`:after`、`:around` メソッドを定義できます。
 
 ~~~lisp
 (defmethod mito:insert-dao :before ((object user))
@@ -791,7 +766,7 @@ functions, you can define `:before`, `:after` or `:around` methods to those, lik
 
 ### Inflation/Deflation
 
-Inflation/Deflation is a function to convert values between Mito and RDBMS.
+Inflation/Deflation は、Mito と RDBMS の間で値を変換するための機能です。
 
 ~~~lisp
 (mito:deftable user-report ()
@@ -806,10 +781,10 @@ Inflation/Deflation is a function to convert values between Mito and RDBMS.
 
 ### Eager loading
 
-One of the pains in the neck to use ORMs is the "N+1 query" problem.
+ORM を使う際の悩みの 1 つが "N+1 query" 問題です。
 
 ~~~lisp
-;; BAD EXAMPLE
+;; 悪い例
 
 (use-package '(:mito :sxql))
 
@@ -817,20 +792,19 @@ One of the pains in the neck to use ORMs is the "N+1 query" problem.
   (select-dao 'tweet
     (where (:like :status "%Japan%"))))
 
-;; Getting names of tweeted users.
+;; tweet したユーザーの名前を取得する。
 (mapcar (lambda (tweet)
           (user-name (tweet-user tweet)))
         *tweets-contain-japan*)
 ~~~
 
-This example sends a query to retrieve a user like "SELECT * FROM user
-WHERE id = ?" at each iteration.
+この例では、各反復で "SELECT * FROM user WHERE id = ?" のようなユーザー取得クエリを送信します。
 
-To prevent this performance issue, add `includes` to the above query
-which only sends a single WHERE IN query instead of N queries:
+この性能問題を避けるには、上のクエリに `includes` を追加します。
+これにより、N 個のクエリではなく単一の WHERE IN クエリだけが送信されます。
 
 ~~~lisp
-;; GOOD EXAMPLE with eager loading
+;; eager loading を使った良い例
 
 (use-package '(:mito :sxql))
 
@@ -842,35 +816,34 @@ which only sends a single WHERE IN query instead of N queries:
 ;-> ;; SELECT * FROM `user` WHERE (`id` IN (?, ?, ?)) (1, 3, 12) [3 row] | MITO.DB:RETRIEVE-BY-SQL
 ;=> (#<TWEET {1003513EC3}> #<TWEET {1007BABEF3}> #<TWEET {1007BB9D63}>)
 
-;; No additional SQLs will be executed.
+;; 追加の SQL は実行されない。
 (tweet-user (first *))
 ;=> #<USER {100361E813}>
 ~~~
 
-### Iteration with cursor (do-select)
+### カーソルによる反復 (do-select)
 
-`do-select` is a macro to iterate over results from `SELECT` one by
-one.
+`do-select` は、`SELECT` の結果を 1 件ずつ反復するためのマクロです。
 
-On PostgreSQL, it uses `CURSOR`, which can reduce memory usage since
-it won't load all results in memory.
+PostgreSQL では `CURSOR` を使います。
+すべての結果をメモリにロードしないため、メモリ使用量を減らせます。
 
 ```common-lisp
 (do-select (dao (select-dao 'user (where (:< "2024-07-01" :created_at))))
-  ;; Can be a more complex condition
+  ;; より複雑な条件でもよい
   (when (equal (user-name dao) "Eitaro")
     (return dao)))
 
-;; Same but without using CURSOR
+;; 同じことを CURSOR を使わずに行う
 (loop for dao in (select-dao 'user (where (:< "2024-07-01" :created_at)))
       when (equal (user-name dao) "Eitaro")
       do (return dao))
 ```
 
-> NOTE: do-select was added on August of 2024. It requires DBI v0.11.1 or above.
+> NOTE: do-select は 2024 年 8 月に追加されました。DBI v0.11.1 以上が必要です。
 
 
-### Schema versioning
+### スキーマのバージョン管理
 
 ~~~
 $ ros install mito
@@ -891,19 +864,18 @@ Options:
     --dry-run                       List SQL expressions to migrate
 ~~~
 
-### Introspection
+### イントロスペクション
 
-Mito provides some functions for introspection.
+Mito はイントロスペクション用の関数をいくつか提供しています。
 
-We can access the information of **columns** with the functions in
-`(mito.class.column:...)`:
+`(mito.class.column:...)` の関数で **columns** の情報にアクセスできます。
 
 - `table-column-[class, name, info, not-null-p,...]`
 - `primary-key-p`
 
-and likewise for **tables** with `(mito.class.table:...)`.
+同様に、**tables** については `(mito.class.table:...)` を使います。
 
-Given we get a list of slots of our class:
+クラスのスロット一覧を取得したとします。
 
 ~~~lisp
 (ql:quickload "closer-mop")
@@ -915,16 +887,16 @@ Given we get a list of slots of our class:
 (defparameter user-slots *)
 ~~~
 
-We can answer the following questions:
+次のような問いに答えられます。
 
-#### What is the type of this column ?
+#### このカラムの型は何か?
 
 ~~~lisp
 (mito.class.column:table-column-type (first user-slots))
 ;; (:VARCHAR 64)
 ~~~
 
-#### Is this column nullable ?
+#### このカラムは nullable か?
 
 ~~~lisp
 (mito.class.column:table-column-not-null-p
@@ -936,13 +908,12 @@ We can answer the following questions:
 ~~~
 
 
-### Testing
+### テスト
 
-We don't want to test DB operations against the production one. We
-need to create a temporary DB before each test.
+DB 操作を本番 DB に対してテストしたくはありません。
+各テストの前に一時 DB を作成する必要があります。
 
-The macro below creates a temporary DB with a random name, creates the
-tables, runs the code and connects back to the original DB connection.
+下のマクロはランダムな名前の一時 DB を作成し、テーブルを作成し、コードを実行してから元の DB 接続へ戻します。
 
 ~~~lisp
 (defpackage my-test.utils
@@ -958,7 +929,7 @@ tables, runs the code and connects back to the original DB connection.
 (in-package my-test.utils)
 
 (defun random-string (length)
-  ;; thanks 40ants/hacrm.
+  ;; 40ants/hacrm に感謝。
   (let ((chars "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789"))
     (coerce (loop repeat length
                   collect (aref chars (random (length chars))))
@@ -970,17 +941,15 @@ tables, runs the code and connects back to the original DB connection.
           (prefix (concatenate 'string
                                (random-string 8)
                                "/"))
-          ;; Save our current DB connection.
+          ;; 現在の DB 接続を保存する。
           (connection mito:*connection*))
      (uiop:with-temporary-file (:pathname name :prefix prefix)
-       ;; Bind our *db-name* to a new name, so as to create a new DB.
+       ;; 新しい DB を作成するため、*db-name* を新しい名前に束縛する。
        (let* ((*db-name* name))
-         ;; Always re-connect to our real DB even in case of
-         ;; error in body.
+         ;; body 内でエラーが起きても、常に実 DB へ再接続する。
          (unwind-protect
            (progn
-             ;; our functions to connect to the DB, create the tables
-             ;; and run the migrations.
+             ;; DB へ接続し、テーブルを作成し、マイグレーションを実行する関数。
              (connect)
              (ensure-tables-exist)
              (migrate-all)
@@ -989,7 +958,7 @@ tables, runs the code and connects back to the original DB connection.
            (setf mito:*connection* connection))))))
 ~~~
 
-Use it like this:
+次のように使います。
 
 ~~~lisp
 (prove:subtest "Creation in a temporary DB."
@@ -1012,15 +981,15 @@ Use it like this:
 ;; ✓ Test username in a temp DB.
 ~~~
 
-## See also
+## 参考
 
 - [exploring an existing (PostgreSQL) database with postmodern](https://sites.google.com/site/sabraonthehill/postmodern-examples/exploring-a-database)
 
 - [mito-attachment](https://github.com/fukamachi/mito-attachment)
 - [mito-auth](https://github.com/fukamachi/mito-auth)
-- [can](https://github.com/fukamachi/can/) a role-based access right control library
+- [can](https://github.com/fukamachi/can/) ロールベースのアクセス権制御ライブラリ
 <!-- epub-exclude-start -->
-- an advanced ["defmodel" macro](drafts/defmodel.lisp.html).
+- 高度な ["defmodel" macro](drafts/defmodel.lisp.html)。
 <!-- epub-exclude-end -->
 
-<!-- # todo: Generating models for an existing DB -->
+<!-- # todo: 既存 DB のモデル生成 -->

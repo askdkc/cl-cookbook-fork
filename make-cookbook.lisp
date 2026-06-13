@@ -19,11 +19,22 @@
 ;; We use str:replace-all which relies on ppcre, so we need a library anyways.
 ;; That's why I'm doing and using CIEL: small scripts are much easier to run and share.
 
-(handler-case
-    (require 'str)
-  (error ()
-    (format t "~&Please install the 'str' library to generate the PDF: (ql:quickload \"str\")~&")
-    (uiop:quit 1)))
+(defun ensure-str ()
+  (handler-case
+      (require 'str)
+    (error ()
+      (format t "~&Please install the 'str' library to generate the PDF: (ql:quickload \"str\")~&")
+      (uiop:quit 1))))
+
+(defun replace-all (old new string)
+  (with-output-to-string (out)
+    (loop with start = 0
+          for position = (search old string :start2 start)
+          while position
+          do (write-string string out :start start :end position)
+             (write-string new out)
+             (setf start (+ position (length old)))
+          finally (write-string string out :start start))))
 
 (defparameter chapters
   (list
@@ -125,8 +136,9 @@
   (format t "~&Inserting our table of contents into full-with-preamble.typ…~&")
   (let* ((file.typ "full-with-preamble.typ")
          (file-string (uiop:read-file-string file.typ))
-         (new-content (str:replace-all "{{PDF-TOCS}}" pdf-toc file-string)))
-    (str:to-file file.typ new-content)))
+         (new-content (replace-all "{{PDF-TOCS}}" pdf-toc file-string)))
+    (with-open-file (stream file.typ :direction :output :if-exists :supersede)
+      (write-string new-content stream))))
 
 (defun to-pdf ()
   "Needs pandoc >= 3.8 with Markdown to Typst conversion,

@@ -1,87 +1,85 @@
 ---
-title: Using Emacs as an IDE
+title: Emacs を IDE として使う
 ---
 
-This page is meant to provide an introduction to using [Emacs](https://www.gnu.org/software/emacs/) as a Lisp IDE.
+このページでは、[Emacs](https://www.gnu.org/software/emacs/) を Lisp IDE として使うための導入を説明します。
 
-We divided it roughly into 3 sections: how to install Slime (or Sly), how to use it, and complementary information on built-in Emacs commands to work with Lisp code.
+大まかに 3 つの節に分けています。Slime（または Sly）のインストール方法、使い方、そして Lisp コードを扱うための Emacs 組み込みコマンドに関する補足情報です。
 
 ![Emacs teaser image](assets/emacs-teaser.png)
 
 <!-- todo: C-u M-x slime and its configuration to work with multiple implementations -->
 
-By the way, if you wonder, why use Emacs?
+ところで、なぜ Emacs を使うのでしょうか。
 
-* Emacs has fantastic support for working with Lisp code
-  * the Slime-Swank client-server model predates LSP and is much richer for Common Lisp integration.
-* it runs on virtually every OS and with every CL implementation, it is lightweight
-* Emacs will probably always be around
-* Emacs works well either with a mouse or without a mouse
-* Emacs works well either in GUI mode or in the terminal
-* Built-in tree-sitter and LSP support
-* Excellent vim mode
-* Because [Org-mode](http://orgmode.org)
-* Because [Magit](https://magit.vc/)
-* Because [Emacs Rocks !](http://emacsrocks.com)
-* Large user base and vast number of extensions: [awesome-emacs](https://github.com/emacs-tw/awesome-emacs).
+* Emacs は Lisp コードを扱うための非常に優れたサポートを備えています
+  * Slime-Swank の client-server モデルは LSP より前からあり、Common Lisp との統合ではずっと豊かです。
+* ほぼすべての OS とすべての CL 処理系で動作し、軽量です
+* Emacs はおそらく今後もあり続けます
+* Emacs はマウスありでもなしでもうまく使えます
+* Emacs は GUI mode でも terminal でもうまく使えます
+* 組み込みの tree-sitter と LSP サポート
+* 優れた vim mode
+* [Org-mode](http://orgmode.org) があるから
+* [Magit](https://magit.vc/) があるから
+* [Emacs Rocks !](http://emacsrocks.com) があるから
+* 大きな user base と膨大な extensions: [awesome-emacs](https://github.com/emacs-tw/awesome-emacs)。
 
 ## SLIME: Superior Lisp Interaction Mode for Emacs
 
-[SLIME](http://common-lisp.net/project/slime/) is the goto major mode
-for CL programming. It has a lot of features that make it a powerful, integrated and very interactive development environment.
+[SLIME](http://common-lisp.net/project/slime/) は CL programming の定番 major mode です。強力で統合された、非常に対話的な開発環境にするための機能を多数備えています。
 
-* it provides a REPL which is hooked to the running image, directly in Emacs,
-* it integrates the Common Lisp debugger with an Emacs interface
-* it provides symbol completion,
-* code evaluation, compilation, macroexpansion
-* cross-referencing,
-* breaking, stepping, tracing,
-* go to definition,
-* online documentation,
-* fuzzy searching functions and symbols, system names, documentation,
-* an interactive object inspector,
-* it supports every common Common Lisp implementation,
-* multiple connections and multiple listener buffers (mrepl)
-* it is readily available from MELPA
-* it is actively maintained.
+* 実行中の image に接続された REPL を Emacs 内で提供します
+* Common Lisp debugger を Emacs interface と統合します
+* symbol completion を提供します
+* code evaluation、compilation、macroexpansion
+* cross-referencing
+* breaking、stepping、tracing
+* go to definition
+* online documentation
+* functions、symbols、system names、documentation の fuzzy search
+* 対話的な object inspector
+* 一般的な Common Lisp 処理系をすべてサポートします
+* 複数 connection と複数 listener buffers（mrepl）
+* MELPA からすぐ利用できます
+* 活発に保守されています。
 
 
 ## SLY: Sylvester the Cat's Common Lisp IDE
 
-[SLY](https://github.com/joaotavora/sly) is a SLIME fork that contains
-the following changes and features:
+[SLY](https://github.com/joaotavora/sly) は SLIME の fork で、次の変更と機能を含みます。
 
-* Completely redesigned REPL based on Emacs's own full-featured comint.el. Everything can be copied to the REPL.
-* Live code annotations via the [Stickers](https://joaotavora.github.io/sly/#Stickers) feature.
-* enumerated backreferences, which highlight the object and remain stable throughout the REPL session.
-* A portable, annotation-based stepper in early but functional prototype stage.
-* Multiple REPLs and multiple inspectors.
-* Regexp-capable `M-x sly-apropos`.
-* Contribs are first class SLY citizens, enabled by default, loaded with ASDF on demand:
+* Emacs 自身の高機能な comint.el に基づく、完全に再設計された REPL。あらゆるものを REPL に copy できます。
+* [Stickers](https://joaotavora.github.io/sly/#Stickers) 機能による live code annotations。
+* object を highlight し、REPL session を通じて安定して残る enumerated backreferences。
+* 初期段階ながら機能する prototype の、portable な annotation-based stepper。
+* 複数 REPL と複数 inspectors。
+* Regexp-capable な `M-x sly-apropos`。
+* Contribs は第一級の SLY citizens で、デフォルトで有効、必要に応じて ASDF でロードされます。
   * [NAMED-READTABLES](https://github.com/joaotavora/sly-named-readtables) support
   * [macrostep.el](https://github.com/joaotavora/sly-macrostep)
   * [Quicklisp](https://github.com/joaotavora/sly-quicklisp)
   * [ASDF](https://github.com/mmgeorge/sly-asdf)
   * [Evaluation Overlays](https://git.sr.ht/~fosskers/sly-overlay)
 
-On the other side, we noticed some lacks or differences:
+一方で、いくつか不足や違いも見つかりました。
 
-* Sly doesn't have a `slime-call-defun` (C-c C-y) equivalent.
-  * which is a bummer, as we are so much used to it. See below in "Sending code to the REPL".
-* it doesn't have the `slime-profile-*` functions (no `sb-prof` contrib).
-* the shortcut `C-c C-z` to switch to the REPL behaves differently than Slime's (it might replace your source file with the REPL window, instead of leaving your source file and showing the REPL on the side).
+* Sly には `slime-call-defun`（C-c C-y）相当がありません。
+  * これは残念です。私たちはかなり慣れているからです。下の「REPL にコードを送る」を参照してください。
+* `slime-profile-*` functions がありません（`sb-prof` contrib がありません）。
+* REPL に切り替える shortcut `C-c C-z` は Slime のものと挙動が異なります（source file を残して横に REPL を表示する代わりに、source file を REPL window で置き換えることがあります）。
 
-Sly is shipped by default in [Doom Emacs](https://github.com/doomemacs/doomemacs/).
+Sly は [Doom Emacs](https://github.com/doomemacs/doomemacs/) にデフォルトで同梱されています。
 
-## Installing SLIME or SLY
+## SLIME または SLY をインストールする
 
-### Manually
+### 手動
 
-On Ubuntu, SLIME is easily installed alongside Emacs and SBCL:
+Ubuntu では、SLIME は Emacs と SBCL と一緒に簡単にインストールできます。
 
     sudo apt install emacs slime sbcl
 
-Otherwise, install SLIME by adding this code to your `~/.emacs.d/init.el` file:
+それ以外では、次の code を `~/.emacs.d/init.el` file に追加して SLIME をインストールします。
 
 ~~~lisp
 (require 'package)
@@ -97,49 +95,43 @@ Otherwise, install SLIME by adding this code to your `~/.emacs.d/init.el` file:
 (require 'slime)
 ~~~
 
-assuming you've also instealled Emacs and SBCL.
+Emacs と SBCL もインストール済みだと仮定します。
 
-Since SLIME is heavily modular and the defaults only do the bare minimum (not
-even the SLIME REPL), you might want to enable more features with
+SLIME はかなり modular で、デフォルトでは最低限（SLIME REPL すら含まない）しか有効にならないため、次のようにより多くの機能を有効にしたくなるかもしれません。
 
 ~~~lisp
 (require 'slime)
 (slime-setup '(slime-fancy slime-quicklisp slime-asdf slime-mrepl))
 ~~~
 
-Finally, tell Slime to use SBCL:
+最後に、Slime に SBCL を使うよう伝えます。
 
 ~~~lisp
 (setq inferior-lisp-program "sbcl")
 ~~~
 
-After this you can press Alt-X on your keyboard and type `slime` and try Common Lisp!
+これでキーボードの Alt-X を押して `slime` と入力し、Common Lisp を試せます。
 
-(Alt-X is often written `M-x` in Emacs-world.)
+（Alt-X は Emacs の世界ではよく `M-x` と書かれます。）
 
-For more details, consult the
-[documentation](https://common-lisp.net/project/slime/doc/html/) (also available
-as an Info page).
+詳しくは[documentation](https://common-lisp.net/project/slime/doc/html/)を参照してください（Info page としても利用できます）。
 
-Now you can run SLIME with, as mentioned, `M-x slime` and/or `M-x slime-connect`.
+これで、前述のとおり `M-x slime` や `M-x slime-connect` で SLIME を実行できます。
 
-See also:
+関連項目:
 
-- [Portacle](https://shinmera.github.io/portacle/) - a portable and multi-platform CL development environment shipping Emacs, Slime, SBCL, git and necessary extensions. It is a straightforward way to get going.
-  - however, Portacle is now old and unmaintained. It brings Emacs 27.1, it may be a pain to run on newer MacOS, and you are on your own. Still, it may work for you, and you can join the effort to update it.
-* [emacs4cl](https://github.com/susam/emacs4cl) - a minimal Emacs configuration to get new users up and running quickly, with a tutorial.
+- [Portacle](https://shinmera.github.io/portacle/) - Emacs、Slime、SBCL、git、必要な extensions を同梱した portable で multi-platform な CL development environment。始めるための straightforward な方法です。
+  - ただし Portacle は現在古く、保守されていません。Emacs 27.1 を含んでおり、新しい MacOS では実行が面倒かもしれません。自己責任です。それでも使える場合はあり、更新の取り組みに参加できます。
+* [emacs4cl](https://github.com/susam/emacs4cl) - 新規ユーザが素早く始めるための、tutorial 付きの最小 Emacs configuration。
 
 ### Doom Emacs
 
-[Doom Emacs](https://github.com/doomemacs/doomemacs/) is a popular Emacs configuration. You can easily enable its Sly integration.
+[Doom Emacs](https://github.com/doomemacs/doomemacs/) は人気の Emacs configuration です。Sly integration を簡単に有効にできます。
 
 
-### SLIME fancy and contrib packages
+### SLIME fancy と contrib packages
 
-SLIME's functionalities live in packages and so-called [contrib
-modules](https://common-lisp.net/project/slime/doc/html/Contributed-Packages.html)
-must be loaded to add further functionalities. The afored mentioned
-`slime-fancy` includes:
+SLIME の機能は packages といわゆる [contrib modules](https://common-lisp.net/project/slime/doc/html/Contributed-Packages.html) に分かれており、追加機能を使うにはロードする必要があります。前述の `slime-fancy` には次が含まれます。
 
 * slime-autodoc
 * slime-c-p-c
@@ -156,92 +148,80 @@ must be loaded to add further functionalities. The afored mentioned
 * slime-scratch
 * slime-package-fu
 * slime-trace-dialog
-* [slime-mrepl](https://slime.common-lisp.dev/doc/html/slime_002dmrepl.html#slime_002dmrepl) (multiple REPLs)
+* [slime-mrepl](https://slime.common-lisp.dev/doc/html/slime_002dmrepl.html#slime_002dmrepl)（複数 REPL）
 
-SLIME also has some nice extensions like
-[Helm-SLIME](https://github.com/emacs-helm/helm-slime) which features, among
-others:
+SLIME には [Helm-SLIME](https://github.com/emacs-helm/helm-slime) のような便利な extensions もあります。主な機能は次のとおりです。
 
-- Fuzzy completion,
-- REPL and connection listing,
-- Fuzzy-search of the REPL history,
-- Fuzzy-search of the _apropos_ documentation.
+- Fuzzy completion
+- REPL と connection の一覧
+- REPL history の fuzzy-search
+- _apropos_ documentation の fuzzy-search
 
 
-## Working with SLIME (or SLY)
+## SLIME（または SLY）で作業する
 
-One of the first things you might want to do is to compile and load some Lisp code. Use `C-c C-c` on a function or `C-c C-k` to compile a whole file. But that's not all, read on.
+最初にやりたくなることの一つは、Lisp code を compile して load することです。関数上で `C-c C-c`、または file 全体を compile するには `C-c C-k` を使います。しかしそれだけではありません。続きを読んでください。
 
-Note that we give function names for SLIME. They are most of the time similar with SLY.
+ここでは SLIME の function names を示します。多くの場合 SLY でも似ています。
 
-### Pro Tip: Use the Emacs menu
+### Pro Tip: Emacs menu を使う
 
-All the information on this page can be overwhelming, but you can easily find all
-the commands and keybindings we are going to talk about under Emacs'
-Slime menu. Thus, we advise to *not* disable the menu. It's very handy!
+このページの情報は多くて圧倒されるかもしれませんが、ここで扱う commands と keybindings は Emacs の Slime menu の下で簡単に見つけられます。そのため menu は*無効にしない*ことを勧めます。とても便利です。
 
-If you can't see it, call `M-x menu-bar-mode RET`.
+見えない場合は `M-x menu-bar-mode RET` を呼び出します。
 
-In the terminal version of Emacs (`emacs -nw`), you can open the menu
-with `M-x menu-bar-open`, which is bound by default to `f10`, or use
-the mouse when it is enabled (evaluate `(xterm-mouse-mode +1)` with
-`M-:` or in the `*scratch*` buffer).
+terminal 版 Emacs（`emacs -nw`）では、`M-x menu-bar-open` で menu を開けます。これはデフォルトで `f10` に bound されています。また、mouse が有効なら mouse も使えます（`M-:` または `*scratch*` buffer で `(xterm-mouse-mode +1)` を評価します）。
 
 ![](assets/slime-menu.png "Emacs' SLIME menu lists all available commands and keybindings.")
 
 
 ### Code completion
 
-Use the built-in `C-c TAB` to complete symbols in SLIME. You can get tooltips
-with [company-mode](http://company-mode.github.io/).
+SLIME で symbol を補完するには、組み込みの `C-c TAB` を使います。[company-mode](http://company-mode.github.io/) を使うと tooltips も得られます。
 
 ![](assets/emacs-company-elisp.png "Lisp symbols completion with company-mode tooltips.")
 
-In the **REPL**, it's simply **TAB**.
+**REPL** では単に **TAB** です。
 
-Use Emacs' hippie-expand, bound to `M-/`, to complete any string present in other open buffers.
+ほかの open buffers にある任意の string を補完するには、`M-/` に bound された Emacs の hippie-expand を使います。
 
-### Evaluating and Compiling Lisp in SLIME
+### SLIME で Lisp を評価・コンパイルする
 
-Compile the entire **buffer** by pressing `C-c C-k` (`slime-compile-and-load-file`).
+**buffer** 全体を compile するには `C-c C-k`（`slime-compile-and-load-file`）を押します。
 
-Compile a **region** with `M-x slime-compile-region`.
+**region** は `M-x slime-compile-region` で compile します。
 
-Compile a **defun** by putting the cursor inside it and pressing `C-c C-c` (`slime-compile-defun`).
+**defun** は cursor をその中に置き、`C-c C-c`（`slime-compile-defun`）を押して compile します。
 
-Once you compiled some code, you can try it, for example on the REPL.
+code を compile したら、たとえば REPL で試せます。
 
 
-To **evaluate** rather than compile:
+compile ではなく**evaluate** するには:
 
-- evaluate the **sexp** before the point by putting the cursor after
-  its closing paren and pressing `C-x C-e`
-  (`slime-eval-last-expression`). The result is printed in the minibuffer.
-- similarly, use `C-c C-p` (`slime-pprint-eval-last-expression`) to eval and pretty-print the expression before point. It shows the result in a new "slime-description" buffer.
-- use `M-x slime-eval-print-last-expression` (unbound by default) to print the result in the same file, under the cursor.
-- evaluate a region with `C-c C-r`,
-- evaluate a defun with `C-M-x`,
-- type `C-c C-e` (`slime-interactive-eval`) to get a prompt that asks for code to eval in the current context. It prints the result in the minibuffer. With a prefix argument, insert the result into the current buffer.
-- type `C-c C-j` (`slime-eval-last-expression-in-repl`), when the cursor is after the closing parenthesis of an expression, to send this expression to the REPL and evaluate it.
+- point の前の **sexp** を評価するには、closing paren の後に cursor を置いて `C-x C-e`（`slime-eval-last-expression`）を押します。結果は minibuffer に表示されます。
+- 同様に、`C-c C-p`（`slime-pprint-eval-last-expression`）を使うと point 前の expression を eval して pretty-print します。結果は新しい "slime-description" buffer に表示されます。
+- `M-x slime-eval-print-last-expression`（デフォルトでは unbound）を使うと、結果を同じ file の cursor 下に出力します。
+- region は `C-c C-r` で evaluate します。
+- defun は `C-M-x` で evaluate します。
+- `C-c C-e`（`slime-interactive-eval`）を入力すると、現在の context で eval する code を尋ねる prompt が出ます。結果は minibuffer に表示されます。prefix argument 付きなら、結果を現在の buffer に挿入します。
+- expression の closing parenthesis の後に cursor があるとき、`C-c C-j`（`slime-eval-last-expression-in-repl`）を入力すると、この expression を REPL に送って評価します。
 
-See also other commands in the menu.
+menu にある他の commands も参照してください。
 
-But what's the difference between evaluating and compiling some code?
+では、code を evaluate することと compile することにはどんな違いがあるのでしょうか。
 
 ### evaluation vs. compilation
 
-There are a couple of pragmatic differences when choosing between compiling or evaluating.
+compile と evaluate のどちらを選ぶかには、いくつか実用上の違いがあります。
 
-However, some implementations like SBCL *always compile* your
-expressions, *unless explicitely asked otherwise*, even when you write
-code on the REPL and when you use these shortcuts for evaluation.
+ただし SBCL のような処理系では、REPL に code を書く場合や評価用 shortcut を使う場合でも、*明示的に別指定しない限り* expressions は*常に compile* されます。
 
-That being said, in general, it is better to *compile* top-level forms, for two reasons:
+そうは言っても一般には、top-level forms は*compile* する方がよいです。理由は 2 つあります。
 
-* Compiling a top-level form highlights warnings and errors in the editor, whereas evaluation does not.
-* SLIME keeps track of line-numbers of compiled forms, but when a top-level form is evaluated, the file line number information is lost. That's problematic for code navigation afterwards.
+* top-level form を compile すると editor 内で warnings と errors が highlight されますが、evaluation ではされません。
+* SLIME は compiled forms の line-numbers を追跡しますが、top-level form を evaluate すると file line number information が失われます。これはその後の code navigation で問題になります。
 
-`eval` is still useful to observe results from individual non top-level forms. For example, say you have this function:
+`eval` は、top-level ではない個々の forms の結果を観察するのに今でも便利です。たとえば次の function があるとします。
 
 
 ~~~lisp
@@ -250,13 +230,13 @@ That being said, in general, it is better to *compile* top-level forms, for two 
     ...))
 ~~~
 
-Go to the end of the OPEN expression and evaluate it (`C-x C-e`), to observe the result:
+OPEN expression の末尾へ移動して評価（`C-x C-e`）し、結果を観察します。
 
 ```
 => #<SB-SYS:FD-STREAM for "file /mnt/e6b00b8f-9dad-4bf4-bd40-34b1e6d31f0a/home/marian/test.lisp" {1003AAAB53}>
 ```
 
-Or on this example, with the cursor on the last parentheses, press `C-x C-e` to evaluate the `let`:
+また次の例では、cursor を最後の parentheses に置いて `C-x C-e` を押すと `let` を evaluate できます。
 
 ~~~lisp
 (let ((n 20))
@@ -264,42 +244,40 @@ Or on this example, with the cursor on the last parentheses, press `C-x C-e` to 
      do (print i)))
 ~~~
 
-You should see numbers printed in the REPL.
+REPL に numbers が出力されるはずです。
 
-See also "Sending code to the REPL" below and the `C-c C-j` shortcut.
+下の「REPL にコードを送る」と `C-c C-j` shortcut も参照してください。
 
 
 ### Debugging
 
-We cover debugging commands in its own [debugging](debugging.html) chapter.
+debugging commands は独立した [debugging](debugging.html) chapter で扱います。
 
 ### Go to definition
 
-Put the cursor on any symbol and press `M-.` (`slime-edit-definition`) to go to its
-definition. Press `M-,` to come back.
+任意の symbol に cursor を置き、`M-.`（`slime-edit-definition`）を押すとその definition へ移動します。戻るには `M-,` を押します。
 
-### Go to any symbol, list symbols in current source
+### 任意の symbol へ移動し、現在の source 内の symbols を一覧する
 
-Use `C-u M-.` (`slime-edit-definition` with a prefix argument, also available as `M-- M-.`) to autocomplete the symbol and navigate to it.
+`C-u M-.`（prefix argument 付きの `slime-edit-definition`、`M-- M-.` としても利用可能）を使うと、symbol を autocomplete してそこへ navigate できます。
 
-This command always asks for a symbol even if the cursor is on one. It works with any loaded definition. Here's a little [demonstration video](https://www.youtube.com/watch?v=ZAEt73JHup8).
+この command は cursor が symbol 上にあっても常に symbol を尋ねます。load 済みの任意の definition で動作します。短い[demonstration video](https://www.youtube.com/watch?v=ZAEt73JHup8)があります。
 
-You can think of it as a `imenu` completion that always work for any Lisp symbol. Add in [Slime's fuzzy completion][slime-fuzzy] for maximum powerness!
+これは、任意の Lisp symbol に対して常に動く `imenu` completion のようなものだと考えられます。最大の威力を得るには [Slime's fuzzy completion][slime-fuzzy] も追加してください。
 
 ### Argument lists
 
-When you put the cursor on a function, SLIME will show its signature
-in the minibuffer.
+function 上に cursor を置くと、SLIME はその signature を minibuffer に表示します。
 
-If you want to see them better, try `C-c C-s` after a function name.
+よりよく見たい場合は、function name の後で `C-c C-s` を試してください。
 
-For example, you forgot how to use `with-open-file`. Write it:
+たとえば、`with-open-file` の使い方を忘れたとします。これを書きます。
 
 ```lisp
 (with-open-file
 ```
 
-now press `C-c C-s` (`slime-complete-form`) and you'll get:
+ここで `C-c C-s`（`slime-complete-form`）を押すと、次が得られます。
 
 ```lisp
 (with-open-file (stream filespec :direction direction
@@ -312,143 +290,125 @@ now press `C-c C-s` (`slime-complete-form`) and you'll get:
            body...)
 ```
 
-written in your source file (or in the REPL).
+これは source file（または REPL）に書き込まれます。
 
-The minibuffer will show you the default values of the arguments.
+minibuffer には arguments の default values が表示されます。
 
 ### Documentation lookup
 
-The main shortcut to know is:
+知っておくべき主な shortcut は次です。
 
-- **C-c C-d d**  shows the symbols' documentation on a new window (same result as using `describe`).
+- **C-c C-d d** は symbols の documentation を新しい window に表示します（`describe` を使うのと同じ結果です）。
 
-Other bindings which may be useful:
+役立つかもしれないその他の bindings:
 
-- **C-c C-d f**  describes a function
-- **C-c C-d h**  looks up the symbol documentation in Common Lisp Hyper Spec (CLHS) by opening the web browser. But it works only on symbols, so there are two more bindings:
-- **C-c C-d #** for reader macros
-- **C-c C-d ~**  for format directives
+- **C-c C-d f** は function を describe します
+- **C-c C-d h** は web browser を開いて Common Lisp Hyper Spec（CLHS）の symbol documentation を検索します。ただし symbols にしか使えないため、さらに 2 つの bindings があります。
+- **C-c C-d #** は reader macros 用です
+- **C-c C-d ~** は format directives 用です
 
-You can enhance the help buffer with the Slime extension [slime-doc-contribs](https://github.com/mmontone/slime-doc-contribs). It will show more information in a nice looking buffer, and it will add choices to the documentation command:
+help buffer は Slime extension [slime-doc-contribs](https://github.com/mmontone/slime-doc-contribs) で強化できます。見やすい buffer により多くの情報を表示し、documentation command に選択肢を追加します。
 
-* **slime-help-package** will display information about a CL package: it will nicely show its exported variables, conditions, classes, generic functions, functions and macros, with their documentation. It is a great way to see at a glance what a package provides.
-* **slime-help-system** does the same for a *system*.
-* **slime-help-apropos-documentation** will show symbols whose documentation contains matches for "PATTERN", which is a great way to lookup for functions.
-* and more.
+* **slime-help-package** は CL package についての情報を表示します。exported variables、conditions、classes、generic functions、functions、macros とその documentation をきれいに表示します。package が何を提供するかを一目で見るのに優れています。
+* **slime-help-system** は *system* について同じことをします。
+* **slime-help-apropos-documentation** は documentation が "PATTERN" に一致する symbols を表示します。functions を探すのに便利です。
+* ほかにもあります。
 
 ![](assets/slime-help.png)
 
 
 ### Inspector
 
-You can call `(inspect 'symbol)` from the REPL or call it with `C-c I` from a source file.
+REPL から `(inspect 'symbol)` を呼ぶか、source file から `C-c I` で呼び出せます。
 
-Learn to use with [its documentation](https://slime.common-lisp.dev/doc/html/Inspector.html#Inspector): use `l` to come back to the previous object, `*` to copy the object at point… and more.
+[documentation](https://slime.common-lisp.dev/doc/html/Inspector.html#Inspector) を読んで使い方を学んでください。`l` で前の object に戻り、`*` で point の object を copy する、などがあります。
 
 ### Macroexpand
 
-Use `C-c M-m` to macroexpand a macro call
+macro call を macroexpand するには `C-c M-m` を使います。
 
-### Navigating warnings
+### Warnings を navigate する
 
-When you compile and load a file with `C-c C-k` (or a single function
-with `C-c C-c`), and when you have compilation warnings, you don't get
-the interactive debugger. You get the list of warnings inside a
-dedicated "`*slime-compilation*`" Emacs buffer that opens up next to your
-source file.
+`C-c C-k` で file を compile and load する場合（または `C-c C-c` で単一 function を compile する場合）、compilation warnings があっても interactive debugger は出ません。source file の横に開く専用の "`*slime-compilation*`" Emacs buffer 内に warnings の一覧が表示されます。
 
-Each line of your source impacted by a warning will be underlined in red.
+warning の影響を受けた source の各行は赤で underline されます。
 
-Each warning of the slime-compilation buffer is clickable, and you can
-quickly go to the next or previous warning (they are called "notes" or
-"annotations") with keybindings: `M-n` and `M-p` (`slime-[next, previous]-note`).
+slime-compilation buffer の各 warning は clickable で、keybindings `M-n` と `M-p`（`slime-[next, previous]-note`）により次または前の warning（"notes" または "annotations" と呼ばれます）へ素早く移動できます。
 
-You can also use the usual Emacs shortcut from [compilation-mode]( https://www.gnu.org/software/emacs/manual/html_node/emacs/Compilation-Mode.html#Compilation-Mode) bound to C-x \` (Control-x and a backquote).
+通常の Emacs shortcut である [compilation-mode]( https://www.gnu.org/software/emacs/manual/html_node/emacs/Compilation-Mode.html#Compilation-Mode) の C-x \`（Control-x と backquote）も使えます。
 
-If you don't want to see the red annotations in your source… use `C-c
-M-c`, `slime-remove-notes`. They are not automagically fixed though.
+source の赤い annotations を見たくない場合は、`C-c M-c`、`slime-remove-notes` を使います。ただし自動で修正されるわけではありません。
 
-If your code has only style warnings, they will be caught by the slime-compilation
-buffer, but the buffer will not pop up on its own.
+code に style warnings しかない場合、それらは slime-compilation buffer に捕捉されますが、buffer は自動では pop up しません。
 
-You can find all these keybindings, as usual, under Emac's Slime menu.
+これらの keybindings はいつもどおり Emac's Slime menu から見つけられます。
 
-Reference: [https://slime.common-lisp.dev/doc/html/Compilation.html#Compilation](https://slime.common-lisp.dev/doc/html/Compilation.html#Compilation).
+Reference: [https://slime.common-lisp.dev/doc/html/Compilation.html#Compilation](https://slime.common-lisp.dev/doc/html/Compilation.html#Compilation)。
 
 
-### Crossreferencing: find who's calling, referencing, setting a symbol
+### Crossreferencing: 誰が呼び出し、参照し、symbol を設定しているかを調べる
 
-Slime has nice cross-referencing facilities. For example, you can ask
-who calls a function, who expands a macro, or where a global variable is being used.
+Slime には便利な cross-referencing 機能があります。たとえば、誰が function を呼ぶか、誰が macro を展開するか、global variable がどこで使われているかを尋ねられます。
 
-Results are presented in a new buffer, listing the places which reference a particular entity.
-From there, we can press Enter to go to the corresponding source line,
-or more interestingly we can recompile the place at point by pressing **C-c C-c** on that
-line. Likewise, **C-c C-k** will recompile all the references. This is useful when
-modifying macros, inline functions, or constants.
+結果は新しい buffer に表示され、特定の entity を参照する場所が一覧されます。そこから Enter を押すと対応する source line へ移動できます。さらに興味深いことに、その行で **C-c C-c** を押すと point の場所を recompile できます。同様に **C-c C-k** はすべての references を recompile します。これは macros、inline functions、constants を変更するときに便利です。
 
-The bindings are the following (they are also shown in Slime's menu):
+bindings は次のとおりです（Slime の menu にも表示されます）。
 
-- **C-c C-w c** (`slime-who-calls`) callers of a function
-- **C-c C-w m** (`slime-who-macroexpands`) places where a macro is expanded
-- **C-c C-w r** (`slime-who-references`) global variable references
-- **C-c C-w b** (`slime-who-bind`) global variable bindings
-- **C-c C-w s** (`slime-who-sets`) global variable setters
-- **C-c C-w a** (`slime-who-specializes`) methods specialized on a symbol
-- **C-c >** (`slime-list-callees`) lists all the functions that are called inside a function body.
-- **C-c <** (`slime-list-callers`) lists all the functions that call a given function.
+- **C-c C-w c**（`slime-who-calls`）function の callers
+- **C-c C-w m**（`slime-who-macroexpands`）macro が展開される場所
+- **C-c C-w r**（`slime-who-references`）global variable references
+- **C-c C-w b**（`slime-who-bind`）global variable bindings
+- **C-c C-w s**（`slime-who-sets`）global variable setters
+- **C-c C-w a**（`slime-who-specializes`）symbol に specialize された methods
+- **C-c >**（`slime-list-callees`）function body 内で呼ばれるすべての functions を一覧します。
+- **C-c <**（`slime-list-callers`）指定 function を呼ぶすべての functions を一覧します。
 
-And when the `slime-asdf` contrib is enabled,
-**C-c C-w d** (`slime-who-depends-on`) lists dependent ASDF systems
+`slime-asdf` contrib が有効な場合、**C-c C-w d**（`slime-who-depends-on`）は依存する ASDF systems を一覧します。
 
-And a general binding: **M-?** or **M-_** (`slime-edit-uses`) combines all
-of the above, it lists every kind of references.
+一般的な binding として、**M-?** または **M-_**（`slime-edit-uses`）は上記すべてを組み合わせ、あらゆる種類の references を一覧します。
 
 ### Systems interactions
 
-In Slime, you can use the usual `C-c C-k` in an .asd file to compile and load it, then `ql:quickload` (or `asdf:load-system`) to effectively load the system. SLIME offers more interactive commands to interact with Lisp systems:
+Slime では、.asd file 内で通常の `C-c C-k` を使って compile and load し、その後 `ql:quickload`（または `asdf:load-system`）で実際に system をロードできます。SLIME は Lisp systems と対話するための、より interactive な commands を提供します。
 
-- `M-x slime-load-system`: offers a prompt to **select an ASDF system**, with **autocompletion** of projects collected from where ASDF sees Common Lisp projects, then compile and load the system. The default system name is taken from the first file matching *.asd in the current buffer's working directory.
-  - note that the system name is inferred from the .asd file name. The real system name defined inside may be different.
-  - to understand where ASDF looks for Lisp systems, read the [getting started](getting-started.html) page, section "How to load an existing project".
-- `M-x slime-open-system`: this opens a new buffer for all source files of a given system.
-- `M-x slime-browse-system`: this command opens a Dired buffer to browse the files of a system.
-- `M-x slime-rgrep-system`: run `rgrep` on the base directory of a system.
-- `M-x slime-isearch-system`: run `isearch` on the files of a system.
-- `M-x slime-query-replace-system`: run `query-replace` on an ASDF system.
-- `M-x slime-save-system`: save all files belonging to a system.
-- `M-x slime-delete-system-fasls`: this deletes the cached .fasl files for this system.
+- `M-x slime-load-system`: **ASDF system を選択**する prompt を表示します。ASDF が Common Lisp projects を見る場所から集めた projects を **autocompletion** 付きで選び、system を compile and load します。default system name は、現在の buffer の working directory で *.asd に一致する最初の file から取られます。
+  - system name は .asd file name から推論されることに注意してください。内部で定義された本当の system name は異なる場合があります。
+  - ASDF が Lisp systems をどこで探すかを理解するには、[getting started](getting-started.html) page の "How to load an existing project" section を読んでください。
+- `M-x slime-open-system`: 指定 system のすべての source files 用に新しい buffer を開きます。
+- `M-x slime-browse-system`: system の files を browse する Dired buffer を開きます。
+- `M-x slime-rgrep-system`: system の base directory で `rgrep` を実行します。
+- `M-x slime-isearch-system`: system の files に対して `isearch` を実行します。
+- `M-x slime-query-replace-system`: ASDF system に対して `query-replace` を実行します。
+- `M-x slime-save-system`: system に属するすべての files を保存します。
+- `M-x slime-delete-system-fasls`: この system の cached .fasl files を削除します。
 
-Sly users have a more featureful `sly-load-system` command that will search the .asd file on the current directory and in parent directories.
+Sly users にはより多機能な `sly-load-system` command があり、現在の directory と親 directories で .asd file を検索します。
 
 
 ### REPL interactions
 
-From the SLIME REPL, press `,` to prompt for commands.  There is completion
-over the available systems and packages.  Examples:
+SLIME REPL では、`,` を押すと commands の prompt が出ます。利用可能な systems と packages に対して completion があります。例:
 
 - `,load-system`
 - `,reload-system`
-- `,in-package` (also `C-c M-p` in a .lisp file)
+- `,in-package`（.lisp file では `C-c M-p` も）
 - `,restart-inferior-lisp`
 
-and many more. Usually the interactive commands given in the previous section have a REPL shortcut.
+ほかにも多数あります。通常、前節で示した interactive commands には REPL shortcut があります。
 
-With the `slime-quicklisp` contrib, we can use `,ql` to
-autocomplete a system to install, from all systems available for
-installation.
+`slime-quicklisp` contrib を使うと、`,ql` でインストール可能な全 systems から system を autocomplete して install できます。
 
-In addition, we can use the [Quicklisp-systems](https://github.com/mmontone/quicklisp-systems) Slime extension to search, browse and load Quicklisp systems from Emacs.
+さらに [Quicklisp-systems](https://github.com/mmontone/quicklisp-systems) Slime extension を使うと、Emacs から Quicklisp systems を検索、browse、load できます。
 
-### Sending code to the REPL
+### REPL にコードを送る
 
-You can write code in the REPL, but you can also interact with code directly from the source file.
+REPL に code を書けますが、source file から code と直接やり取りすることもできます。
 
-We saw **C-c C-j**, that sends the expression at point to the REPL and evaluates it.
+**C-c C-j** は見ました。point の expression を REPL に送り、評価します。
 
-**C-c C-y** (`slime-call-defun`): send code to the REPL (Sly doesn't have this).
+**C-c C-y**（`slime-call-defun`）: code を REPL に送ります（Sly にはありません）。
 
-When the point is inside a defun and C-c C-y is pressed (below I’ll use [] as an indication where the cursor is)
+point が defun 内にあり、C-c C-y が押された場合（下では [] を cursor 位置の目印として使います）
 
 ~~~lisp
 (defun foo ()
@@ -456,27 +416,22 @@ When the point is inside a defun and C-c C-y is pressed (below I’ll use [] as 
 ~~~
 
 
-then `(foo [])` will be inserted into the REPL, so that you can write
-additional arguments and run it.
+すると `(foo [])` が REPL に挿入され、追加 arguments を書いて実行できます。
 
 
-If `foo` was in a different package than the package of the REPL,
-`(package:foo )` or `(package::foo )` will be inserted.
+`foo` が REPL の package とは異なる package にあった場合、`(package:foo )` または `(package::foo )` が挿入されます。
 
-This feature is very useful for testing a function you just wrote.
+この機能は、書いたばかりの function を test するのにとても便利です。
 
-That works not only for a `defun`, but also for `defgeneric`, `defmethod`,
-`defmacro`, and `define-compiler-macro` in the same fashion as for defun.
+これは `defun` だけでなく、`defgeneric`、`defmethod`、`defmacro`、`define-compiler-macro` に対しても defun と同じように動作します。
 
-For `defvar`, `defparameter`, `defconstant`: `[] *foo*` will be inserted
-(the cursor is positioned before the symbol so that you can easily
-wrap it into a function call).
+`defvar`、`defparameter`、`defconstant` の場合は `[] *foo*` が挿入されます（symbol の前に cursor が置かれるため、簡単に function call で包めます）。
 
-For defclass: `(make-instance ‘class-name )`.
+defclass の場合: `(make-instance ‘class-name )`。
 
-**Inserting calls to frames in the debugger**
+**debugger 内の frames への calls を挿入する**
 
-**C-y** in SLDB on a frame will insert a call to that frame into the REPL, e.g.,
+SLDB の frame 上で **C-y** を押すと、その frame への call が REPL に挿入されます。例:
 
 ```
 (/ 0) =>
@@ -485,40 +440,28 @@ For defclass: `(make-instance ‘class-name )`.
 …
 ```
 
-**C-y** will insert `(CCL::INTEGER-/-INTEGER 1 0)`.
+**C-y** は `(CCL::INTEGER-/-INTEGER 1 0)` を挿入します。
 
-(thanks to [Slime tips](https://slime-tips.tumblr.com/page/2))
+（[Slime tips](https://slime-tips.tumblr.com/page/2) に感謝）
 
 
-### Synchronizing packages
+### Packages を同期する
 
-**C-c ~** (`slime-sync-package-and-default-directory`): When run in a
-buffer with a lisp file it will change the current package of the REPL
-to the package of that file and also set the current directory of the REPL
-to the parent directory of the file.
+**C-c ~**（`slime-sync-package-and-default-directory`）: lisp file の buffer で実行すると、REPL の現在 package をその file の package に変更し、REPL の current directory も file の parent directory に設定します。
 
-### Exporting symbols
+### Symbols を export する
 
-Slime provides a shortcut to add export declarations to your package, effectively exporting one or many symbol(s), or on the contrary un-exporting it.
+Slime は package に export declarations を追加する shortcut を提供します。実質的に一つまたは複数の symbol(s) を export したり、逆に un-export したりできます。
 
-**C-c x** (*slime-export-symbol-at-point*) from the `slime-package-fu`
-contrib: takes the symbol at point and modifies the `:export` clause of
-the corresponding defpackage form. It also exports the symbol.  When
-called with a negative argument (C-u C-c x) it will remove the symbol
-from `:export` and unexport it.
+`slime-package-fu` contrib の **C-c x**（*slime-export-symbol-at-point*）: point の symbol を取り、対応する defpackage form の `:export` clause を変更します。また symbol も export します。negative argument（C-u C-c x）付きで呼ぶと、symbol を `:export` から削除し unexport します。
 
-**M-x slime-export-class** does the same but with symbols defined
-by a structure or a class, like accessors, constructors, and so on.
-It works on structures only on SBCL and Clozure CL so far.
-Classes should work everywhere with MOP.
+**M-x slime-export-class** も同じことをしますが、accessors、constructors など、structure または class によって定義される symbols が対象です。今のところ structures では SBCL と Clozure CL でのみ動作します。Classes は MOP によりどこでも動くはずです。
 
 Customization
 
-There are different styles of how symbols are presented in
-`defpackage`, the default is to use uninterned symbols (`#:foo`).
-This can be changed:
+`defpackage` で symbols を表示する style にはいくつかあり、default は uninterned symbols（`#:foo`）を使います。これは変更できます。
 
-to use keywords, add this to your Emacs init file:
+keywords を使うには、Emacs init file に次を追加します。
 
 
 ~~~lisp
@@ -526,7 +469,7 @@ to use keywords, add this to your Emacs init file:
       (lambda (n) (format ":%s" n)))
 ~~~
 
-or strings:
+または strings:
 
 ~~~lisp
 (setq slime-export-symbol-representation-function
@@ -534,104 +477,83 @@ or strings:
 ~~~
 
 
-### (optional) Consult the Hyper Spec (CLHS) offline
+### （任意）Hyper Spec（CLHS）を offline で参照する
 
-The [Common Lisp Hyper Spec](http://www.lispworks.com/documentation/common-lisp.html) is the
-official online version of the ANSI Common Lisp standard. We can start
-browsing it from [starting points](http://www.lispworks.com/documentation/HyperSpec/Front/StartPts.htm):
-a shortened [table of contents of highlights](http://www.lispworks.com/documentation/HyperSpec/Front/Hilights.htm),
-a [symbols index](http://www.lispworks.com/documentation/HyperSpec/Front/Hilights.htm),
-a glossary, a master index.
+[Common Lisp Hyper Spec](http://www.lispworks.com/documentation/common-lisp.html) は ANSI Common Lisp standard の公式 online version です。[starting points](http://www.lispworks.com/documentation/HyperSpec/Front/StartPts.htm) から browsing を始められます。短縮された [table of contents of highlights](http://www.lispworks.com/documentation/HyperSpec/Front/Hilights.htm)、[symbols index](http://www.lispworks.com/documentation/HyperSpec/Front/Hilights.htm)、glossary、master index があります。
 
-Since January of 2023, we have the Common Lisp Community Spec: [https://cl-community-spec.github.io/pages/index.html](https://cl-community-spec.github.io/pages/index.html), a new web rendering of the specification. It is a more modern rendering:
+2023 年 1 月以降、Common Lisp Community Spec があります: [https://cl-community-spec.github.io/pages/index.html](https://cl-community-spec.github.io/pages/index.html)。これは specification の新しい web rendering です。より modern な rendering です。
 
-* it has a *search box*
-* it has *syntax highlihgting*
-* it is hosted on GitHub and we have the right to modify it: [https://github.com/fonol/cl-community-spec](https://github.com/fonol/cl-community-spec)
+* *search box* があります
+* *syntax highlihgting* があります
+* GitHub で host されており、変更する権利があります: [https://github.com/fonol/cl-community-spec](https://github.com/fonol/cl-community-spec)
 
-If you want other tools to do a quick look-up of symbols on the CLHS,
-since the official website doesn't have a search bar, you can use:
+公式 website には search bar がないため、CLHS 上の symbols を他の tools ですばやく look-up したい場合は、次を使えます。
 
-* Xach's website search utility: [https://www.xach.com/clhs?q=with-open-file](https://www.xach.com/clhs?q=with-open-file)
-* the l1sp.org website: [http://l1sp.org/search?q=with-open-file](http://l1sp.org/search?q=with-open-file),
-* and we can use Duckduckgo's or Brave Search's `!clhs` "bang".
+* Xach の website search utility: [https://www.xach.com/clhs?q=with-open-file](https://www.xach.com/clhs?q=with-open-file)
+* l1sp.org website: [http://l1sp.org/search?q=with-open-file](http://l1sp.org/search?q=with-open-file)
+* Duckduckgo または Brave Search の `!clhs` "bang" も使えます。
 
-We can **browse the CLHS offline** with [Dash](https://kapeli.com/dash) on MacOS, [Zeal](https://zealdocs.org/) on GNU/Linux and [Velocity](https://velocity.silverlakesoftware.com/) on Windows.
+MacOS では [Dash](https://kapeli.com/dash)、GNU/Linux では [Zeal](https://zealdocs.org/)、Windows では [Velocity](https://velocity.silverlakesoftware.com/) を使って **CLHS を offline で browse**できます。
 
-But we can also browse it offline from Emacs. We have to install a CL package and to configure the Emacs side with one command:
+しかし Emacs からも offline で browse できます。CL package をインストールし、Emacs 側を一つの command で設定します。
 
 ~~~lisp
 (ql:quickload "clhs")
 (clhs:install-clhs-use-local)
 ~~~
 
-Then add this to your Emacs configuration:
+次を Emacs configuration に追加します。
 
 ~~~lisp
 (load "~/quicklisp/clhs-use-local.el" 'noerror)
 ~~~
 
-Now, you can use `C-c C-d h` to look-up the symbol at point in the
-HyperSpec. This will open your browser, but look at its URL starting
-with "file://home/": it opens a local file.
+これで `C-c C-d h` を使って、point の symbol を HyperSpec で look-up できます。browser が開きますが、URL が "file://home/" で始まることを見てください。local file を開いています。
 
-Other commands are available:
+他の commands も利用できます。
 
-* when you want to look-up a reader macro, such as `#'`
-  (sharpsign-quote) or `(` (left-parenthesis), use
-  `M-x common-lisp-hyperspec-lookup-reader-macro`, bound to `C-c C-d #`.
-* to look-up a `format` directive, such as `~A`, use `M-x
-  common-lisp-hyperspec-format`, bound to `C-c C-d ~`.
-  * of course, you can TAB-complete on Emacs' minibuffer prompt to see all the available format directives.
-* you can also look-up glossary terms (for example, you can look-up "function" instead of "defun"), use `M-x common-lisp-hyperspec-glossary-term`, bound to `C-c C-d g`.
+* `#'`（sharpsign-quote）や `(`（left-parenthesis）のような reader macro を look-up したい場合は、`C-c C-d #` に bound された `M-x common-lisp-hyperspec-lookup-reader-macro` を使います。
+* `~A` のような `format` directive を look-up するには、`C-c C-d ~` に bound された `M-x common-lisp-hyperspec-format` を使います。
+  * もちろん、Emacs の minibuffer prompt で TAB-complete すれば利用可能な format directives をすべて見られます。
+* glossary terms も look-up できます（たとえば "defun" ではなく "function" を look-up できます）。`C-c C-d g` に bound された `M-x common-lisp-hyperspec-glossary-term` を使います。
 
 
-## Working with Emacs
+## Emacs で作業する
 
-In this section we'll learn the most useful Emacs commands to work with Lisp code in general, or to perform common actions.
+この section では、Lisp code 一般を扱うため、また common actions を行うために最も役立つ Emacs commands を学びます。
 
-We'll start by how to find your way into Emacs' built-in documentation. If there is a skill you should learn, that is the one.
+まず Emacs 組み込み documentation で道を見つける方法から始めます。学ぶべき skill が一つあるとすれば、これです。
 
-Don't forget that Emacs both GUI and terminal interfaces have menus, they help in discovering all available commands. If you don't see one, ensure that your emacs configuration doesn't hide it. Display the menu with `M-x menu-bar-mode`.
+Emacs の GUI と terminal interfaces の両方に menu があることを忘れないでください。利用可能な commands を発見する助けになります。見えない場合は、emacs configuration が隠していないことを確認してください。`M-x menu-bar-mode` で menu を表示できます。
 
 ### Built-in documentation
 
-Emacs comes with built-in tutorials and documentation. Moreover, it is
-a self-documented and self-discoverable editor, capable of introspection to let you
-know about the current keybindings, to let you search about function documentation,
-available variables,source code, tutorials, etc. Whenever you ask yourself questions like
-"what are the available shortcuts to do x" or "what does this
-keybinding really do", the answer is most probably a keystroke away,
-right inside Emacs. You should learn a few keybindings to be able to
-discover Emacs with Emacs flawlessly.
+Emacs には組み込み tutorials と documentation が付属します。さらに、自己 documentation と自己発見性を備えた editor であり、introspection によって現在の keybindings、function documentation、available variables、source code、tutorials などを知ることができます。「x をするための shortcuts は何があるか」や「この keybinding は実際に何をするのか」といった疑問を持ったとき、答えはほぼ確実に Emacs の中で keystroke 一つ先にあります。Emacs で Emacs を滞りなく発見できるよう、いくつかの keybindings を覚えるべきです。
 
-The help on the topic is here:
+この topic の help はここにあります。
 
 - [Help page: commands for asking Emacs about its commands](https://www.gnu.org/software/emacs/manual/html_node/emacs/Help.html#Help)
 
-The help keybindings start with either `C-h` or `F1`. Important ones are:
+help keybindings は `C-h` または `F1` で始まります。重要なものは次です。
 
-- `C-h k <keybinding>`: what function does this keybinding call?
-- `C-h f <function name>`: what keybinding is linked to this function?
-- `C-h a <topic>`: show a list of commands whose name match the given *topic*. It accepts a keyword, a list of keywords or a regular expression.
-- `C-h i`: show the Info page, a menu of major topics.
+- `C-h k <keybinding>`: この keybinding はどの function を呼ぶか？
+- `C-h f <function name>`: この function にはどの keybinding が関連付けられているか？
+- `C-h a <topic>`: 指定された *topic* に name が一致する commands の一覧を表示します。keyword、keywords の list、regular expression を受け付けます。
+- `C-h i`: Info page を表示します。major topics の menu です。
 
-Some Emacs packages give even more help.
+Emacs packages の中には、さらに多くの help を提供するものもあります。
 
-### More help and discoverability packages
+### さらに help と discoverability packages
 
-Sometimes, you start typing a key sequence but you can't remember it
-completely. Or, you wonder what other keybindings are related. Comes
-[which-key-mode](https://github.com/justbur/emacs-which-key). This
-packages will display all possible keybindings starting with the key(s) you just typed.
+key sequence を入力し始めたものの、完全には思い出せないことがあります。また、関連する他の keybindings が気になることもあります。そこで [which-key-mode](https://github.com/justbur/emacs-which-key) です。この package は、入力した key(s) で始まる可能な keybindings をすべて表示します。
 
-For example, I know there are useful keybindings under `C-x` but I don't remember which ones… I just type `C-x`, I wait for half a second, and which-key shows all the ones available.
+たとえば、`C-x` の下に便利な keybindings があることは知っているけれど、どれかを覚えていないとします。`C-x` と入力し、半秒待つだけで、which-key が利用可能なものをすべて表示します。
 
 ![](assets/emacs-which-key-minibuffer.png)
 
-Just try it with `C-h` too!
+`C-h` でも試してみてください。
 
-See also [Helpful](https://github.com/Wilfred/helpful), an alternative to the built-in Emacs help that provides much more contextual information.
+組み込み Emacs help の代替で、より多くの contextual information を提供する [Helpful](https://github.com/Wilfred/helpful) も参照してください。
 
 <img src="assets/emacs-helpful.png" style="height: 450px" alt="The Emacs helpful package shows detailed information about a symbol."/>
 
@@ -642,44 +564,34 @@ See also [Helpful](https://github.com/Wilfred/helpful), an alternative to the bu
 
 ### Built-in tutorial
 
-Emacs ships its own tutorial. You should give it a look to learn the most important keybindings and concepts.
+Emacs には独自の tutorial が付属しています。重要な keybindings と concepts を学ぶために一度見ておくとよいでしょう。
 
-Call it with `M-x help-with-tutorial` (where `M-x` is `alt-x`).
+`M-x help-with-tutorial`（ここで `M-x` は `alt-x`）で呼び出します。
 
 
 
-### Editing with parentheses
+### Parentheses を編集する
 
-Emacs has, of course, built-in commands to deal with s-expressions.
+Emacs にはもちろん、s-expressions を扱う組み込み commands があります。
 
-#### Forward/Backward/Up/Down movement and selection by s-expressions
+#### s-expressions による Forward/Backward/Up/Down movement と selection
 
-Use `C-M-f` and `C-M-b` (`forward-sexp` and `backward-sexp`) to move
-to the end (to the beginning) of the s-expression at point or to the
-next expression of the same level. `C-M-n` and `C-M-p` (next,
-previous) are similar.
+`C-M-f` と `C-M-b`（`forward-sexp` と `backward-sexp`）を使うと、point の s-expression の終端（始端）や、同じ level の次の expression へ移動できます。`C-M-n` と `C-M-p`（next、previous）も似ています。
 
-Use `C-M-u` (`backward-up-list`) and `C-M-d` (`down-list`) to go up
-and down in the tree of s-expressions.
+`C-M-u`（`backward-up-list`）と `C-M-d`（`down-list`）で s-expressions の tree を上下に移動します。
 
-Use `C-M-a` (`beginning-of-defun` or `slime-beginning-of-defun` in
-lisp-mode) and `C-M-e` (`end-of-defun` or `slime-end-of-defun`) to go
-to the beginning (or end) of the top-level s-expression: for example
-this goes to the beginning of the current function definition.
+`C-M-a`（lisp-mode では `beginning-of-defun` または `slime-beginning-of-defun`）と `C-M-e`（`end-of-defun` または `slime-end-of-defun`）で top-level s-expression の始端（または終端）へ移動します。たとえば現在の function definition の先頭へ移動します。
 
-Use `C-M-@` or `C-M-space` (both `mark-sexp`) to highlight an entire sexp. Then press `C-M-u` to expand
-the selection "upwards" and `C-M-d` to move forward down one level of
-parentheses. You can also press `mark-sexp` repeatedly.
+sexp 全体を highlight するには `C-M-@` または `C-M-space`（どちらも `mark-sexp`）を使います。その後 `C-M-u` で selection を「上方向」に広げ、`C-M-d` で parentheses の一段下へ forward できます。`mark-sexp` を繰り返し押すこともできます。
 
-Use `M-)` (`move-past-close-and-reindent`) to move to the end of the
-current lexical block, create a new line and indent.
+`M-)`（`move-past-close-and-reindent`）を使うと、現在の lexical block の終端へ移動し、新しい行を作って indent します。
 
-Use `C-M-t` (`transpose-sexps`) to drag the s-expression at point up, before the previous s-exp.
+`C-M-t`（`transpose-sexps`）を使うと、point の s-expression を前の s-exp の前へ drag できます。
 
-For example:
+例:
 
 ```lisp
-;; Press C-M-t and observe how you move the different additions.
+;; C-M-t を押し、異なる additions がどう動くかを観察します。
 
 (defun c ()
   "another function"
@@ -700,17 +612,15 @@ For example:
        (+ 4 4))))
 ```
 
-#### Comment a line or a region
+#### 行または region を comment する
 
-Insert a comment or comment a region with `M-;`, adjust text with `M-q`.
+`M-;` で comment を挿入するか region を comment し、`M-q` で text を整えます。
 
-#### Deleting parenthesis and s-expressions
+#### Parenthesis と s-expressions を削除する
 
-Use `M-x delete-pair` to delete the pair of parenthesis ahead of the
-point. It actually works with any symbols that come in pair (double
-quotes, square brackets…).
+point の前方にある pair of parenthesis を削除するには `M-x delete-pair` を使います。実際には pair になる任意の symbols（double quotes、square brackets…）で動作します。
 
-For example:
+例:
 
 ~~~lisp
 [](1 2 3)
@@ -718,9 +628,9 @@ For example:
 1 2 3
 ~~~
 
-Use `C-M-k` (`kill-sexp`) and `C-M-backspace` (`backward-kill-sexp`) (but caution: this keybinding may restart the system on GNU/Linux).
+`C-M-k`（`kill-sexp`）と `C-M-backspace`（`backward-kill-sexp`）を使います（ただし注意: この keybinding は GNU/Linux で system を restart することがあります）。
 
-For example, if point is before `(progn` (I’ll use [] as an indication where the cursor is):
+たとえば point が `(progn` の前にある場合（[] を cursor の位置として使います）:
 
 ~~~lisp
 (defun d ()
@@ -734,7 +644,7 @@ For example, if point is before `(progn` (I’ll use [] as an indication where t
       (+ 4 4)))
 ~~~
 
-and you press `C-M-k`, you get:
+`C-M-k` を押すと、次になります。
 
 ~~~lisp
 (defun d ()
@@ -744,11 +654,9 @@ and you press `C-M-k`, you get:
       (+ 4 4)))
 ~~~
 
-#### raise: moving an s-expression up
+#### raise: s-expression を上へ移動する
 
-Use `M-x raise-sexp` (unbound by default) to "raise" the current
-expression. This moves it up one level, and erases the previous
-expression. For example, with the point below:
+現在の expression を "raise" するには `M-x raise-sexp`（デフォルトでは unbound）を使います。これは一段上へ移動し、以前の expression を消します。たとえば point が下の位置にある場合:
 
 ~~~lisp
 (defun d ()
@@ -756,50 +664,49 @@ expression. For example, with the point below:
     [](+ 3 3)
 ~~~
 
-call `raise-sexp` and you get:
+`raise-sexp` を呼ぶと、次になります。
 
 ~~~lisp
 (defun d ()
   [](+ 3 3))
 ~~~
 
-You can bind it to a global key:
+global key に bind できます。
 
 ~~~lisp
 (keymap-global-set "M-+" #'raise-sexp) ;; M-+ originally unbound
 ~~~
 
-#### Indenting s-expressions
+#### s-expressions を indent する
 
-Indentation is automatic for Lisp forms.
+Lisp forms の indentation は自動です。
 
-Pressing TAB will indent incorrectly indented code. For example, put
-the point at the beginning of the `(+ 3 3)` form and press TAB:
+TAB を押すと、誤って indent された code を indent します。たとえば `(+ 3 3)` form の先頭に point を置いて TAB を押します。
 
 ~~~lisp
 (progn
 (+ 3 3))
 ~~~
 
-you correctly get
+正しく次のようになります。
 
 ~~~lisp
 (progn
   (+ 3 3))
 ~~~
 
-Use `C-M-q` (`indent-sexp`) to re-indent the form at point.
+point の form を re-indent するには `C-M-q`（`indent-sexp`）を使います。
 
 ~~~lisp
-;; Put the cursor on the open parens of "(defun ..."
-;; and press "C-M-q" to indent the code:
+;; cursor を "(defun ..." の open parens に置き、
+;; "C-M-q" を押して code を indent します:
 [] (defun e ()
    "A badly indented function."
  (let ((x 20))
  (print x)))
 ~~~
 
-you get:
+次のようになります。
 
 ```lisp
 (defun e ()
@@ -808,11 +715,11 @@ you get:
     (print x)))
 ```
 
-Use `C-c M-q` (`slime-reindent-defun`) to indent the current function definition:
+現在の function definition を indent するには `C-c M-q`（`slime-reindent-defun`）を使います。
 
 ~~~lisp
-;; Put the cursor anywhere inside the function
-;; and press "C-M-q" to indent the code:
+;; cursor を function 内のどこかに置き、
+;; "C-M-q" を押して code を indent します:
 (defun e ()
 "A badly indented function."
 (let ((x 20))
@@ -838,22 +745,17 @@ do (print j))
                (print z))))))
 ~~~
 
-You can also select a region and call `M-x indent-region`.
+region を select して `M-x indent-region` を呼ぶこともできます。
 
-#### Open and close parentheses
+#### Parentheses を開閉する
 
-You may not need many keybindings (or any at all) to manage Lisp's
-parentheses. `M-x show-paren-mode` is super useful already (see
-below). But some keybindings are helpful nonetheless.
+Lisp の parentheses を管理するのに、多くの keybindings（またはまったく）必要ないかもしれません。`M-x show-paren-mode` だけでも非常に便利です（下記参照）。とはいえ、役立つ keybindings もあります。
 
-Did you know that when you are in a Slime REPL, you can use `C-return` or `M-return`
-(`slime-repl-closing-return`) to close the remaining parenthesis and
-evaluate your input string?
+Slime REPL では、`C-return` または `M-return`（`slime-repl-closing-return`）で残りの parenthesis を閉じて input string を evaluate できることを知っていましたか。
 
-In source files, you can use `C-c C-]` (`slime-close-all-parens-in-sexp`)
-to insert the required number of closing parenthesis.
+source files では、必要な数の closing parenthesis を挿入するために `C-c C-]`（`slime-close-all-parens-in-sexp`）を使えます。
 
-For example:
+例:
 
 ```lisp
 (defun example ()
@@ -871,17 +773,15 @@ For example:
          ^^^ 3 closing ) were inserted.
 ```
 
-In files, use `M-(` to insert a pair of parenthesis (`()`) and the same
-keybinding with a prefix argument, `C-u M-(`, to enclose the
-expression in front of the cursor with a pair of parens.
+files では、`M-(` で pair of parenthesis（`()`）を挿入できます。同じ keybinding に prefix argument `C-u M-(` を付けると、cursor の前の expression を pair of parens で囲みます。
 
-For example, we start with the cursor before the first paren:
+たとえば最初の paren の前に cursor がある状態から始めます。
 
 ~~~lisp
 [](- 2 2)
 ~~~
 
-Press `C-u M-(` to enclose it with parens:
+`C-u M-(` を押して parens で囲みます。
 
 ~~~lisp
 ([](- 2 2))
@@ -889,122 +789,95 @@ Press `C-u M-(` to enclose it with parens:
 (zerop (- 2 2))
 ~~~
 
-With a numbered prefix argument (`C-u 2 M-(`), wrap around this number of s-expressions.
+numbered prefix argument（`C-u 2 M-(`）を使うと、その数の s-expressions を wrap します。
 
-Additionally, use `M-x check-parens` to spot malformed s-exps.
+さらに、malformed s-exps を見つけるには `M-x check-parens` を使います。
 
-There are additional packages that can make your use of parens easier:
+parens の利用を簡単にする追加 packages もあります。
 
-- `M-x show-paren-mode`, a built-in Emacs mode: it toggles the visualization of matching parenthesis. When enabled, place the cursor on a paren and you'll see the other paren it matches with. You can initialize it in your Emacs init file with `(show-paren-mode t)`. It is a global minor mode (it will work for all buffers, all languages).
- - **we highly suggest you enable it**.
-- when evil-mode (the vim layer) is enabled, you can use the `%` key to go to the matching paren.
-- `M-x electric-pair-mode`, a built-in Emacs mode: when enabled, typing an open parenthesis automatically inserts the corresponding closing parenthesis, and vice versa.  (Likewise for brackets, etc.). If the region is active, the parentheses (brackets, etc.) are inserted around the region instead.
-- you could use [Paredit (animated guide)](http://danmidwood.com/content/2014/11/21/animated-paredit.html) to automatically insert parentheses in pairs,
-- or [lispy-mode](https://github.com/abo-abo/lispy), like Paredit, but a key triggers an action when the cursor is placed right before or right after a parentheses.
+- `M-x show-paren-mode` は組み込み Emacs mode で、対応する parenthesis の可視化を toggle します。有効にすると、paren 上に cursor を置いたとき対応する paren が見えます。Emacs init file で `(show-paren-mode t)` により初期化できます。global minor mode です（すべての buffers、すべての languages で動作します）。
+ - **有効にすることを強く勧めます**。
+- evil-mode（vim layer）が有効な場合、`%` key で matching paren に移動できます。
+- `M-x electric-pair-mode` は組み込み Emacs mode です。有効にすると、open parenthesis を入力したとき対応する closing parenthesis を自動挿入し、その逆も行います（brackets なども同様）。region が active の場合、parentheses（brackets など）は region の周りに挿入されます。
+- [Paredit (animated guide)](http://danmidwood.com/content/2014/11/21/animated-paredit.html) を使うと parentheses を自動で pair 挿入できます。
+- または [lispy-mode](https://github.com/abo-abo/lispy) もあります。Paredit のようなものですが、cursor が parentheses の直前または直後にあるときだけ key が action を trigger します。
 
-### (optional) Packages for structured editing
+### （任意）Structured editing の packages
 
-In addition to the built-in Emacs commands and modes (`show-paren-mode` is a must have, see above),
-you have more packages at your disposal
-that will help to keep the parens and/or the indentation balanced.
-The list below is somewhat sorted by age of the
-extension, according to the
-[history of Lisp editing](https://github.com/shaunlebron/history-of-lisp-editing):
+組み込み Emacs commands と modes（`show-paren-mode` は必須です。上記参照）に加えて、parens や indentation の balance を保つ助けになる packages がさらにあります。下の list は、[history of Lisp editing](https://github.com/shaunlebron/history-of-lisp-editing) による extension の年代順にある程度並べています。
 
-- [Paredit](https://www.emacswiki.org/emacs/ParEdit) - Paredit is a
-  classic. It defines the must-have commands (move, kill, split, join
-  a sexp,…).
+- [Paredit](https://www.emacswiki.org/emacs/ParEdit) - Paredit は classic です。must-have commands（move、kill、split、join a sexp など）を定義します。
   ([visual tutorial](http://danmidwood.com/content/2014/11/21/animated-paredit.html))
-- [Smartparens](https://github.com/Fuco1/smartparens) - Smartparens
-  not only deals with parens but with everything that comes in pairs
-  (html tags,…) and thus has features for non-lispy languages.
-- [Lispy](https://github.com/abo-abo/lispy) - Lispy reimagines Paredit
-  with the goal to have the shortest bindings (mostly one key) that
-  only act depending on the point position.
-- [Paxedit](https://github.com/promethial/paxedit) - Paxedit adds
-  commands based on the context (in a symbol, a sexp,… ) and puts
-  efforts on whitespace cleanup and context refactoring.
-- [Parinfer](http://shaunlebron.github.io/parinfer/) - Parinfer
-  automatically fixes the parens depending on the indentation, or the
-  other way round (or both !).
+- [Smartparens](https://github.com/Fuco1/smartparens) - Smartparens は parens だけでなく pair になるすべてのもの（html tags など）を扱うため、non-lispy languages 向けの機能もあります。
+- [Lispy](https://github.com/abo-abo/lispy) - Lispy は Paredit を再考し、point position に応じて動作する最短の bindings（多くは 1 key）を目指しています。
+- [Paxedit](https://github.com/promethial/paxedit) - Paxedit は context（symbol 内、sexp 内など）に基づく commands を追加し、whitespace cleanup と context refactoring に力を入れています。
+- [Parinfer](http://shaunlebron.github.io/parinfer/) - Parinfer は indentation に応じて parens を自動修正するか、その逆を行います（または両方）。
 
-We personally advice to know the built-in functions well, then to get
-inspiration from the famous Paredit or from Lispy for evil users. See
-even more on [Wikemacs](http://wikemacs.org/wiki/Lisp_editing).
+個人的には、まず組み込み functions をよく知り、その後有名な Paredit や evil users 向けの Lispy から着想を得ることを勧めます。さらに詳しくは [Wikemacs](http://wikemacs.org/wiki/Lisp_editing) を参照してください。
 
 
-### Hiding/showing code
+### Code を隠す/表示する
 
-Use `C-x n n` (narrow-to-region) and `C-x n w` to widen back.
+`C-x n n`（narrow-to-region）と `C-x n w` を使って widen back します。
 
-See also [code folding](http://wikemacs.org/wiki/Folding) with external packages.
+external packages による [code folding](http://wikemacs.org/wiki/Folding) も参照してください。
 
 ### Search and replace
 
-#### isearch forward/backward, regexp searches, search/replace
+#### isearch forward/backward、regexp searches、search/replace
 
-`C-s` does an incremental search forward (e.g. - as each key is
-the search string is entered, the source file is searched for the
-first match. This can make finding specific text much quicker as
-you only need to type in the unique characters. Repeat searches
-(using the same search characters) can be done by repeatedly
-pressing `C-s`
+`C-s` は forward incremental search を行います。たとえば search string の各 key を入力するたびに source file が最初の match に向けて検索されます。unique characters だけを入力すればよいため、特定の text をかなり素早く見つけられます。同じ search characters を使った repeat searches は、`C-s` を繰り返し押すことで行えます。
 
-`C-r` does an incremental search backward
+`C-r` は backward incremental search を行います。
 
-`C-s RET` and `C-r RET` both do conventional string searches
-(forward and backward respectively)
+`C-s RET` と `C-r RET` はどちらも通常の string search を行います（それぞれ forward と backward）。
 
-`C-M-s` and `C-M-r` both do regular expression searches (forward
-and backward respectively)
+`C-M-s` と `C-M-r` はどちらも regular expression search を行います（それぞれ forward と backward）。
 
-`M-%` does a search/replace while `C-M-%` does a regular
-expression search/replace
+`M-%` は search/replace を行い、`C-M-%` は regular expression search/replace を行います。
 
 
-#### Finding occurrences (occur, grep)
+#### Occurrences を探す（occur、grep）
 
-Use `M-x grep`, `rgrep`, `occur`…
+`M-x grep`、`rgrep`、`occur` などを使います。
 
-See also interactive versions with
-[helm-swoop](http://wikemacs.org/wiki/Helm-swoop), helm-occur,
-[ag.el](https://github.com/Wilfred/ag.el).
+interactive versions として [helm-swoop](http://wikemacs.org/wiki/Helm-swoop)、helm-occur、[ag.el](https://github.com/Wilfred/ag.el) も参照してください。
 
 
 ## Questions/Answers
 
 ### Emacs Lisp vs Common Lisp
 
-It isn't necessary to write Emacs Lisp in order to use Emacs with Slime or Sly for Common Lisp.
+Common Lisp 用に Emacs を Slime または Sly と一緒に使うために、Emacs Lisp を書く必要はありません。
 
-However learning Emacs Lisp can be useful and is similar (but different) from CL:
+ただし Emacs Lisp を学ぶことは役に立ちますし、CL と似ています（しかし異なります）。
 
-*   Dynamic scope is everywhere
-*   There are no reader (or reader-related) functions
-*   Does not support all the types that are supported in CL
-*   Incomplete implementation of CLOS (with the add-on EIEIO package)
-*   No numerical tower support
+*   Dynamic scope が至るところにあります
+*   reader（または reader-related）functions がありません
+*   CL でサポートされるすべての types をサポートしているわけではありません
+*   CLOS の実装は不完全です（add-on の EIEIO package による）
+*   numerical tower support がありません
 
-Some good Emacs Lisp learning resources:
+Emacs Lisp 学習に役立つ resources:
 
 *   [An Introduction to Programming in Emacs Lisp](https://www.gnu.org/software/emacs/manual/eintr.html)
 *   [Writing GNU Emacs Extensions](http://www.oreilly.com/catalog/gnuext/)
 *   [Wikemacs](http://wikemacs.org/wiki/Category:Emacs_Lisp)
 
-### What about LSP (Language Server Protocol)?
+### LSP（Language Server Protocol）はどうか？
 
-LSP server and client ports for Common Lisp exist, but we don't *need* them to have a high quality IDE integration. In fact, Slime/Swank follow a client/server architecture, like LSP, but Slime predates LSP by decades, and still offers much more features for lispers than LSP.
+Common Lisp 向けの LSP server と client ports は存在しますが、高品質な IDE integration を得るためにそれらが*必要*なわけではありません。実際、Slime/Swank は LSP のような client/server architecture に従っていますが、Slime は LSP より何十年も前からあり、今でも LSP より lispers 向けにずっと多くの機能を提供しています。
 
 ### utf-8 encoding
 
-You might want to set this to your init file:
+init file に次を設定したくなるかもしれません。
 
 ~~~lisp
 (set-language-environment "UTF-8")
 (setenv "LC_CTYPE" "en_US.UTF-8")
 ~~~
 
-and for Sly:
+Sly では次のようにします。
 
 ~~~lisp
 (setf sly-lisp-implementations
@@ -1012,16 +885,14 @@ and for Sly:
         ))
 ~~~
 
-This will avoid getting `ascii stream decoding error`s when you have
-non-ascii characters in files you evaluate with SLIME.
+これにより、SLIME で評価する files に non-ascii characters があるときの `ascii stream decoding error` を避けられます。
 
 
 ### Default cut/copy/paste keybindings
 
-*I am so used to C-c, C-v and friends to copy and paste text that
-the default Emacs shortcuts don't make any sense to me.*
+*私は text の copy and paste に C-c、C-v などを使うことに慣れすぎていて、default Emacs shortcuts がまったくしっくりきません。*
 
-Luckily, you have a solution! Install [cua-mode](http://www.emacswiki.org/cgi-bin/wiki.pl?CuaMode) and you can continue to use these shortcuts.
+幸い、解決策があります。[cua-mode](http://www.emacswiki.org/cgi-bin/wiki.pl?CuaMode) を install すれば、これらの shortcuts を使い続けられます。
 
 ~~~lisp
 ;; C-z=Undo, C-c=Copy, C-x=Cut, C-v=Paste (needs cua.el)
@@ -1031,11 +902,11 @@ Luckily, you have a solution! Install [cua-mode](http://www.emacswiki.org/cgi-bi
 
 ## Appendix
 
-### All Slime REPL shortcuts
+### Slime REPL shortcuts すべて
 
-Here is the reference of all Slime shortcuts that work in the REPL.
+REPL で動作するすべての Slime shortcuts の reference です。
 
-To see them, go in a REPL, type `C-h m` and go to the Slime REPL map section.
+見るには REPL に移動し、`C-h m` と入力して Slime REPL map section へ進みます。
 
 
 ```
@@ -1087,13 +958,13 @@ C-c M-i         slime-fuzzy-complete-symbol
 C-c M-o         slime-repl-clear-buffer
 ```
 
-### All other Slime shortcuts
+### その他すべての Slime shortcuts
 
-There is more to what we showed! Slime has shortcuts to disassemble the function definition of the symbol at point, learn how to navigate the inspector, toggle functions profiling, learn its indentation or completion strategies, use multiple Lisp connections, learn how to [manipulate presentations](https://slime.common-lisp.dev/doc/html/Presentations.html#Presentations)…
+ここで示した以上のものがあります。Slime には、point の symbol の function definition を disassemble したり、inspector の navigate 方法を学んだり、functions profiling を toggle したり、indentation や completion strategies を学んだり、複数 Lisp connections を使ったり、[presentations を操作](https://slime.common-lisp.dev/doc/html/Presentations.html#Presentations)したりする shortcuts があります。
 
-Here are all the default keybindings defined by Slime mode.
+Slime mode によって定義される default keybindings は次のとおりです。
 
-To see them, go in a .lisp file, type `C-h m` and go to the Slime section.
+見るには .lisp file に移動し、`C-h m` と入力して Slime section へ進みます。
 
 ```
 Commands to compile the current buffer’s source file and visually
@@ -1258,22 +1129,22 @@ C-c C-v M-o     slime-clear-presentations
 
 [slime-fuzzy]: https://common-lisp.net/project/slime/doc/html/Fuzzy-Completion.html
 
-## See also
+## 関連項目
 
 - [SLIME's documentation](https://slime.common-lisp.dev/doc/html/)
-- **[Slime video tutorial](https://www.youtube.com/watch?v=sBcPNr1CKKw)** (and the author's channel, full of great stuff)
-- Marco Baringer's [Slime tutorial](https://www.youtube.com/watch?v=NUpAvqa5hQw)
-- [Common Lisp REPL exploration guide](https://bnmcgn.github.io/lisp-guide/lisp-exploration.html), a concise and curated set of highlights to find one's way in the REPL.
-- [Emacs4CL](https://github.com/susam/emacs4cl), a tiny DIY kit to set up vanilla Emacs for Common Lisp programming.
-- [slime-star](https://github.com/mmontone/slime-star), a collection of extensions for SLIME:
-  * doc contribs: richer slime-help and slime-info buffers to display documentation.
-  * Quicklisp systems: autocompletion to load Quicklisp systems from the REPL.
-  * quicksearch integration: search for Common Lisp repositories on Quicklisp, Github and Cliki.
-  * Slime breakpoints: set breakpoints visually without code annotation, get buttons to step through code.
-  * Quicklisp apropos: "apropos" across Quicklisp libraries.
-  * Slime critic: get the Slime critic gently critique your code.
+- **[Slime video tutorial](https://www.youtube.com/watch?v=sBcPNr1CKKw)**（作者の channel も素晴らしい内容が豊富です）
+- Marco Baringer の [Slime tutorial](https://www.youtube.com/watch?v=NUpAvqa5hQw)
+- [Common Lisp REPL exploration guide](https://bnmcgn.github.io/lisp-guide/lisp-exploration.html)。REPL で道を見つけるための、簡潔で curated な highlights 集です。
+- [Emacs4CL](https://github.com/susam/emacs4cl)。vanilla Emacs を Common Lisp programming 用に設定するための小さな DIY kit です。
+- [slime-star](https://github.com/mmontone/slime-star)。SLIME extensions の collection です。
+  * doc contribs: documentation を表示する、より豊かな slime-help と slime-info buffers。
+  * Quicklisp systems: REPL から Quicklisp systems を load する autocompletion。
+  * quicksearch integration: Quicklisp、Github、Cliki で Common Lisp repositories を検索。
+  * Slime breakpoints: code annotation なしで breakpoints を visual に設定し、code を step through する buttons を得る。
+  * Quicklisp apropos: Quicklisp libraries 全体の "apropos"。
+  * Slime critic: Slime critic に code をやさしく critique してもらう。
   * interactive print and trace buffers
-  * dedicated Emacs buffers for output streams
-  * access to the ANSICL specification in Emacs' Info format.
-  * Lisp system browser: a (work in progress) Smalltalk-like system browser for Common Lisp, where one can get different panes to browse available packages and their functions, variables, macros, classes, generic functions.
+  * output streams 用の dedicated Emacs buffers
+  * ANSICL specification への Emacs Info format での access。
+  * Lisp system browser: Common Lisp 用の（work in progress な）Smalltalk-like system browser。available packages とその functions、variables、macros、classes、generic functions を browse するための different panes を得られます。
 - [Slime tips](https://github.com/lisp-tips/lisp-tips/issues?q=state%3Aopen%20label%3A%22slime%22)

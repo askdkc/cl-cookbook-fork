@@ -1,13 +1,10 @@
 ---
-title: Streams
+title: ストリーム
 ---
 
-Streams are the standard abstraction for input and output in
-Common Lisp. Every time you read from a file, write to the
-terminal, or communicate over a network socket, you are using
-a stream.
+ストリームは、Common Lisp における入出力の標準的な抽象化です。ファイルから読み込むとき、端末へ書き込むとき、ネットワークソケットで通信するとき、あなたはストリームを使っています。
 
-Many built-in functions have a stream argument, maybe optional:
+多くの組み込み関数は stream 引数を持ちます。省略可能な場合もあります。
 
 ```lisp
 (print object &optional stream)
@@ -19,48 +16,31 @@ Many built-in functions have a stream argument, maybe optional:
 (with-open-file (stream filespec …) &body body)
 ```
 
-This chapter covers the stream types, how to create
-and use them, and how to extend the stream protocol.
+この章では、stream の種類、作成と利用の方法、そして stream protocol の拡張方法を扱います。
 
-## What is a stream anyways?
+## そもそも stream とは何か
 
-A stream represents data that flows from one (or many) direction(s) to
-another (or others). It can represent a small, well delimited amount
-of data, as well as a possibly infinite amount of data.
+stream は、ある方向（または複数の方向）から別の方向（または複数の方向）へ流れるデータを表します。小さく明確に区切られたデータ量も、場合によっては無限のデータ量も表せます。
 
-In English, a "stream" can represent a small river, an uninterrupted
-flow and, well, audio or video broadcast.
+英語では、"stream" は小川、途切れない流れ、そして音声や動画の broadcast を表すことがあります。
 
-While working with streams, we look at the data passing by us, instead
-of capturing all the stream *and then* doing our work. When we count
-boats passing by the river, we don't collect all the river into a
-bucket, and then count how many boats we captured. When reading a
-small file into CSV, we can read the file at once and then parse it,
-but if we work with very big files, we'll need a streaming API, and
-divide our work by logical chunks.
+stream を扱うとき、私たちは stream 全体を捕まえて _その後で_ 作業するのではなく、目の前を通り過ぎるデータを見ます。川を通る boat を数えるとき、川全体を bucket に集めてから捕まえた boat の数を数えるわけではありません。小さな CSV ファイルを読むときは、ファイル全体を一度に読み込んでから parse できますが、とても大きいファイルを扱う場合は streaming API が必要になり、作業を論理的な chunk に分けることになります。
 
 
-## Stream basics
+## stream の基本
 
-A stream is an object that represents a source or sink of
-characters or bytes. The standard defines several stream
-types:
+stream は、文字または byte の source や sink を表す object です。標準はいくつかの stream type を定義しています。
 
-- **Input streams** support reading (`read-char` and `unread-char`,
-  `read-byte`, `read-line`, `read`).
-- **Output streams** support writing (`write-char`,
-  `write-byte`, `write-string`, `format`).
-- **Bidirectional streams** support both.
+- **Input streams** は読み取りをサポートします（`read-char` と `unread-char`、`read-byte`、`read-line`、`read`）。
+- **Output streams** は書き込みをサポートします（`write-char`、`write-byte`、`write-string`、`format`）。
+- **Bidirectional streams** はその両方をサポートします。
 
-Separately, streams have an element type:
+これとは別に、stream は element type を持ちます。
 
-- **Character streams** carry characters, which is what
-  `read-char`, `read-line`, `format`, and most examples in
-  this chapter use by default.
-- **Binary streams** carry bytes, usually declared with an
-  element type like `(unsigned-byte 8)`.
+- **Character streams** は文字を運びます。`read-char`、`read-line`、`format`、およびこの章のほとんどの例がデフォルトで使うものです。
+- **Binary streams** は byte を運び、通常は `(unsigned-byte 8)` のような element type で宣言されます。
 
-You can test what a stream supports:
+stream が何をサポートしているかはテストできます。
 
 ~~~lisp
 (input-stream-p *standard-input*)   ;; => T
@@ -69,64 +49,59 @@ You can test what a stream supports:
 ;; => CHARACTER
 ~~~
 
-## Standard stream variables
+## 標準 stream 変数
 
-Common Lisp provides several global stream variables that
-are bound by default:
+Common Lisp は、デフォルトで bound されているいくつかの global stream variables を提供します。
 
-| Variable | Purpose |
+| 変数 | 目的 |
 |---|---|
-| `*standard-input*` | Default input (your terminal or REPL) |
-| `*standard-output*` | Default output (your terminal or REPL) |
-| `*error-output*` | Error/warning messages |
-| `*trace-output*` | Output from `trace` |
-| `*debug-io*` | Interactive debugging I/O |
-| `*query-io*` | User yes/no questions |
-| `*terminal-io*` | The actual terminal stream |
+| `*standard-input*` | デフォルト入力（端末または REPL） |
+| `*standard-output*` | デフォルト出力（端末または REPL） |
+| `*error-output*` | error/warning メッセージ |
+| `*trace-output*` | `trace` からの出力 |
+| `*debug-io*` | 対話的な debugging I/O |
+| `*query-io*` | ユーザーへの yes/no 質問 |
+| `*terminal-io*` | 実際の terminal stream |
 
-Functions like `read`, `print`, and `format` use these by
-default when you don't specify a stream:
+`read`、`print`、`format` のような関数は、stream を指定しない場合、デフォルトでこれらを使います。
 
 ~~~lisp
-;; these are equivalent:
+;; これらは等価です。
 (print "hello")
-(print "hello" *standard-output*) ;; or (print "hello" t)
+(print "hello" *standard-output*) ;; または (print "hello" t)
 
-(format *standard-output* "hello") ;; or (format t "hello")
+(format *standard-output* "hello") ;; または (format t "hello")
 ~~~
 
-You can rebind them to redirect output.
+出力を redirect するために、これらを rebind できます。
 
-### Capturing or redirecting a program output
+### プログラム出力の捕捉または redirect
 
-Do you want, for example, to capture some function output, that
-normally prints to standard output, to a string?
+たとえば、通常は standard output に print する関数の出力を、文字列として捕捉したいでしょうか。
 
-You can generally use a `let` binding of this form:
+一般には、この形の `let` binding を使えます。
 
 ~~~lisp
 (let ((*standard-output* some-other-stream))
-  (print "hello"))  ;; or another function call.
-  ;; prints to some-other-stream
+  (print "hello"))  ;; または別の関数呼び出し。
+  ;; some-other-stream に print されます
 ~~~
 
-In this (convoluted) example we create a string stream and we bind
-`*standard-output*` to it:
+この（少し込み入った）例では、string stream を作成し、`*standard-output*` をそれに bind します。
 
 ```lisp
 (with-output-to-string (s)
  (let ((*standard-output* s))
-   ;; some function calls here…
+   ;; ここにいくつかの関数呼び出し…
    (princ "hello")
    (princ " ")
    (princ "streams")))
 ;; => "hello streams"
 ```
 
-We use `princ` to print an "aesthetic" representation of the
-object. `print` would print the quotes and a newline.
+`princ` を使って object の「aesthetic」な表現を print しています。`print` なら quote と newline も print します。
 
-This example can, by the way, be shortened to this:
+ちなみに、この例は次のように短くできます。
 
 ```lisp
 (with-output-to-string (*standard-output*)
@@ -135,16 +110,14 @@ This example can, by the way, be shortened to this:
   (princ "streams"))
 ```
 
-## File streams
+## file stream
 
-Use `open` to create a file stream, or the
-`with-open-file` macro which ensures the stream is
-properly closed:
+file stream を作成するには `open` を使うか、stream が確実に閉じられる `with-open-file` macro を使います。
 
 ~~~lisp
-;; processing a file line by line:
+;; ファイルを 1 行ずつ処理する:
 (with-open-file (my-file-stream "test.txt")
-  ;;            ^^^ bind this symbol in the macro body.
+  ;;            ^^^ macro body でこの symbol を bind します。
   (loop for line = (read-line my-file-stream nil)
         while line
         when (search "cat" line)
@@ -152,21 +125,21 @@ properly closed:
 ~~~
 
 ~~~lisp
-;; writing to a file:
+;; ファイルに書き込む:
 (with-open-file (stream "/tmp/out.txt"
                  :direction :output
                  :if-exists :supersede)
   (format stream "Hello, streams!~%"))
 ~~~
 
-The `:direction` keyword controls the stream type:
+`:direction` keyword は stream type を制御します。
 
-- `:input` (default) — read only
-- `:output` — write only
-- `:io` — read and write
-- `:probe` — just check if the file exists, then close.
+- `:input`（デフォルト）- 読み取り専用
+- `:output` - 書き込み専用
+- `:io` - 読み取りと書き込み
+- `:probe` - ファイルが存在するか確認して閉じるだけ
 
-For binary files, specify `:element-type`:
+binary file の場合は `:element-type` を指定します。
 
 ~~~lisp
 (with-open-file (stream "/tmp/data.bin"
@@ -177,60 +150,52 @@ For binary files, specify `:element-type`:
   (write-byte 101 stream))
 ~~~
 
-## String streams
+## string stream
 
-String streams let you treat strings as streams, which is
-useful for building output or parsing input without files.
+string stream を使うと、文字列を stream として扱えます。これは、ファイルを使わずに出力を構築したり入力を parse したりするときに便利です。
 
-### Writing to a string: `with-output-to-string`
+### 文字列への書き込み: `with-output-to-string`
 
-This macro allows to bind a symbol to a stream, to call functions that
-print to this stream in the macro body, and in the end to create a
-string:
+この macro は、symbol を stream に bind し、macro body 内でその stream に print する関数を呼び出し、最後に文字列を作成できるようにします。
 
 ~~~lisp
 (with-output-to-string (s)
-  ;; more clever processing…
+  ;; より賢い処理…
   (format s "Hello, ")
   (format s "world!"))
 ;; => "Hello, world!"
 ~~~
 
-You can use `format`, `write-string`, or other stream operations.
+`format`、`write-string`、その他の stream operation を使えます。
 
-This can be seen as a more flexible equivalent of using `format` with
-a destination of `nil`:
+これは、destination に `nil` を指定した `format` を使うことの、より柔軟な同等物と見なせます。
 
 ~~~lisp
 (format nil "Hello, world!")
 ;; => "Hello, world!"
 ~~~
 
-### Reading from a string: `with-input-from-string`
+### 文字列からの読み取り: `with-input-from-string`
 
-Reading from a string is useful for small parsers, REPL helpers, or
-tests where you want input without touching the filesystem.
+文字列からの読み取りは、小さな parser、REPL helper、または filesystem に触れずに入力を使いたい test に便利です。
 
-For this example, because `read` parses tokens from a
-stream, we need to emulate an input stream with `with-input-from-string`:
+この例では、`read` が stream から token を parse するため、`with-input-from-string` で input stream を emulate する必要があります。
 
 ~~~lisp
-;; see also read-from-string to parse one form.
+;; 1 つの form を parse するには read-from-string も参照。
 (with-input-from-string (s "123 456")
   (list (read s) (read s)))
 ;; => (123 456)
 ~~~
 
-For more options:
+さらに option が必要なら次を参照してください。
 
-- read [`with-input-from-string` on the Community Spec](https://cl-community-spec.github.io/pages/with_002dinput_002dfrom_002dstring.html)
+- Community Spec の [`with-input-from-string`](https://cl-community-spec.github.io/pages/with_002dinput_002dfrom_002dstring.html) を読む
 
 
-### `make-string-input-stream` and `make-string-output-stream`
+### `make-string-input-stream` と `make-string-output-stream`
 
-For cases where the macro forms are inconvenient, you
-can create string streams directly. This is common when you
-need to create the stream in one place and consume it later.
+macro form が不便な場合は、string stream を直接作成できます。これは、ある場所で stream を作成し、後で消費する必要がある場合によく使われます。
 
 ~~~lisp
 (let ((s (make-string-output-stream)))
@@ -247,13 +212,9 @@ need to create the stream in one place and consume it later.
 ;; => #\h
 ~~~
 
-## Concatenated streams
+## concatenated stream
 
-`make-concatenated-stream` creates a stream that reads
-from multiple input streams in sequence. When the first
-stream is exhausted, reading continues from the next. This is
-useful when several inputs should look like one continuous
-source to existing stream-consuming code:
+`make-concatenated-stream` は、複数の input streams から順番に読み取る stream を作成します。最初の stream が尽きると、次の stream から読み取りが続きます。複数の入力を既存の stream-consuming code に対して 1 つの連続した source のように見せたいときに便利です。
 
 ~~~lisp
 (let* ((s1 (make-string-input-stream "Hello, "))
@@ -263,20 +224,19 @@ source to existing stream-consuming code:
 ;; => "Hello, world!"
 ~~~
 
-## Broadcast streams
+## broadcast stream
 
-`make-broadcast-stream` creates a stream that sends
-output to multiple streams simultaneously:
+`make-broadcast-stream` は、複数の stream に同時に output を送る stream を作成します。
 
 ~~~lisp
 (with-output-to-string (s)
   (let ((broadcast (make-broadcast-stream *standard-output* s)))
      (format broadcast "to both")))
-;; prints "to both" to the terminal
-;; => and returns the "to both" string.
+;; terminal に "to both" を print します
+;; => そして "to both" string を返します。
 ~~~
 
-or also:
+または次のようにも書けます。
 
 ~~~lisp
 (let* ((s (make-string-output-stream))
@@ -285,30 +245,22 @@ or also:
   (get-output-stream-string str))
 ~~~
 
-This is useful for logging to both the console and a
-file at the same time.
+これは console と file の両方に同時に logging する場合に便利です。
 
-### Discarding output (writing to /dev/null)
+### output を捨てる（/dev/null へ書き込む）
 
-Calling `make-broadcast-stream` with no arguments is also the
-portable equivalent of writing to `/dev/null`: output sent to
-that stream is discarded.
+引数なしで `make-broadcast-stream` を呼ぶことは、`/dev/null` へ書き込むことの portable な同等物でもあります。その stream に送られた output は捨てられます。
 
 ~~~lisp
 (let ((sink (make-broadcast-stream)))
   (format sink "this goes nowhere"))
 ~~~
 
-## Example: one report, many destinations
+## 例: 1 つの report、複数の destination
 
-A common pattern in real programs is to write functions that
-accept a stream instead of deciding for themselves whether
-output should go to the terminal, a file, or an in-memory
-string. That keeps the formatting code in one place and makes
-it easy to reuse.
+実際の program でよくある pattern は、output を terminal、file、in-memory string のどれへ送るかを関数自身で決めるのではなく、stream を受け取る関数を書くことです。そうすると formatting code を 1 か所に保て、再利用しやすくなります。
 
-Below, the stream argument is an optional argument (it could also be a
-`&key` argument) and defaults to standard output.
+下では、stream 引数は optional argument（`&key` argument でも構いません）で、デフォルトは standard output です。
 
 ~~~lisp
 (defun write-expense-report (expenses &optional (stream t))
@@ -323,22 +275,22 @@ Below, the stream argument is an optional argument (it could also be a
                 sum (second entry))))
 ~~~
 
-The same function can now target different destinations:
+同じ関数を、今度は異なる destination に向けられます。
 
 ~~~lisp
 (let ((expenses '(("Books" 12.50)
                   ("Train" 24.10)
                   ("Lunch" 18.00))))
-  ;; 1. print to the REPL / terminal (default)
+  ;; 1. REPL / terminal に print する（デフォルト）
   (write-expense-report expenses)
 
-  ;; 2. save to a file
+  ;; 2. file に保存する
   (with-open-file (out "/tmp/expenses.txt"
                        :direction :output
                        :if-exists :supersede)
     (write-expense-report expenses out))
 
-  ;; 3. capture as a string, for a test or an email body
+  ;; 3. test や email body 用に string として捕捉する
   (with-output-to-string (out)
     (write-expense-report expenses out)))
 
@@ -352,11 +304,9 @@ The same function can now target different destinations:
 ;; => "
 ~~~
 
-### Writing to 2 streams at once
+### 2 つの stream に同時に書き込む
 
-If you want tee-style output — that is, writing the same output
-to two streams at once, like the Unix `tee` command — you can
-also combine destinations with a broadcast stream:
+tee 風の output、つまり Unix の `tee` command のように同じ output を 2 つの stream に同時に書き込みたい場合も、broadcast stream で destination を組み合わせられます。
 
 ~~~lisp
 (let* ((expenses '(("Books" 12.50)
@@ -367,10 +317,9 @@ also combine destinations with a broadcast stream:
   (get-output-stream-string copy))
 ~~~
 
-## Two-way and echo streams
+## two-way stream と echo stream
 
-A **two-way stream** bundles an input and output stream
-into a single bidirectional stream:
+**two-way stream** は、input stream と output stream を 1 つの bidirectional stream に束ねます。
 
 ~~~lisp
 (let* ((in (make-string-input-stream "42"))
@@ -383,68 +332,56 @@ into a single bidirectional stream:
 ;; "
 ~~~
 
-An **echo stream** is a two-way stream that also echoes
-everything read from the input stream onto the output
-stream. This is useful for logging or recording
-interactive sessions:
+**echo stream** は two-way stream の一種で、input stream から読み取ったすべてを output stream に echo します。これは interactive session の logging や recording に便利です。
 
 ~~~lisp
 (let* ((in (make-string-input-stream "hello"))
        (out (make-string-output-stream))
        (echo (make-echo-stream in out)))
-  (read-char echo)  ;; reads #\h, also writes to out
-  (read-char echo)  ;; reads #\e, also writes to out
+  (read-char echo)  ;; #\h を読み取り、out にも書き込む
+  (read-char echo)  ;; #\e を読み取り、out にも書き込む
   (get-output-stream-string out))
 ;; => "he"
 ~~~
 
-## Synonym streams
+## synonym stream
 
-A synonym stream is an indirection — it forwards all
-operations to the stream that is the current value of a
-symbol. `*terminal-io*` is typically a synonym stream.
+synonym stream は indirection です。すべての operation を、ある symbol の現在値である stream に転送します。`*terminal-io*` は通常 synonym stream です。
 
 ~~~lisp
 (let* ((a-stream (make-string-input-stream "123"))
        (b-stream (make-string-input-stream "456"))
        (my-synonym (make-synonym-stream 'c-stream)))
 
-  ;; setting our synonym stream symbol to A:
+  ;; synonym stream symbol を A に設定:
   (setf c-stream a-stream)
   (format t "reading stream A: ~a~&" (read my-synonym))
 
-  ;; switching streams to B:
+  ;; streams を B に切り替える:
   (setf c-stream b-stream)
   (format t "and now reading stream B: ~a~&" (read my-synonym)))
 ~~~
 
-This lets you redirect where a stream goes by rebinding
-the symbol, without changing the stream object itself.
+これにより、stream object 自体を変更せずに、symbol の rebinding によって stream の行き先を redirect できます。
 
-## Pitfall: streams may be buffered, `finish-output`
+## 落とし穴: stream は buffer されることがある、`finish-output`
 
-Be aware that some streams can be buffered and that buffered output
-may not appear immediately. Use `finish-output`.
+一部の stream は buffered されることがあり、buffered output はすぐに現れない可能性があることに注意してください。`finish-output` を使います。
 
-What may happen is that the buffer may hold data for a short while
-before passing it to the stream. This mechanism is generally useful
-under load, when the input source feeds data faster than the stream
-can handle it.
+起こり得ることは、buffer が短時間データを保持してから stream に渡すということです。この仕組みは一般に、負荷がある状況で、入力 source が stream の処理能力より速くデータを供給する場合に便利です。
 
-As such, this snippet is typically not portable, it may vary across
-implementations and may depend on the context (running this in a busy
-terminal, etc):
+したがって、次の snippet は通常 portable ではなく、処理系や context（忙しい terminal で実行している等）に依存して変わる可能性があります。
 
 ~~~lisp
 (write "enter an expression > ")
 (read)
 ~~~
 
-You logically expect to read the prompt string, then to enter an expression.
+論理的には、prompt string を読んでから expression を入力すると期待します。
 
-But you could get the blocking `(read)` before seeing the text on your terminal.
+しかし、terminal に text が表示される前に blocking `(read)` に入ってしまうことがあります。
 
-To ensure all the stream output is written in time, use `finish-output`:
+すべての stream output が時間どおりに書き込まれるようにするには、`finish-output` を使います。
 
 ~~~lisp
 (write "enter an expression > ")
@@ -452,54 +389,47 @@ To ensure all the stream output is written in time, use `finish-output`:
 (read)
 ~~~
 
-`uiop` also defines `uiop:format!` which calls `finish-output` before
-and after printing to the stream.
+`uiop` は `uiop:format!` も定義しており、これは stream に print する前後で `finish-output` を呼び出します。
 
-See also [force-output and clear-output](https://cl-community-spec.github.io/pages/finish_002doutput.html) (initiate the emptying of buffers but don't wait, attempt to abord output operations).
+[force-output and clear-output](https://cl-community-spec.github.io/pages/finish_002doutput.html) も参照してください（buffer を空にし始めますが待機はせず、output operation の abort を試みます）。
 
-## More stream functions and macros
+## さらに多くの stream 関数と macro
 
-See all of them in the [streams dictionary on the CLCS](https://cl-community-spec.github.io/pages/Streams-Dictionary.html).
+それらすべては [streams dictionary on the CLCS](https://cl-community-spec.github.io/pages/Streams-Dictionary.html) で参照できます。
 
 ### `listen`
 
 [listen](https://cl-community-spec.github.io/pages/listen.html):
 
-> Returns true if there is a character immediately available from input-stream; otherwise, returns false. On a non-interactive input-stream, listen returns true except when at end of file_1. If an end of file is encountered, listen returns false. listen is intended to be used when input-stream obtains characters from an interactive device such as a keyboard.
+> input-stream から直ちに利用可能な文字がある場合 true を返し、それ以外の場合 false を返します。non-interactive input-stream では、end of file_1 の場合を除き listen は true を返します。end of file に遭遇した場合、listen は false を返します。listen は、input-stream が keyboard のような interactive device から文字を取得する場合に使うことを意図しています。
 
 
 ### `terpri, fresh-line`
 
 [terpri](https://cl-community-spec.github.io/pages/terpri.html)
-always writes a newline to an output stream.
+は常に output stream に newline を書き込みます。
 
-`fresh-line` writes a newline only if the stream isn't at the start of a newline.
+`fresh-line` は、stream が newline の先頭にない場合にのみ newline を書き込みます。
 
 
 ### `y-or-n-p`, `yes-or-no-p`
 
-[These functions](https://cl-community-spec.github.io/pages/y_002dor_002dn_002dp.html) print a prompt to `*query-io*`, wait for user input (a
-one-letter "y" or "n", or a complete "yes" or "no"), and return a
-boolean value.
+[これらの関数](https://cl-community-spec.github.io/pages/y_002dor_002dn_002dp.html) は prompt を `*query-io*` に print し、ユーザー入力（1 文字の "y" または "n"、あるいは完全な "yes" または "no"）を待ち、boolean value を返します。
 
 
 ### `with-open-stream`
 
 [with-open-stream](https://cl-community-spec.github.io/pages/with_002dopen_002dstream.html)
-"performs a series of operations on the stream, returns a value, and then
-closes the stream."
+は「stream に対して一連の operation を実行し、値を返し、その後 stream を閉じます」。
 
-This macro can be used to run expressions in the context of the stream
-and ensure it is closed afterwards.
+この macro は、stream の context で expression を実行し、その後確実に閉じるために使えます。
 
-Example from the Lem editor: `make-buffer-output-stream` is a
-primitive to create an editor buffer, and keep its stream open. We use
-`with-open-stream` to write content.
+Lem editor からの例です。`make-buffer-output-stream` は editor buffer を作成し、その stream を開いたままにする primitive です。`with-open-stream` を使って content を書き込みます。
 
 ```lisp
 (defun display-welcome ()
   (when *enable-welcome*
-    ;; print the welcome message to the start buffer
+    ;; start buffer に welcome message を print する
     (with-open-stream (stream (make-buffer-output-stream (buffer-start-point (current-buffer))))
       (loop :with prefix := (/ (- (window-width (current-window)) *message-width*) 2)
             :for line :in (str:lines *message-content*)
@@ -508,38 +438,20 @@ primitive to create an editor buffer, and keep its stream open. We use
 ```
 
 
-## Gray streams: extending the protocol
+## Gray stream: protocol の拡張
 
-The standard stream types are implemented by the
-Common Lisp runtime. They let you *use* file, string, socket,
-and terminal streams, but they do not standardize how you
-define new stream classes that participate in ordinary Common
-Lisp I/O operations. If you need custom stream behavior
-(for example, a stream that compresses data, counts
-bytes, transforms characters, or reads from an application
-object instead of a file descriptor), you can use
-**Gray streams**.
+標準の stream type は Common Lisp runtime によって実装されています。それらを使うことで file、string、socket、terminal stream を _利用_ できますが、通常の Common Lisp I/O operation に参加する新しい stream class をどう定義するかは標準化されていません。custom stream behavior（たとえば、データを圧縮する stream、byte を数える stream、文字を変換する stream、file descriptor ではなく application object から読む stream）が必要なら、**Gray streams** を使えます。
 
-Gray streams are a de facto standard, proposed before ANSI
-Common Lisp was finalized and based on the stream chapter from
-CLtL. They did not make it into the ANSI standard, but most
-popular implementations support this protocol anyway. In
-practice, Gray streams are the usual way to define custom
-streams that work with standard functions like `read-char`,
-`write-char`, `read-sequence`, or `write-sequence`.
+Gray streams は de facto standard です。ANSI Common Lisp が final になる前に提案され、CLtL の stream 章に基づいています。ANSI 標準には入りませんでしたが、人気のあるほとんどの処理系はこの protocol をサポートしています。実際には、`read-char`、`write-char`、`read-sequence`、`write-sequence` のような標準関数で動く custom streams を定義する通常の方法が Gray streams です。
 
-The [`trivial-gray-streams`](https://github.com/trivial-gray-streams/trivial-gray-streams)
-library provides a portable interface.
+[`trivial-gray-streams`](https://github.com/trivial-gray-streams/trivial-gray-streams)
+library は portable interface を提供します。
 
-To use it, we subclass a fundamental gray stream, such as
-`fundamental-character-output-stream` below, and we define the
-required methods for our new stream class. Below, for this character
-output stream, we must define two methods, `stream-write-char` and
-`stream-line-column`.
+これを使うには、下の `fundamental-character-output-stream` のような fundamental gray stream を subclass し、新しい stream class に必要な methods を定義します。下の character output stream では、`stream-write-char` と `stream-line-column` という 2 つの methods を定義しなければなりません。
 
 
 ~~~lisp
-;; in your .asd:
+;; .asd 内:
 ;; :depends-on ("trivial-gray-streams")
 
 (defclass counting-stream (trivial-gray-streams:fundamental-character-output-stream)
@@ -554,7 +466,7 @@ output stream, we must define two methods, `stream-write-char` and
   nil)
 ~~~
 
-And now:
+そして次のように使います。
 
 ~~~lisp
 (let* ((out (make-string-output-stream))
@@ -566,9 +478,9 @@ And now:
 ;; => 5
 ~~~
 
-### Gray streams: fundamental classes
+### Gray stream: fundamental class
 
-The library defines the following classes:
+この library は次の classes を定義します。
 
 ```
 trivial-gray-streams:fundamental-stream
@@ -582,46 +494,42 @@ trivial-gray-streams:fundamental-character-input-stream
 trivial-gray-streams:fundamental-character-output-stream
 ```
 
-### Gray streams: methods
+### Gray stream: method
 
-The key methods to implement depend on the stream type. Take note of
-which methods are mandatory to implement, and which are optional.
+実装すべき key methods は stream type に依存します。どの methods が必須で、どれが省略可能かに注意してください。
 
-For **character input streams**:
+**character input streams** について:
 
-- `stream-read-char` — read one character.
-  - returns the symbol `:eof` if the stream is at end-of-file.
-- `stream-unread-char` — push a character back.
-- `stream-read-char-no-hang` (optional) — non-blocking character read
-- `stream-read-line` (optional, for performance)
-- `stream-read-sequence` (optional, for performance)
+- `stream-read-char` - 1 文字を読む。
+  - stream が end-of-file の場合、symbol `:eof` を返します。
+- `stream-unread-char` - 文字を押し戻す。
+- `stream-read-char-no-hang`（optional）- blocking しない character read
+- `stream-read-line`（optional、performance のため）
+- `stream-read-sequence`（optional、performance のため）
 
-Every subclass of `` must define a
-method for the first two functions.
+`` のすべての subclass は、最初の 2 つの関数の method を定義しなければなりません。
 
-For **character output streams**:
+**character output streams** について:
 
-- `stream-write-char` — write one character
-- `stream-line-column` —  Return the column number where the next character will be written, or NIL if that is not meaningful for this stream.
-- `stream-write-string` (optional, for performance)
-- `stream-write-sequence` (optional, for performance)
+- `stream-write-char` - 1 文字を書き込む
+- `stream-line-column` - 次の文字が書き込まれる column number を返す。この stream で意味がない場合は NIL を返す。
+- `stream-write-string`（optional、performance のため）
+- `stream-write-sequence`（optional、performance のため）
 
-For **binary streams**:
+**binary streams** について:
 
 - `stream-read-byte`
 - `stream-write-byte`
 - `stream-read-sequence` / `stream-write-sequence`
 
-The sequence methods let your stream move whole slices of data
-at once, which is often much faster than reading or writing
-one character or byte at a time.
+sequence methods により、stream はデータの whole slices を一度に移動できます。これは 1 文字または 1 byte ずつ読み書きするより、しばしばはるかに高速です。
 
-## Further reading
+## 参考
 
 - [CLHS: Streams](http://www.lispworks.com/documentation/HyperSpec/Body/21_.htm)
 - [CLtL2: Streams](https://www.cs.cmu.edu/Groups/AI/html/cltl/clm/node329.html)
 - [trivial-gray-streams](https://github.com/trivial-gray-streams/trivial-gray-streams)
-- [flexi-streams](https://edicl.github.io/flexi-streams/) - FLEXI-STREAMS "implements "virtual" bivalent streams that can be layered atop real binary or bivalent streams and that can be used to read and write character data in various single- or multi-octet encodings which can be changed on the fly. It also supplies in-memory binary streams which are similar to string streams".
-- [nontrivial-gray-streams](https://github.com/yitzchak/nontrivial-gray-streams) - extensions to the Gray stream protocol (Sequence Extensions, File Position Extensions…) and, unlike trivial-gray-streams, it does not introduce its own subclasses of the fundamental stream classes. Instead it exports the CL implementation's fundamental stream classes directly.
-- [SBCL's bivalent streams](https://www.sbcl.org/manual/#Bivalent-Streams) - "A bivalent stream can be used to read and write both `character` and `(unsigned-byte 8)` values. A bivalent stream is created by calling open with the argument :element-type :default. On such a stream, both binary and character data can be read and written with the usual input and output functions."
-- [Allegro CL's simple-streams](https://franz.com/support/documentation/10.1/doc/streams.htm) - also [a subset in SBCL](https://www.sbcl.org/manual/#Simple-Streams).
+- [flexi-streams](https://edicl.github.io/flexi-streams/) - FLEXI-STREAMS は「real binary または bivalent streams の上に layer でき、各種 single-octet または multi-octet encoding で character data を読み書きでき、その encoding を on the fly で変更できる "virtual" bivalent streams」を実装します。また、string streams に似た in-memory binary streams も提供します。
+- [nontrivial-gray-streams](https://github.com/yitzchak/nontrivial-gray-streams) - Gray stream protocol の拡張（Sequence Extensions、File Position Extensions…）。trivial-gray-streams とは異なり、fundamental stream classes の独自 subclass を導入しません。代わりに、CL implementation の fundamental stream classes を直接 export します。
+- [SBCL's bivalent streams](https://www.sbcl.org/manual/#Bivalent-Streams) - 「bivalent stream は `character` と `(unsigned-byte 8)` value の両方を読み書きするために使えます。bivalent stream は、引数 :element-type :default で open を呼び出すことで作成されます。そのような stream では、通常の input/output functions で binary data と character data の両方を読み書きできます。」
+- [Allegro CL's simple-streams](https://franz.com/support/documentation/10.1/doc/streams.htm) - [SBCL の subset](https://www.sbcl.org/manual/#Simple-Streams) もあります。

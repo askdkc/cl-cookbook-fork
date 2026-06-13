@@ -1,21 +1,16 @@
 ---
-title: Performance Tuning and Tips
+title: パフォーマンスチューニングとヒント
 ---
 
-Many Common Lisp implementations translate the source code into assembly
-language, so the performance is really good compared with some other
-interpreted languages.
+多くの Common Lisp 処理系は source code を assembly language に変換するため、interpreted languages の一部と比べて性能はとても良好です。
 
-However, sometimes we just want the program to be faster. This chapter
-introduces some techniques to squeeze the CPU power out.
+しかし、プログラムをもっと速くしたいこともあります。この章では CPU power を引き出すためのいくつかの技法を紹介します。
 
-## Finding Bottlenecks
+## ボトルネックを見つける
 
-### Acquiring Execution Time
+### 実行時間を取得する
 
-The macro [`time`][time] is very useful for finding out bottlenecks. It takes
-a form, evaluates it and prints timing information in
-[`*trace-output*`][trace-output], as shown below:
+macro [`time`][time] は bottleneck を見つけるのにとても便利です。form を受け取り、それを評価し、下に示すように [`*trace-output*`][trace-output] に timing information を出力します。
 
 ~~~lisp
 * (defun collect (start end)
@@ -33,54 +28,39 @@ Evaluation took:
   0 bytes consed
 ~~~
 
-By using the `time` macro it is fairly easy to find out which part of your program
-takes too much time, or take too much memory ("bytes consed").
+`time` macro を使うと、プログラムのどの部分が時間を取りすぎているか、または memory（"bytes consed"）を使いすぎているかをかなり簡単に見つけられます。
 
-Please note that the timing information provided here is not guaranteed to be
-reliable enough for marketing comparisons. It should only be used for tuning
-purpose, as demonstrated in this chapter.
+ここで提供される timing information は、marketing comparison に十分な信頼性が保証されているわけではないことに注意してください。この章で示すように、tuning purpose にだけ使うべきです。
 
-### Know your Lisp's statistical profiler
+### Lisp の統計的 profiler を知る
 
-Implementations ship their own profilers. SBCL has
-[sb-profile](http://www.sbcl.org/manual/#Deterministic-Profiler), a
-"classic, per-function-call" deterministic profiler and
-[sb-sprof](http://www.sbcl.org/manual/#Statistical-Profiler), a
-statistical profiler. The latter works by taking samples of the
-program execution at regular intervals, instead of instrumenting
-functions like `sb-profile:profile` does.
+処理系はそれぞれ独自の profiler を同梱しています。SBCL には、"classic, per-function-call" な deterministic profiler である [sb-profile](http://www.sbcl.org/manual/#Deterministic-Profiler) と、statistical profiler である [sb-sprof](http://www.sbcl.org/manual/#Statistical-Profiler) があります。後者は `sb-profile:profile` のように関数を instrument するのではなく、一定間隔で program execution の sample を取ることで動作します。
 
-> You might find sb-sprof more useful than the deterministic profiler when profiling functions in the common-lisp-package, SBCL internals, or code where the instrumenting overhead is excessive.
+> common-lisp-package の関数、SBCL internals、または instrumenting overhead が過大な code を profiling する場合、deterministic profiler より sb-sprof の方が便利かもしれません。
 
-Load `sb-sprof` in your image:
+image に `sb-sprof` を load します。
 
 ```lisp
 (require :sb-sprof)
 ```
 
-and then use the macro `sb-sprof:with-profiling`. Please see its documentation.
+そして macro `sb-sprof:with-profiling` を使います。詳細はその documentation を参照してください。
 
 
-### Use flamegraphs and other tracing profilers
+### flamegraph とその他の tracing profiler を使う
 
-[cl-flamegraph](https://github.com/40ants/cl-flamegraph) is a wrapper around SBCL's statistical profiler to generate FlameGraph charts. Flamegraphs are a very visual way to search for hotspots in your code:
+[cl-flamegraph](https://github.com/40ants/cl-flamegraph) は、FlameGraph charts を生成するための SBCL statistical profiler の wrapper です。Flamegraphs は code 内の hotspot を探すための非常に視覚的な方法です。
 
 ![](assets/cl-flamegraph.png)
 
-See also [tracer](https://github.com/TeMPOraL/tracer), a tracing
-profiler for SBCL. Its output is suitable for display in
-Chrome’s or Chromium’s Tracing Viewer (`chrome://tracing`).
+[tracer](https://github.com/TeMPOraL/tracer) も参照してください。これは SBCL 用の tracing profiler です。その出力は Chrome または Chromium の Tracing Viewer（`chrome://tracing`）で表示するのに適しています。
 
-The tool [ICL](https://github.com/atgreen/icl/), an enhanced REPL with
-a browser interface, has a built-in command to profile a function and
-explore the results in an interactive flamegraph visualizer. You can
-switch between different views to identify bottlenecks.
+browser interface を持つ enhanced REPL である [ICL](https://github.com/atgreen/icl/) には、関数を profile し、結果を interactive flamegraph visualizer で探索する built-in command があります。bottleneck を特定するために異なる view を切り替えられます。
 
 
-### Checking Assembly Code
+### assembly code を確認する
 
-The function [`disassemble`][disassemble] takes a function and prints the
-compiled code of it to `*standard-output*`. For example:
+関数 [`disassemble`][disassemble] は関数を受け取り、その compiled code を `*standard-output*` に出力します。例:
 
 ~~~lisp
 * (defun plus (a b)
@@ -105,8 +85,7 @@ PLUS
 ; 5E:  CC0F         BREAK 15   ; Invalid argument count trap
 ~~~
 
-The code above was evaluated in SBCL. In some other implementations such as
-CLISP, `disassembly` might return something different:
+上の code は SBCL で評価されました。CLISP のような他の処理系では、`disassembly` は異なるものを返すかもしれません。
 
 ~~~lisp
 * (defun plus (a b)
@@ -127,37 +106,23 @@ No keyword parameters
 NIL
 ~~~
 
-It is because SBCL compiles the Lisp code into machine code, while CLISP does
-not.
+これは、SBCL が Lisp code を machine code に compile する一方で、CLISP はそうしないためです。
 
-## Using Declare Expression
+## declare expression を使う
 
-The [*declare expression*][declare] can be used to provide hints for compilers
-to perform various optimization. Please note that these hints are
-implementation-dependent. Some implementations such as SBCL support this
-feature, and you may refer to their own documentation for detailed
-information. Here only some basic techniques mentioned in CLHS are introduced.
+[*declare expression*][declare] は、compiler に各種 optimization の hint を与えるために使えます。これらの hint は implementation-dependent であることに注意してください。SBCL のような一部の処理系はこの機能をサポートしており、詳細はそれぞれの documentation を参照できます。ここでは CLHS で触れられている基本的な技法だけを紹介します。
 
-In general, declare expressions can occur only at the beginning of the bodies
-of certain forms, or immediately after a documentation string if the context
-allows. Also, the content of a declare expression is restricted to limited
-forms. Here we introduce some of them that are related to performance tuning.
+一般に、declare expressions は特定の form の body の先頭、または context が許す場合は documentation string の直後にだけ現れます。また、declare expression の内容は限られた form に制限されています。ここでは performance tuning に関係するものをいくつか紹介します。
 
-Please keep in mind that these optimization skills introduced in this section
-are strongly connected to the Lisp implementation selected. Always check their
-documentation before using `declare`!
+この節で紹介する optimization skills は、選択した Lisp implementation と強く結びついていることを覚えておいてください。`declare` を使う前に必ずその documentation を確認してください。
 
-### Speed and Safety
+### speed と safety
 
-Lisp allows you to specify several quality properties for the compiler using
-the declaration [`optimize`][optimize]. Each quality may be assigned a value
-from 0 to 3, with 0 being "totally unimportant" and 3 being "extremely
-important".
+Lisp では、declaration [`optimize`][optimize] を使って compiler にいくつかの quality property を指定できます。各 quality には 0 から 3 の値を割り当てられ、0 は「まったく重要でない」、3 は「非常に重要」を意味します。
 
-The most significant qualities might be `safety` and `speed`.
+最も重要な quality は `safety` と `speed` かもしれません。
 
-By default, Lisp considers code safety to be much more important than
-speed. But you may adjust the weight for more aggressive optimization.
+デフォルトでは、Lisp は code safety を speed よりずっと重要だと見なします。しかし、より積極的な optimization のために重みを調整できます。
 
 ~~~lisp
 * (defun max-original (a b)
@@ -264,16 +229,12 @@ MAX-WITH-SPEED-3
 ; 95:       EBC6             jmp L0
 ~~~
 
-As you can see, the generated assembly code is much shorter (92 bytes VS 144).
-The compiler was able to perform optimizations. Yet we can do better by
-declaring types.
+見て分かるように、生成された assembly code はかなり短くなっています（92 bytes 対 144）。compiler は optimization を行えました。さらに type を宣言すれば、もっと良くできます。
 
 
-### Type Hints
+### type hint
 
-As mentioned in the [*Type System*][type] chapter, Lisp has a relatively
-powerful type system. You may provide type hints so that the compiler may
-reduce the size of the generated code.
+[*Type System*][type] 章で述べたように、Lisp には比較的強力な type system があります。compiler が生成 code の size を減らせるように type hint を与えられます。
 
 ~~~lisp
 * (defun max-with-type (a b)
@@ -302,8 +263,7 @@ MAX-WITH-TYPE
 ; 47:       C3               ret
 ~~~
 
-The size of generated assembly code shrunk to about 1/3 of the size. What
-about speed?
+生成された assembly code の size は約 1/3 まで縮みました。速度はどうでしょうか。
 
 ~~~lisp
 * (time (dotimes (i 10000) (max-original 100 200)))
@@ -323,19 +283,15 @@ Evaluation took:
   0 bytes consed
 ~~~
 
-You see, by specifying type hints, our code runs much faster!
+type hint を指定することで、code がずっと速く動くことが分かります。
 
-But wait...What happens if we declare wrong types? The answer is: it depends.
+しかし待ってください。間違った type を宣言すると何が起きるでしょうか。答えは「場合による」です。
 
-For example, SBCL treats type declarations in a [special way][sbcl-type]. It
-performs different levels of type checking according to the safety level. If
-safety level is set to 0, no type checking will be performed. Thus a wrong
-type specifier might cause a lot of damage.
+たとえば、SBCL は type declarations を [special way][sbcl-type] で扱います。safety level に応じて異なる level の type checking を行います。safety level が 0 に設定されている場合、type checking は行われません。そのため、間違った type specifier は大きな損害を引き起こすかもしれません。
 
-### More on Type Declaration with `declaim`
+### `declaim` による type declaration の詳細
 
-If you try to evaluate a `declare` form in the top level, you might get the
-following error:
+top level で `declare` form を評価しようとすると、次の error が出るかもしれません。
 
 ~~~lisp
 Execution of a form compiled with errors.
@@ -348,16 +304,11 @@ being evaluated, which invokes undefined behaviour.
    [Condition of type SB-INT:COMPILED-PROGRAM-ERROR]
 ~~~
 
-This is because type declarations have [scopes][declare-scope]. In the
-examples above, we have seen type declarations applied to a function.
+これは type declarations に [scopes][declare-scope] があるためです。上の例では、type declarations が関数に適用されるのを見ました。
 
-During development it is usually useful to raise the importance of safety in
-order to find out potential problems as soon as possible. On the contrary,
-speed might be more important after deployment. However, it might be too
-verbose to specify declaration expression for each single function.
+development 中は、潜在的な問題をできるだけ早く見つけるために safety の重要度を上げることが普通は有用です。反対に、deployment 後は speed の方が重要かもしれません。しかし、すべての関数に declaration expression を指定するのは冗長すぎることがあります。
 
-The macro [`declaim`][declaim] provides such possibility. It can be used as a
-top level form in a file and the declarations will be made at compile-time.
+macro [`declaim`][declaim] はその可能性を提供します。file 内の top level form として使え、declarations は compile-time に作られます。
 
 ~~~lisp
 * (declaim (optimize (speed 0) (safety 3)))
@@ -384,45 +335,35 @@ MAX-ORIGINAL
 ; Size: 142 bytes. Origin: #x52D4815D
 ~~~
 
-Please note that `declaim` works in **compile-time** of a file. It is mostly
-used to make some declares local to that file. And it is unspecified whether
-or not the compile-time side-effects of a declaim persist after the file has
-been compiled.
+`declaim` は file の **compile-time** に動作することに注意してください。主に、一部の declares をその file に local にするために使われます。また、declaim の compile-time side-effects が file の compile 後も persist するかどうかは unspecified です。
 
 
-### Declaring function types
-Another useful declaration is a `ftype` declaration which establishes
-the relationship between the function argument types and the return value type.
-If the type of passed arguments matches the declared types, the return value type
-is expected to match the declared one. Because of that, a function can have more
-than one `ftype` declaration associated with it. A `ftype` declaration restricts
-the type of the argument every time the function is called. It has the following form:
+### 関数 type の宣言
+
+もう 1 つ有用な declaration は `ftype` declaration です。これは関数の argument types と return value type の関係を確立します。渡された arguments の type が declared types と一致する場合、return value type は declared one と一致すると期待されます。そのため、1 つの関数に複数の `ftype` declaration を associated できます。`ftype` declaration は、関数が呼び出されるたびに argument の type を制限します。形は次のとおりです。
 
 ~~~lisp
  (declaim (ftype (function (arg1 arg2 ...) return-value)
                  function-name1))
 ~~~~
 
-If the function returns `nil`, its return type is `null`.
-This declaration does not put any restriction on the types of arguments by itself.
-It only takes effect if the provided arguments have the specified types -- otherwise
-no error is signaled and declaration has no effect. For example,
-the following declamation states that if the argument to the function `square`
-is a `fixnum`, the value of the function will also be a `fixnum`:
+関数が `nil` を返す場合、その return type は `null` です。
+この declaration は、それ自体では arguments の type に制限をかけません。
+与えられた arguments が指定された types を持つ場合にのみ効果があります。そうでなければ error は signal されず、declaration は効果を持ちません。たとえば、次の declamation は、関数 `square` への argument が `fixnum` なら、その関数の value も `fixnum` になることを述べています。
 
 ~~~lisp
 (declaim (ftype (function (fixnum) fixnum) square))
 (defun square (x) (* x x))
 ~~~~
-If we provide it with the argument which is not declared to be of type `fixnum`,
-no optimization will take place:
+
+`fixnum` type と宣言されていない argument を与えると、optimization は行われません。
 
 ~~~lisp
 (defun do-some-arithmetic (x)
   (the fixnum (+ x (square x))))
 ~~~~
 
-Now let's try to optimize the speed. The compiler will state that there is type uncertainty:
+では speed を optimize してみましょう。compiler は type uncertainty があると述べます。
 
 ~~~lisp
 (defun do-some-arithmetic (x)
@@ -469,8 +410,7 @@ NIL
 ~~~~
 
 
-Now we can add a type declaration for `x`, so the compiler can assume
-that the expression `(square x)` is a `fixnum`, and use the fixnum-specific `+`:
+ここで `x` に type declaration を追加すると、compiler は expression `(square x)` が `fixnum` だと仮定でき、fixnum-specific な `+` を使えます。
 
 ~~~lisp
 (defun do-some-arithmetic (x)
@@ -500,67 +440,55 @@ that the expression `(square x)` is a `fixnum`, and use the fixnum-specific `+`:
 NIL
 ~~~~
 
-### Code Inline
+### code inline
 
-The declaration [`inline`][inline] replaces function calls with function body,
-if the compiler supports it. It will save the cost of function calls but will
-potentially increase the code size. The best situation to use `inline` might
-be those small but frequently used functions. The following snippet shows how
-to encourage and prohibit code inline.
+declaration [`inline`][inline] は、compiler がサポートしていれば function call を function body で置き換えます。function call の cost は節約できますが、code size は増える可能性があります。`inline` を使う最適な状況は、小さいけれど頻繁に使われる関数でしょう。次の snippet は code inline を促す方法と禁止する方法を示しています。
 
 ~~~lisp
-;; The globally defined function DISPATCH should be open-coded,
-;; if the implementation supports inlining, unless a NOTINLINE
-;; declaration overrides this effect.
+;; globally defined function DISPATCH は open-coded にされるべきです。
+;; implementation が inlining をサポートしており、NOTINLINE declaration が
+;; この効果を上書きしない場合です。
 (declaim (inline dispatch))
 (defun dispatch (x) (funcall (get (car x) 'dispatch) x))
 
-;; Here is an example where inlining would be encouraged.
-;; Because function DISPATCH was defined as INLINE, the code
-;; inlining will be encouraged by default.
+;; inlining が促される例です。
+;; function DISPATCH は INLINE として定義されているため、
+;; code inlining はデフォルトで促されます。
 (defun use-dispatch-inline-by-default ()
   (dispatch (read-command)))
 
-;; Here is an example where inlining would be prohibited.
-;; The NOTINLINE here only affects this function.
+;; inlining が禁止される例です。
+;; ここでの NOTINLINE はこの関数にだけ影響します。
 (defun use-dispatch-with-declare-notinline  ()
   (declare (notinline dispatch))
   (dispatch (read-command)))
 
-;; Here is an example where inlining would be prohibited.
-;; The NOTINLINE here affects all following code.
+;; inlining が禁止される例です。
+;; ここでの NOTINLINE は以後のすべての code に影響します。
 (declaim (notinline dispatch))
 (defun use-dispatch-with-declaim-noinline ()
   (dispatch (read-command)))
 
-;; Inlining would be encouraged because you specified it.
-;; The INLINE here only affects this function.
+;; 指定したため inlining が促されます。
+;; ここでの INLINE はこの関数にだけ影響します。
 (defun use-dispatch-with-inline ()
   (declare (inline dispatch))
   (dispatch (read-command)))
 ~~~
 
-Please note that when the inlined functions change, all the callers must be
-re-compiled.
+inlined functions が変わった場合、すべての caller を再 compile しなければならないことに注意してください。
 
-## Optimizing Generic Functions
+## generic function の最適化
 
-### Using Static Dispatch
+### static dispatch を使う
 
-Generic functions provide much convenience and flexibility during
-development. However, the flexibility comes with cost: generic methods are
-much slower than trivial functions. The performance cost becomes a burden
-especially when the flexibility is not needed.
+generic functions は development 中に多くの convenience と flexibility を提供します。しかし、その flexibility には cost があります。generic methods は trivial functions よりずっと遅いのです。flexibility が不要な場合、この performance cost は特に負担になります。
 
-The package [`inlined-generic-function`][inlined-generic-function] provides
-functions to convert generic functions to static dispatch, moving the dispatch
-cost to compile-time. You just need to define generic function as a
-`inlined-generic-function`.
+package [`inlined-generic-function`][inlined-generic-function] は、generic functions を static dispatch に変換し、dispatch cost を compile-time に移す関数を提供します。generic function を `inlined-generic-function` として定義するだけで済みます。
 
-**Caution**
+**注意**
 
-This package is declared as experimental thus is not recommended to be used in
-a serious software production. Use it at your own risk!
+この package は experimental と宣言されているため、serious software production での利用は推奨されません。自己責任で使ってください。
 
 ~~~lisp
 * (defgeneric plus (a b)
@@ -602,11 +530,9 @@ Evaluation took:
   0 bytes consed
 ~~~
 
-The inlining is not enabled by default because once inlined, changes made to
-methods will not be reflected.
+一度 inline されると method に加えた変更が反映されないため、inlining はデフォルトでは有効になっていません。
 
-It can be enabled globally by adding `:inline-generic-function` flag in
-[`*features*`][*features*].
+[`*features*`][*features*] に `:inline-generic-function` flag を追加すると、global に有効化できます。
 
 ~~~lisp
 * (push :inline-generic-function *features*)
@@ -619,48 +545,44 @@ It can be enabled globally by adding `:inline-generic-function` flag in
 :COMPARE-AND-SWAP-VOPS :CYCLE-COUNTER :ELF :FP-AND-PC-STANDARD-SAVE ..)
 ~~~
 
-When this feature is present, all inlinable generic functions are inlined
-unless it is declared `notinline`.
+この feature が存在する場合、`notinline` と宣言されていない限り、すべての inlinable generic functions が inlined されます。
 
-## Multiple return values
+## 複数の戻り値
 
-Usually, `values` and `multiple-value-bind `are not going to "cons",
-where a `(cons a b)` call does heap allocate. Use them!
+通常、`values` と `multiple-value-bind ` は "cons" しません。一方 `(cons a b)` call は heap allocate します。これらを使いましょう。
 
-In the parcom library [parcom][parcom], using `values` instead of `cons` reduced its memory usage by 30%.
+parcom library [parcom][parcom] では、`cons` の代わりに `values` を使うことで memory usage が 30% 減りました。
 
-## Stack allocation
+## stack allocation
 
-With `(declare (dynamic-extent your-variable))`, you can tell the compiler when
-you want a local variable to be allocated on the stack and not on the
-heap, automatically freeing the memory when the function returns.
+`(declare (dynamic-extent your-variable))` により、local variable を heap ではなく stack に allocate してほしいと compiler に伝えられます。関数が return すると memory は自動的に解放されます。
 
 
-## Block compilation
+## block compilation
 
-SBCL [got block compilation on version 2.0.2](https://mstmetent.blogspot.com/2020/02/block-compilation-fresh-in-sbcl-202.html), which was in CMUCL since 1991 but a little forgotten since.
+SBCL は [version 2.0.2 で block compilation を得ました](https://mstmetent.blogspot.com/2020/02/block-compilation-fresh-in-sbcl-202.html)。これは CMUCL では 1991 年からありましたが、少し忘れられていました。
 
-You can enable block compilation with a one-liner:
+block compilation は 1 行で有効化できます。
 
 ~~~lisp
 (setq *block-compile-default* t)
 ~~~
 
-But what is it?
+ではこれは何でしょうか。
 
-Block compilation addresses a known aspect of dynamic languages: function calls to global, top-level functions are expensive.
+block compilation は dynamic languages の既知の側面に対処します。global な top-level functions への function calls は高価です。
 
-> Much more expensive than in a statically compiled language. They're slow because of the late-bound nature of top-level defined functions, allowing arbitrary redefinition while the program is running and forcing runtime checks on whether the function is being called with the right number or types of arguments. This type of call is known as a "full call" in Python (the compiler used in CMUCL and SBCL, not to be confused with the programming language), and their calling convention permits the most runtime flexibility.
+> statically compiled language よりはるかに高価です。遅い理由は、top-level defined functions の late-bound な性質にあります。program が実行中に任意に再定義できるため、その関数が正しい数や type の arguments で呼び出されているかについて runtime checks を強制されます。この種の call は Python（CMUCL と SBCL で使われる compiler であり、programming language と混同しないでください）で "full call" と呼ばれ、その calling convention は最大限の runtime flexibility を許します。
 
-But local calls, the ones inside a top-level functions (for example `lambda`s, `labels` and `flet`s) are fast.
+しかし local calls、つまり top-level functions の内側にあるもの（たとえば `lambda`、`labels`、`flet`）は高速です。
 
-> These calls are more 'static' in the sense that they are treated more like function calls in static languages, being compiled "together" and at the same time as the local functions they reference, allowing them to be optimized at compile-time. For example, argument checking can be done at compile time because the number of arguments of the callee is known at compile time, unlike in the full call case where the function, and hence the number of arguments it takes, can change dynamically at runtime at any point. Additionally, the local call calling convention can allow for passing unboxed values like floats around, as they are put into unboxed registers never used in the full call convention, which must use boxed argument  and return value registers.
+> これらの call は、static languages の function call に近いものとして扱われるという意味で、より「static」です。参照している local functions と「一緒に」同時に compile され、compile-time に optimize できるためです。たとえば、callee の argument 数が compile time に分かるため、argument checking は compile time に行えます。full call の場合は、function と、それが取る argument 数が runtime の任意の時点で dynamically に変わり得るため、そうではありません。さらに、local call calling convention では float のような unboxed values を渡せる場合があります。これらは、full call convention では使われない unboxed registers に入れられるからです。full call convention は boxed argument and return value registers を使わなければなりません。
 
-So enabling block compilation kind of turns your code into a giant `labels` form.
+つまり block compilation を有効にすると、code が巨大な `labels` form になるようなものです。
 
-One evident possible drawback, dependending on your application, is that you can't redefine functions at runtime anymore.
+application によって明白な possible drawback の 1 つは、runtime に関数を再定義できなくなることです。
 
-We can also enable block compilation with the `:block-compile` keyword to `compile-file`:
+`compile-file` に `:block-compile` keyword を渡して block compilation を有効化することもできます。
 
 ~~~lisp
 (defun foo (x y)
@@ -681,23 +603,23 @@ We can also enable block compilation with the `:block-compile` keyword to `compi
 > (sb-disassem:disassemble-code-component #'foo)
 ~~~
 
-If you inspect the assembly,
+assembly を調べると、
 
-> you [will] see that FOO and BAR are now compiled into the same component (with local calls), and both have valid external entry points. This improves locality of code quite a bit and still allows calling both FOO and BAR externally from the file (e.g. in the REPL). […]
+> FOO と BAR が同じ component（local calls 付き）に compile され、両方とも有効な external entry points を持つことが分かるでしょう。これにより code の locality がかなり改善され、それでも file の外部（たとえば REPL）から FOO と BAR の両方を呼び出せます。[…]
 
-But there is one more goody block compilation adds...
+しかし block compilation が追加する良い点はもう 1 つあります。
 
-> Notice we specified `:entry-points` nil above. That's telling the compiler to still create external entry points to every function in the file, since we'd like to be able to call them normally from outside the code component (i.e. the compiled compilation unit, here the entire file).
+> 上で `:entry-points` nil を指定したことに注意してください。これは、file 内のすべての関数に external entry points をまだ作成するよう compiler に伝えています。code component（つまり compiled compilation unit、ここでは file 全体）の外から通常どおり呼び出せるようにしたいからです。
 
-For more explanations, I refer you to the mentioned blog post, the current de-facto documentation for SBCL, in addition to [CMUCL's documentation](https://cmucl.org/docs/cmu-user/html/Block-Compilation.html) (note that the form-by-form level granularity in CMUCL (` (declaim (start-block ...)) ... (declaim (end-block ..))`) is missing in SBCL, at the time of writing).
+さらなる説明については、SBCL の現在の de-facto documentation である前述の blog post と、[CMUCL's documentation](https://cmucl.org/docs/cmu-user/html/Block-Compilation.html) を参照してください（CMUCL にある form-by-form level granularity（` (declaim (start-block ...)) ... (declaim (end-block ..))`）は、執筆時点の SBCL にはないことに注意してください）。
 
-Finally, be aware that "block compiling and inlining currently does not interact very well [in SBCL]".
+最後に、"block compiling and inlining currently does not interact very well [in SBCL]" であることに注意してください。
 
-## See also
+## 参考
 
-* [CMUCL's Advanced Compiler Use and Efficiency Hints](https://cmucl.org/downloads/doc/cmu-user-2010-05-03/compiler-hint.html), which is were SBCL comes from.
-* [Optimizing Common Lisp (for the parcom library)](https://www.fosskers.ca/en/blog/optimizing-common-lisp)
-* [Idiomatic Lisp and the nbody benchmark](https://www.stylewarning.com/posts/nbody/) (2026) - on Lisp DSLs, matching C performance, readability, reusability and additional benefits unique to Lisp.
+* [CMUCL's Advanced Compiler Use and Efficiency Hints](https://cmucl.org/downloads/doc/cmu-user-2010-05-03/compiler-hint.html)。SBCL はここから来ています。
+* [Common Lisp の最適化（parcom library 向け）](https://www.fosskers.ca/en/blog/optimizing-common-lisp)
+* [Idiomatic Lisp and the nbody benchmark](https://www.stylewarning.com/posts/nbody/) (2026) - Lisp DSL、C performance への matching、readability、reusability、そして Lisp 固有の additional benefits について。
 
 
 [time]: http://www.lispworks.com/documentation/lw51/CLHS/Body/m_time.htm

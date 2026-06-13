@@ -1,89 +1,88 @@
 ---
-title: Files and Directories
+title: ファイルとディレクトリ
 ---
 
-We'll see here a handful of functions and libraries to operate on files and directories.
+ここでは file と directory を操作するための function と library をいくつか見ていきます。
 
-In this chapter, we use mainly
+この章では主に
 [namestrings](http://www.lispworks.com/documentation/HyperSpec/Body/19_aa.htm)
-to
+を使って
 [specify filenames](http://www.lispworks.com/documentation/HyperSpec/Body/19_.htm).
-In a recipe or two we also use
+file name を指定します。いくつかの recipe では
 [pathnames](http://www.lispworks.com/documentation/HyperSpec/Body/19_ab.htm).
+も使います。
 
-Many functions will come from UIOP, so we suggest you have a look directly at it:
+多くの function は UIOP 由来なので、直接見ておくことを勧めます。
 
 * [UIOP/filesystem](https://common-lisp.net/project/asdf/uiop.html#UIOP_002fFILESYSTEM)
 * [UIOP/pathname](https://common-lisp.net/project/asdf/uiop.html#UIOP_002fPATHNAME)
 
-Of course, do not miss:
+もちろん、次も見逃さないでください。
 
 * [Files and File I/O in Practical Common Lisp](http://gigamonkeys.com/book/files-and-file-io.html)
 
 
-### Getting the components of a pathname
+### pathname の構成要素を取得する
 
-#### File name (sans directory)
+#### file name (directory なし)
 
-Use `file-namestring` to get a file name from a pathname:
+pathname から file name を取得するには `file-namestring` を使います。
 
 ~~~lisp
 (file-namestring #p"/path/to/file.lisp") ;; => "file.lisp"
 ~~~
 
-#### File extension
+#### file extension
 
-The file extension is called "pathname type" in Lisp parlance:
+file extension は Lisp 用語では "pathname type" と呼ばれます。
 
 ~~~lisp
 (pathname-type "~/foo.org")  ;; => "org"
 ~~~
 
-#### File basename
+#### file basename
 
-The basename is called the "pathname name" -
+basename は "pathname name" と呼ばれます。
 
 ~~~lisp
 (pathname-name "~/foo.org")  ;; => "foo"
 (pathname-name "~/foo")      ;; => "foo"
 ~~~
 
-If a directory pathname has a trailing slash, `pathname-name` may return `nil`; use `pathname-directory` instead -
+directory pathname に trailing slash がある場合、`pathname-name` は `nil` を返すことがあります。代わりに `pathname-directory` を使います。
 
 ~~~lisp
 (pathname-name "~/foo/")     ;; => NIL
 (first (last (pathname-directory #P"~/foo/"))) ;; => "foo"
 ~~~
 
-#### Parent directory
+#### parent directory
 
 ~~~lisp
 (uiop:pathname-parent-directory-pathname #P"/foo/bar/quux/")
 ;; => #P"/foo/bar/"
 ~~~
 
-### Testing whether a file exists
+### file が存在するか test する
 
-Use the function
+function
 [`probe-file`](http://www.lispworks.com/documentation/HyperSpec/Body/f_probe_.htm)
-which will return a
+を使います。これは
 [generalized boolean](http://www.lispworks.com/documentation/HyperSpec/Body/26_glo_g.htm#generalized_boolean) -
-either `nil` if the file doesn't exists, or its
+を返します。file が存在しなければ `nil`、存在するならその
 [truename](http://www.lispworks.com/documentation/HyperSpec/Body/20_ac.htm)
-(which might be different from the argument you supplied).
+(渡した argument とは異なる場合があります) を返します。
 
-For more portability, use `uiop:probe-file*` or `uiop:file-exists-p`
-which will return the file pathname (if it exists).
+より portable にするには、`uiop:probe-file*` または `uiop:file-exists-p` を使います。これらは (存在する場合) file pathname を返します。
 
-If you fear that your file name might contain a wildcard character such as
-`*`, `[` or `]`, read below.
+file name に `*`、`[`、`]` などの wildcard character が含まれているかもしれない場合は、下を読んでください。
 
 
 ~~~lisp
 * (probe-file "/etc/passwd")
 #p"/etc/passwd"
 
-;; Create a symlink (shell):
+;; symlink を作成する (shell):
 $ ln -s /etc/passwd foo
 
 * (probe-file "foo")
@@ -94,24 +93,21 @@ NIL
 ~~~
 
 
-### Testing whether a file exists (beware of wildcard characters)
+### file が存在するか test する (wildcard character に注意)
 
-Use `probe-file` after `(make-pathname :name filename-with-wild-chars)` or `sb-ext:parse-native-namestring` on SBCL. Why?
+`(make-pathname :name filename-with-wild-chars)` の後に `probe-file` を使うか、SBCL では `sb-ext:parse-native-namestring` を使います。なぜでしょうか。
 
-The characters `*` but also `[` and `]` are wildcard characters. Inside a file name, they create
-[wildcard pathnames](https://cl-community-spec.github.io/pages/Restrictions-on-Wildcard-Pathnames.html) with restrictions.
+`*` だけでなく `[` と `]` も wildcard character です。file name の中では、これらは制限付きの [wildcard pathnames](https://cl-community-spec.github.io/pages/Restrictions-on-Wildcard-Pathnames.html) を作ります。
 
-If a file contains any of them, `uiop:probe-file*` and
-`uiop:file-exists-p` will return NIL, even though your file exists.
+file name にこれらが含まれている場合、file が存在していても `uiop:probe-file*` と `uiop:file-exists-p` は NIL を返します。
 
-Let's have a music file named "best-of-[2000]-01.mp3":
+"best-of-[2000]-01.mp3" という music file があるとします。
 
 ```txt
 $ touch best-of-\[2000\]-01.mp3
 ```
 
-You can't use `probe-file`, unless you escape the characters with two
-backslashes (which we would do with `str:replace-all`):
+2 つの backslash で character を escape しない限り、`probe-file` は使えません (これは `str:replace-all` で行うことになるでしょう)。
 
 ```lisp
 (probe-file "best-of-[2000]-01.mp3")
@@ -121,162 +117,153 @@ backslashes (which we would do with `str:replace-all`):
 ;; => #P"best-of-\\[2000]-01.mp3"
 ```
 
-You can use `make-pathname` followed by `probe-file`:
+`make-pathname` に続けて `probe-file` を使えます。
 
 ~~~lisp
 (probe-file (make-pathname :name "best-of-[2000]-01.mp3"))
 ;; => #P"/home/me/path/to/best-of-\\[2000]-01.mp3"
 ~~~
 
-On SBCL, you can use `sb-ext:parse-native-namestring`:
+SBCL では `sb-ext:parse-native-namestring` を使えます。
 
 ```lisp
 (sb-ext:parse-native-namestring "best-of-[2000]-01.mp3")
 ;; => #P"best-of-\\[2000]-01.mp3"
 ```
 
-With `uiop:ensure-pathname`, you can use the `:want-non-wild t` key parameter.
+`uiop:ensure-pathname` では `:want-non-wild t` key parameter を使えます。
 
 
-### Expanding a file or a directory name with a tilde (`~`)
+### tilde (`~`) を含む file name または directory name を展開する
 
-For portability, use `uiop:native-namestring`:
+portability のために `uiop:native-namestring` を使います。
 
 ~~~lisp
 (uiop:native-namestring "~/.emacs.d/")
 "/home/me/.emacs.d/"
 ~~~
 
-It also expand the tilde with files and directories that don't exist:
+存在しない file や directory についても tilde を展開します。
 
 ~~~lisp
 (uiop:native-namestring "~/foo987.txt")
 :: "/home/me/foo987.txt"
 ~~~
 
-On several implementations (CCL, ABCL, ECL, CLISP, LispWorks),
-`namestring` works similarly. On SBCL, if the file or directory
-doesn't exist, `namestring` doesn't expand the path but returns the
-argument, with the tilde.
+いくつかの implementation (CCL、ABCL、ECL、CLISP、LispWorks) では、`namestring` も同様に動作します。SBCL では file または directory が存在しない場合、`namestring` は path を展開せず、tilde を含む argument を返します。
 
-With files that exist, you can also use `truename`. But, at least on
-SBCL, it returns an error if the path doesn't exist.
+存在する file には `truename` も使えます。ただし少なくとも SBCL では、path が存在しない場合 error を返します。
 
-### Turning a pathname into a string with Windows' directory separator
+### pathname を Windows の directory separator を使う string に変換する
 
-Use again `uiop:native-namestring`:
+ここでも `uiop:native-namestring` を使います。
 
 ~~~lisp
 CL-USER> (uiop:native-namestring #p"~/foo/")
 "C:\\Users\\You\\foo\\"
 ~~~
 
-See also `uiop:parse-native-namestring` for the inverse operation.
+逆の operation には `uiop:parse-native-namestring` も参照してください。
 
-### Creating directories
+### directory を作成する
 
-The function
+function
 [ensure-directories-exist](http://www.lispworks.com/documentation/HyperSpec/Body/f_ensu_1.htm)
-creates the directories if they do not exist:
+は、directory が存在しない場合に作成します。
 
 ~~~lisp
 (ensure-directories-exist "foo/bar/baz/")
 ~~~
 
-This may create `foo`, `bar` and `baz`. Don't forget the trailing slash.
+これは `foo`、`bar`、`baz` を作成するかもしれません。trailing slash を忘れないでください。
 
-### Deleting directories
+### directory を削除する
 
-Use `uiop:delete-directory-tree` with a pathname (`#p`), a trailing slash and the `:validate` key:
+pathname (`#p`)、trailing slash、`:validate` key とともに `uiop:delete-directory-tree` を使います。
 
 ~~~lisp
 ;; mkdir dirtest
 (uiop:delete-directory-tree #p"dirtest/" :validate t)
 ~~~
 
-You can use `pathname` around a string that designates a directory:
+directory を指す string を `pathname` で包んで使うこともできます。
 
 ~~~lisp
 (defun rmdir (path)
   (uiop:delete-directory-tree (pathname path) :validate t))
 ~~~
 
-UIOP also has `delete-empty-directory`
+UIOP には `delete-empty-directory` もあります。
 
 [cl-fad][cl-fad] has `(fad:delete-directory-and-files "dirtest")`.
 
-### Merging files and directories
+### file と directory を merge する
 
-Use `merge-pathnames`, with one thing to note: if you want to append
-directories, the second argument must have a trailing `/`.
+`merge-pathnames` を使いますが、注意点が 1 つあります。directory を append したい場合、第 2 argument には trailing `/` が必要です。
 
-As always, look at UIOP functions. We have a `uiop:merge-pathnames*`
-equivalent which fixes corner cases.
+いつものように UIOP function を見てください。corner case を修正する `uiop:merge-pathnames*` 相当があります。
 
-So, here's how to append a directory to another one:
+ある directory に別の directory を append する方法は次のとおりです。
 
 ~~~lisp
 (merge-pathnames "otherpath" "/home/vince/projects/")
-;; important:                                     ^^
-;; a trailing / denotes a directory.
+;; 重要:                                         ^^
+;; trailing / は directory を表す
 ;; => #P"/home/vince/projects/otherpath"
 ~~~
 
-Look at the difference: if you don't include a trailing slash to
-either paths, `otherpath` and `projects` are seen as files, so `otherpath` is appended to the base directory containing `projects`:
+違いを見てください。どちらの path にも trailing slash を含めない場合、`otherpath` と `projects` は file と見なされるため、`otherpath` は `projects` を含む base directory に append されます。
 
 ~~~lisp
 (merge-pathnames "otherpath" "/home/vince/projects")
 ;; #P"/home/vince/otherpath"
-;;               ^^ no "projects", because it was seen as a file.
+;;               ^^ "projects" はない。file と見なされたため
 ~~~
 
-or again, with `otherpath/` (a trailing `/`) but `projects` seen as a file:
+あるいは、`otherpath/` (trailing `/` 付き) だが `projects` は file と見なされる場合です。
 
 ~~~lisp
 (merge-pathnames "otherpath/" "/home/vince/projects")
 ;; #P"/home/vince/otherpath/projects"
-;;                ^^ inserted here
+;;                ^^ ここに挿入される
 ~~~
 
-### Get the current working directory (CWD)
+### current working directory (CWD) を取得する
 
-Use `uiop/os:getcwd`:
+`uiop/os:getcwd` を使います。
 
 ~~~lisp
 (uiop/os:getcwd)
 ;; #P"/home/vince/projects/cl-cookbook/"
-;;                                    ^ with a trailing slash, useful for merge-pathnames
+;;                                    ^ trailing slash 付き。merge-pathnames に便利
 ~~~
 
-### Get the current directory relative to a Lisp project
+### Lisp project からの相対 current directory を取得する
 
-Use `asdf:system-relative-pathname system path`.
+`asdf:system-relative-pathname system path` を使います。
 
-Say you are working inside `mysystem`. It has an ASDF system
-declaration, the system is loaded in your Lisp image. This ASDF file
-is somewhere on your filesystem and you want the path to `src/web/`. Do this:
+`mysystem` の中で作業しているとします。これは ASDF system declaration を持ち、その system は Lisp image に load されています。この ASDF file は filesystem のどこかにあり、`src/web/` への path が欲しいとします。次のようにします。
 
 ~~~lisp
 (asdf:system-relative-pathname "mysystem" "src/web/")
 ;; => #P"/home/vince/projects/mysystem/src/web/"
 ~~~
 
-This will work on another user's machine, where the system sources are located in another location.
+これは system source が別の場所にある他の user の machine でも動作します。
 
 
-### Setting the current working directory
+### current working directory を設定する
 
-Use [`uiop:chdir`](https://asdf.common-lisp.dev/uiop.html#Function-uiop_002fos_003achdir) _`path`_:
+[`uiop:chdir`](https://asdf.common-lisp.dev/uiop.html#Function-uiop_002fos_003achdir) _`path`_ を使います。
 
 ~~~lisp
 (uiop:chdir "/bin/")
 0
 ~~~
 
-The trailing slash in _path_ is optional.
+_path_ の trailing slash は optional です。
 
-Or, to set for the current directory for the next operation only, use `uiop:with-current-directory`:
+または、次の operation だけ current directory を設定するには、`uiop:with-current-directory` を使います。
 
 ~~~lisp
 (let ((dir "/path/to/another/directory/"))
@@ -285,22 +272,17 @@ Or, to set for the current directory for the next operation only, use `uiop:with
 ~~~
 
 
-### Opening a file
+### file を開く
 
-Common Lisp has
-[`open`](http://www.lispworks.com/documentation/HyperSpec/Body/f_open.htm) and
+Common Lisp には
+[`open`](http://www.lispworks.com/documentation/HyperSpec/Body/f_open.htm) と
 [`close`](http://www.lispworks.com/documentation/HyperSpec/Body/f_close.htm)
-functions which resemble the functions of the same denominator from other
-programming languages you're probably familiar with. However, it is almost
-always recommendable to use the macro
+function があり、これはおそらく馴染みのある他の programming language の同名の function に似ています。しかし、ほとんど常に macro
 [`with-open-file`](http://www.lispworks.com/documentation/HyperSpec/Body/m_w_open.htm)
-instead. Not only will this macro open the file for you and close it when you're
-done, it'll also take care of it if your code leaves the body abnormally (such
-as by a use of
+を使うことを勧めます。この macro は file を開き、終わったら閉じるだけではありません。code が body から異常に抜けた場合 (
 [`go`](https://www.lispworks.com/documentation/HyperSpec/Body/s_go.htm),
 [`return-from`](https://www.lispworks.com/documentation/HyperSpec/Body/s_ret_fr.htm),
-or [`throw`](http://www.lispworks.com/documentation/HyperSpec/Body/s_throw.htm)). A
-typical use of `with-open-file` looks like this:
+または [`throw`](http://www.lispworks.com/documentation/HyperSpec/Body/s_throw.htm) の使用など) も処理してくれます。`with-open-file` の典型的な使い方は次のようになります。
 
 ~~~lisp
 (with-open-file (str <_file-spec_>
@@ -310,40 +292,23 @@ typical use of `with-open-file` looks like this:
   (your code here))
 ~~~
 
-*   `str` is a variable which'll be bound to the stream which is created by
-    opening the file.
-*   `<_file-spec_>` will be a truename or a pathname.
-*   `<_direction_>` is usually `:input` (meaning you want to read from the file),
-    `:output` (meaning you want to write to the file) or `:io` (which is for
-    reading _and_ writing at the same time) - the default is `:input`.
-*   `<_if-exists_>` specifies what to do if you want to open a file for writing
-    and a file with that name already exists - this option is ignored if you
-    just want to read from the file. The default is `:error` which means that an
-    error is signalled. Other useful options are `:supersede` (meaning that the
-    new file will replace the old one), `:append` (content is added to the file),
-    `nil` (the stream variable will be bound to `nil`),
-    and `:rename` (i.e. the old file is renamed).
-*   `<_if-does-not-exist_>` specifies what to do if the file you want to open does
-    not exist. It is one of `:error` for signalling an error, `:create` for
-    creating an empty file, or `nil` for binding the stream variable to
-    `nil`. The default is, to be brief, to do the right thing depending on the
-    other options you provided. See the CLHS for details.
+*   `str` は、file を開くことで作成される stream に bind される variable です。
+*   `<_file-spec_>` は truename または pathname になります。
+*   `<_direction_>` は通常 `:input` (file から読みたい場合)、`:output` (file に書きたい場合)、または `:io` (同時に read _and_ write する場合) です。default は `:input` です。
+*   `<_if-exists_>` は、書き込み用に file を開きたいが同名の file がすでに存在する場合にどうするかを指定します。file から読むだけなら、この option は無視されます。default は `:error` で、error が signalled されることを意味します。他に便利な option として、`:supersede` (新しい file が古いものを置き換える)、`:append` (content が file に追加される)、`nil` (stream variable が `nil` に bind される)、`:rename` (つまり古い file が rename される) があります。
+*   `<_if-does-not-exist_>` は、開きたい file が存在しない場合にどうするかを指定します。error を signal する `:error`、空の file を作成する `:create`、stream variable を `nil` に bind する `nil` のいずれかです。default は簡単に言えば、指定した他の option に応じて正しいことをする、というものです。詳細は CLHS を参照してください。
 
-Note that there are a lot more options to `with-open-file`. See
+`with-open-file` にはさらに多くの option がある点に注意してください。詳細は
 [the CLHS entry for `open`](http://www.lispworks.com/documentation/HyperSpec/Body/f_open.htm)
-for all the details. You'll find some examples on how to use `with-open-file`
-below. Also note that you usually don't need to provide any keyword arguments if
-you just want to open an existing file for reading.
+を参照してください。下に `with-open-file` の使い方の例があります。また、既存の file を読むために開くだけなら、通常 keyword argument を指定する必要はありません。
 
-### Reading files
+### file を読む
 
-#### Reading a file into a string or a list of lines
+#### file を string または line の list に読む
 
-It's quite common to need to access the contents of a file in string
-form, or to get a list of lines.
+file の内容に string 形式で access したり、line の list を取得したりする必要はかなりよくあります。
 
-uiop is included in ASDF (there is no extra library to install or
-system to load) and has the following functions:
+uiop は ASDF に含まれており (追加で install する library や load する system はありません)、次の function を持ちます。
 
 
 ~~~lisp
@@ -356,11 +321,7 @@ and
 (uiop:read-file-lines "file.txt")
 ~~~
 
-*Otherwise*, this can be achieved by using `read-line` or `read-char` functions,
-that probably won't be the best solution. The file might not be divided into
-multiple lines or reading one character at a time might bring significant
-performance problems. To solve this problems, you can read files using buckets
-of specific sizes.
+*別の方法として*、これは `read-line` や `read-char` function でも実現できますが、おそらく最善の解決策ではありません。file が複数行に分かれていないかもしれませんし、1 character ずつ読むと大きな performance 問題を招くかもしれません。この問題を解決するには、特定 size の bucket を使って file を読めます。
 
 ~~~lisp
 (with-output-to-string (out)
@@ -371,14 +332,11 @@ of specific sizes.
           do (write-sequence buffer out :start 0 :end n-characters)))))
 ~~~
 
-Furthermore, you're free to change the format of the read/written data, instead
-of using elements of type character every time. For instance, you can set
-`:element-type` type argument of `with-output-to-string`, `with-open-file` and
-`make-array` functions to `'(unsigned-byte 8)` to read data in octets.
+さらに、常に character 型の element を使う代わりに、read/write される data の format を自由に変更できます。たとえば octet として data を読むには、`with-output-to-string`、`with-open-file`、`make-array` function の `:element-type` type argument を `'(unsigned-byte 8)` に設定できます。
 
-#### Reading with an utf-8 encoding
+#### utf-8 encoding で読む
 
-To avoid an `ASCII stream decoding error` you might want to specify an UTF-8 encoding:
+`ASCII stream decoding error` を避けるために UTF-8 encoding を指定したい場合があります。
 
 ~~~lisp
 (with-open-file (in "/path/to/big/file"
@@ -386,30 +344,22 @@ To avoid an `ASCII stream decoding error` you might want to specify an UTF-8 enc
                  ...
 ~~~
 
-#### Set SBCL's default encoding format to utf-8
+#### SBCL の default encoding format を utf-8 に設定する
 
-Sometimes you don't control the internals of a library, so you'd
-better set the default encoding to utf-8. Add this line to your
-`~/.sbclrc`:
+library の内部を control できないことがあるため、default encoding を utf-8 に設定しておく方がよいでしょう。`~/.sbclrc` に次の行を追加します。
 
     (setf sb-impl::*default-external-format* :utf-8)
 
-and optionally
+必要に応じて:
 
     (setf sb-alien::*default-c-string-external-format* :utf-8)
 
-#### Reading a file one line at a time
+#### file を 1 line ずつ読む
 
 [`read-line`](http://www.lispworks.com/documentation/HyperSpec/Body/f_rd_lin.htm)
-will read one line from a stream (which defaults to
+は stream から 1 line を読みます (default は
 [_standard input_](http://www.lispworks.com/documentation/HyperSpec/Body/26_glo_s.htm#standard_input))
-the end of which is determined by either a newline character or the end of the
-file. It will return this line as a string _without_ the trailing newline
-character. (Note that `read-line` has a second return value which is true if there
-was no trailing newline, i.e. if the line was terminated by the end of the
-file.) `read-line` will by default signal an error if the end of the file is
-reached. You can inhibit this by supplying NIL as the second argument. If you do
-this, `read-line` will return `nil` if it reaches the end of the file.
+です)。line の終端は newline character または file の終端で決まります。この line は trailing newline character _なし_ の string として返ります。(`read-line` には第 2 戻り値があり、trailing newline がなかった場合、つまり line が file の終端で終わった場合に true になる点に注意してください。) `read-line` は default では file の終端に到達すると error を signal します。第 2 argument に NIL を渡すとこれを抑制できます。その場合、file の終端に到達すると `read-line` は `nil` を返します。
 
 ~~~lisp
 (with-open-file (stream "/etc/passwd")
@@ -419,8 +369,7 @@ this, `read-line` will return `nil` if it reaches the end of the file.
        (print line)))
 ~~~
 
-You can also supply a third argument which will be used instead of `nil` to signal
-the end of the file:
+file の終端を signal するために `nil` の代わりに使われる第 3 argument も指定できます。
 
 ~~~lisp
 (with-open-file (stream "/etc/passwd")
@@ -429,12 +378,10 @@ the end of the file:
    do (print line)))
 ~~~
 
-#### Reading a file one character at a time
+#### file を 1 character ずつ読む
 
 [`read-char`](http://www.lispworks.com/documentation/HyperSpec/Body/f_rd_cha.htm)
-is similar to `read-line`, but it only reads one character as opposed to one
-line. Of course, newline characters aren't treated differently from other
-characters by this function.
+は `read-line` に似ていますが、1 line ではなく 1 character だけを読みます。もちろん、この function では newline character は他の character と異なる扱いを受けません。
 
 ~~~lisp
 (with-open-file (stream "/etc/passwd")
@@ -444,15 +391,11 @@ characters by this function.
        (print char)))
 ~~~
 
-#### Looking one character ahead
+#### 1 character 先を見る
 
-You can 'look at' the next character of a stream without actually removing it
-from there - this is what the function
+stream の次の character を実際には取り除かずに「見る」ことができます。これを行うのが function
 [`peek-char`](http://www.lispworks.com/documentation/HyperSpec/Body/f_peek_c.htm)
-is for. It can be used for three different purposes depending on its first
-(optional) argument (the second one being the stream it reads from): If the
-first argument is `nil`, `peek-char` will just return the next character that's
-waiting on the stream:
+です。これは最初の (optional) argument に応じて 3 つの異なる目的に使えます (第 2 argument は読む対象の stream です)。最初の argument が `nil` の場合、`peek-char` は stream で待っている次の character をそのまま返します。
 
 ~~~lisp
 CL-USER> (with-input-from-string (stream "I'm not amused")
@@ -466,11 +409,9 @@ CL-USER> (with-input-from-string (stream "I'm not amused")
 #\'
 ~~~
 
-If the first argument is `T`, `peek-char` will skip
+最初の argument が `T` の場合、`peek-char` は
 [whitespace](http://www.lispworks.com/documentation/HyperSpec/Body/26_glo_w.htm#whitespace)
-characters, i.e. it will return the next non-whitespace character that's waiting
-on the stream. The whitespace characters will vanish from the stream as if they
-had been read by `read-char`:
+character を skip します。つまり stream で待っている次の non-whitespace character を返します。whitespace character は `read-char` で読まれたかのように stream から消えます。
 
 ~~~lisp
 CL-USER> (with-input-from-string (stream "I'm not amused")
@@ -490,8 +431,7 @@ CL-USER> (with-input-from-string (stream "I'm not amused")
 #\o
 ~~~
 
-If the first argument to `peek-char` is a character, the function will skip all
-characters until that particular character is found:
+`peek-char` の最初の argument が character の場合、その特定の character が見つかるまですべての character を skip します。
 
 ~~~lisp
 CL-USER> (with-input-from-string (stream "I'm not amused")
@@ -507,9 +447,7 @@ CL-USER> (with-input-from-string (stream "I'm not amused")
 #\m
 ~~~
 
-Note that `peek-char` has further optional arguments to control its behaviour on
-end-of-file similar to those for `read-line` and `read-char` (and it will signal an
-error by default):
+`peek-char` には、`read-line` や `read-char` と同様に end-of-file 時の behaviour を control する追加の optional argument がある点に注意してください (default では error を signal します)。
 
 ~~~lisp
 CL-USER> (with-input-from-string (stream "I'm not amused")
@@ -525,10 +463,9 @@ CL-USER> (with-input-from-string (stream "I'm not amused")
 THE-END
 ~~~
 
-You can also put one character back onto the stream with the function
+function
 [`unread-char`](http://www.lispworks.com/documentation/HyperSpec/Body/f_unrd_c.htm). You
-can use it as if, _after_ you have read a character, you decide that you'd
-better used `peek-char` instead of `read-char`:
+を使うと、1 character を stream に戻すこともできます。character を読んだ _後で_、`read-char` ではなく `peek-char` を使うべきだったと判断した場合のように使えます。
 
 ~~~lisp
 CL-USER> (with-input-from-string (stream "I'm not amused")
@@ -542,20 +479,15 @@ CL-USER> (with-input-from-string (stream "I'm not amused")
 #\I
 ~~~
 
-Note that the front of a stream doesn't behave like a stack: You can only put
-back exactly _one_ character onto the stream. Also, you _must_ put back the same
-character that has been read previously, and you can't unread a character if
-none has been read before.
+stream の先頭は stack のようには振る舞わない点に注意してください。stream に戻せるのは正確に _1_ character だけです。また、以前に読んだものと同じ character を戻さなければならず、まだ何も読んでいない場合は character を unread できません。
 
-#### Random access to a File
+#### file への random access
 
-Use the function
+function
 [`file-position`](http://www.lispworks.com/documentation/HyperSpec/Body/f_file_p.htm)
-for random access to a file. If this function is used with one argument (a
-stream), it will return the current position within the stream. If it's used
-with two arguments (see below), it will actually change the
+を file への random access に使います。この function を 1 つの argument (stream) で使うと、stream 内の現在 position を返します。2 つの argument で使うと (下を参照)、stream 内の
 [file position](http://www.lispworks.com/documentation/HyperSpec/Body/26_glo_f.htm#file_position)
-in the stream.
+を実際に変更します。
 
 ~~~lisp
 CL-USER> (with-input-from-string (stream "I'm not amused")
@@ -576,9 +508,9 @@ CL-USER> (with-input-from-string (stream "I'm not amused")
 5
 ~~~
 
-### Writing content to a file
+### content を file に書く
 
-With `with-open-file`, specify `:direction :output` and use `write-sequence` inside:
+`with-open-file` では `:direction :output` を指定し、内部で `write-sequence` を使います。
 
 ~~~lisp
 (with-open-file (f <pathname> :direction :output
@@ -587,46 +519,39 @@ With `with-open-file`, specify `:direction :output` and use `write-sequence` ins
     (write-sequence s f))
 ~~~
 
-If the file exists, you can also `:append` content to it.
+file が存在する場合、content を `:append` することもできます。
 
-If it doesn't exist, you can `:error` out. See [the standard](http://www.lispworks.com/documentation/HyperSpec/Body/f_open.htm) for more details.
+存在しない場合は `:error` にできます。詳細は [the standard](http://www.lispworks.com/documentation/HyperSpec/Body/f_open.htm) を参照してください。
 
-#### Using libraries
+#### library を使う
 
-The library [Alexandria](https://common-lisp.net/project/alexandria/draft/alexandria.html#Conses)
-has a function called [write-string-into-file](https://gitlab.common-lisp.net/alexandria/alexandria/-/blob/master/alexandria-1/io.lisp#L73)
+[Alexandria](https://common-lisp.net/project/alexandria/draft/alexandria.html#Conses) library には [write-string-into-file](https://gitlab.common-lisp.net/alexandria/alexandria/-/blob/master/alexandria-1/io.lisp#L73) という function があります。
 
 ~~~lisp
 (alexandria:write-string-into-file content "file.txt")
 ~~~
 
-Alternatively, the library [str](https://github.com/vindarel/cl-str) has the `to-file` function.
+また、[str](https://github.com/vindarel/cl-str) library には `to-file` function があります。
 
 ~~~lisp
-(str:to-file "file.txt" content) ;; with optional options
+(str:to-file "file.txt" content) ;; optional option 付き
 ~~~
 
-Both `alexandria:write-string-into-file` and `str:to-file` take the same keyword arguments as `cl:open` that controls file creation: `:if-exists` and `if-does-not-exists`.
+`alexandria:write-string-into-file` と `str:to-file` はどちらも、file creation を control する `cl:open` と同じ keyword argument、つまり `:if-exists` と `if-does-not-exists` を取ります。
 
-### Getting file attributes (size, access time,...)
+### file attribute (size、access time など) を取得する
 
 [Osicat](https://www.common-lisp.net/project/osicat/)
-is a lightweight operating system interface for Common Lisp on
-POSIX-like systems, including Windows. With Osicat we can get and set
-**environment variables** (now doable with `uiop:getenv`),
-manipulate **files and directories**,
-**pathnames** and a bit more.
+は Windows を含む POSIX-like system 向けの Common Lisp の軽量 operating system interface です。Osicat を使うと、**environment variables** の取得と設定 (現在は `uiop:getenv` でも可能)、**files and directories**、**pathnames** などの操作ができます。
 
 [file-attributes](https://github.com/Shinmera/file-attributes/) is a
-newer and lighter OS portability library specifically for getting file attributes,
-using system calls (cffi).
+新しく軽量な OS portability library で、system call (cffi) を使って file attribute を取得することに特化しています。
 
-SBCL with its `sb-posix` contrib can be used too.
+`sb-posix` contrib を持つ SBCL も使えます。
 
-#### File attributes (Osicat)
+#### file attribute (Osicat)
 
-Once Osicat is installed, it also defines the `osicat-posix` system,
-which permits us to get file attributes.
+Osicat を install すると、file attribute を取得できる `osicat-posix` system も定義されます。
 
 ~~~lisp
 (ql:quickload "osicat")
@@ -635,7 +560,7 @@ which permits us to get file attributes.
   (osicat-posix:stat-size stat))  ;; => 10629
 ~~~
 
-We can get the other attributes with the following methods:
+他の attribute は次の method で取得できます。
 
 ~~~
 osicat-posix:stat-dev
@@ -653,26 +578,22 @@ osicat-posix:stat-blocks
 osicat-posix:stat-blksize
 ~~~
 
-#### File attributes (file-attributes)
+#### file attribute (file-attributes)
 
-Install the library with
+library は次で install します。
 
     (ql:quickload "file-attributes")
 
-Its package is `org.shirakumo.file-attributes`. You can use a
-package-local nickname for a shorter access to its functions, for example:
+package は `org.shirakumo.file-attributes` です。function に短く access するために、たとえば package-local nickname を使えます。
 
 ~~~lisp
 (uiop:add-package-local-nickname :file-attributes :org.shirakumo.file-attributes)
 ~~~
 
-Then simply use the functions:
+あとは単に function を使います。
 
-- `access-time`, `modification-time`, `creation-time`. You can `setf` them.
-- `owner`, `group`, and `attributes`. The values used are OS specific
-for these functions. The attributes flag can be decoded and
-encoded via a standardised form with `decode-attributes` and
-`encode-attributes`.
+- `access-time`, `modification-time`, `creation-time`。これらは `setf` できます。
+- `owner`, `group`, `attributes`。これらの function で使われる value は OS specific です。attribute flag は `decode-attributes` と `encode-attributes` により standardized form で decode/encode できます。
 
 ~~~lisp
 CL-USER> (file-attributes:decode-attributes
@@ -683,13 +604,13 @@ CL-USER> (file-attributes:decode-attributes
  :RECALL NIL)
 ~~~
 
-See [its documentation](https://shinmera.github.io/file-attributes).
+[documentation](https://shinmera.github.io/file-attributes) を参照してください。
 
-#### File attributes (sb-posix)
+#### file attribute (sb-posix)
 
-This contrib is loaded by default on POSIX systems.
+この contrib は POSIX system では default で load されます。
 
-First get a stat object for a file, then get the stat you want:
+まず file の stat object を取得し、それから必要な stat を取得します。
 
 ~~~lisp
 CL-USER> (sb-posix:stat "test.txt")
@@ -700,9 +621,9 @@ CL-USER> (sb-posix:stat-mtime *)
 ~~~
 
 
-### Listing files and directories
+### file と directory を list する
 
-Some functions below return pathnames, so you might need the following:
+下のいくつかの function は pathname を返すため、次が必要になるかもしれません。
 
 ~~~lisp
 (namestring #p"/foo/bar/baz.txt")           ==> "/foo/bar/baz.txt"
@@ -711,13 +632,13 @@ Some functions below return pathnames, so you might need the following:
 ~~~
 
 
-#### Listing files in a directory
+#### directory 内の file を list する
 
 ~~~lisp
 (uiop:directory-files "./")
 ~~~
 
-Returns a list of pathnames:
+pathname の list を返します。
 
 ```
 (#P"/home/vince/projects/cl-cookbook/.emacs"
@@ -730,7 +651,7 @@ Returns a list of pathnames:
  […]
 ```
 
-#### Listing sub-directories
+#### sub-directory を list する
 
 ~~~lisp
 (uiop:subdirectories "./")
@@ -745,13 +666,11 @@ Returns a list of pathnames:
  #P"/home/vince/projects/cl-cookbook/assets/")
 ```
 
-#### Iterating on files (lazily)
+#### file を iterate する (lazy に)
 
-In addition to the above functions, we mention solutions that *lazily*
-traverse a directory. They don't load the entire list of files before
-returning it.
+上の function に加えて、directory を *lazy* に traverse する解決策にも触れておきます。これらは file の list 全体を load してから返すわけではありません。
 
-Osicat has `with-directory-iterator`:
+Osicat には `with-directory-iterator` があります。
 
 ~~~lisp
 (with-directory-iterator (next "/")
@@ -762,29 +681,26 @@ Osicat has `with-directory-iterator`:
 ;; => (#P"tmp/")
 ~~~
 
-LispWorks has the [fast-directory-files](https://www.lispworks.com/documentation/lw80/lw/lw-hcl-74.htm#LWUGRM) function, and AllegroCL has [map-over-directory](https://franz.com/support/documentation/10.1/doc/operators/excl/map-over-directory.htm).
+LispWorks には [fast-directory-files](https://www.lispworks.com/documentation/lw80/lw/lw-hcl-74.htm#LWUGRM) function があり、AllegroCL には [map-over-directory](https://franz.com/support/documentation/10.1/doc/operators/excl/map-over-directory.htm) があります。
 
-#### Traversing (walking) directories recursively
+#### directory を recursively に traverse (walk) する
 
-See `uiop/filesystem:collect-sub*directories`. It takes as arguments:
+`uiop/filesystem:collect-sub*directories` を参照してください。これは argument として次を取ります。
 
 - a `directory`
 - a `collectp` function
 - a `recursep` function
 - a `collector` function
 
-Given a directory, when `collectp` returns true with the directory,
-call the `collector` function on the directory, and recurse
-each of its subdirectories on which `recursep` returns true.
+directory が与えられると、`collectp` がその directory に対して true を返した場合、その directory に対して `collector` function を call し、`recursep` が true を返す各 subdirectory を recurse します。
 
-This function will thus let you traverse a filesystem hierarchy,
-superseding the functionality of `cl-fad:walk-directory`.
+したがって、この function により filesystem hierarchy を traverse でき、`cl-fad:walk-directory` の機能を置き換えられます。
 
-The behavior in presence of symlinks is not portable. Use IOlib to handle such situations.
+symlink が存在する場合の behavior は portable ではありません。そのような状況を扱うには IOlib を使います。
 
-Examples:
+例:
 
-- this collects only subdirectories:
+- subdirectory だけを collect します。
 
 ~~~lisp
 (defparameter *dirs* nil "All recursive directories.")
@@ -795,7 +711,7 @@ Examples:
     (lambda (it) (push it *dirs*)))
 ~~~
 
-- this collects files and subdirectories:
+- file と subdirectory を collect します。
 
 ~~~lisp
 (let ((results))
@@ -806,14 +722,14 @@ Examples:
      (lambda (subdir)
        (setf results
              (nconc results
-                    ;; A detail: we return strings, not pathnames.
+                    ;; 細かい点: pathname ではなく string を返す
                     (loop for path in (append (uiop:subdirectories subdir)
                                               (uiop:directory-files subdir))
                           collect (namestring path))))))
     results)
 ~~~
 
-- we can do the same with the `cl-fad` library:
+- `cl-fad` library でも同じことができます。
 
 ~~~lisp
 (cl-fad:walk-directory "./"
@@ -822,21 +738,20 @@ Examples:
    :directories t)
 ~~~
 
-- and of course, we can use an external tool: the good ol' unix `find`, or the newer `fd` (`fdfind` on Debian) that has a simpler syntax and filters out a set of common files and directories by default (node_modules, .git…):
+- もちろん external tool も使えます。古き良き unix `find`、またはより新しい `fd` (Debian では `fdfind`) です。`fd` はより単純な syntax を持ち、common files and directories の集合を default で filter out します (node_modules、.git など)。
 
 ~~~lisp
 (str:lines (uiop:run-program (list "find" ".") :output :string))
-;; or
+;; または
 (str:lines (uiop:run-program (list "fdfind") :output :string))
 ~~~
 
-Here with the help of the `str` library.
+ここでは `str` library の助けを借りています。
 
 
-#### Finding files matching a pattern
+#### pattern に match する file を探す
 
-Below we simply list files of a directory and check that their name
-contains a given string.
+下では単に directory の file を list し、その name が与えられた string を含むかを確認します。
 
 ~~~lisp
 (remove-if-not (lambda (it)
@@ -850,16 +765,14 @@ contains a given string.
  #P"/home/vince/projects/cl-cookbook/AppendixC.jpg")
 ```
 
-We used `namestring` to convert a `pathname` to a string, thus a
-sequence that `search` can deal with.
+`pathname` を string に変換するために `namestring` を使いました。これにより、`search` が扱える sequence になります。
 
 
-#### Finding files with a wildcard
+#### wildcard で file を探す
 
-We can not transpose unix wildcards to portable Common Lisp.
+unix wildcard を portable Common Lisp にそのまま移すことはできません。
 
-In pathname strings we can use `*` and `**` as wildcards. This works
-in absolute and relative pathnames.
+pathname string では `*` と `**` を wildcard として使えます。これは absolute pathname と relative pathname で動作します。
 
 ~~~lisp
 (directory #P"*.jpg")
@@ -870,18 +783,14 @@ in absolute and relative pathnames.
 ~~~
 
 
-#### Change the default pathname
+#### default pathname を変更する
 
-The concept of `.` denoting the current directory does not exist in
-portable Common Lisp. This may exist in specific filesystems and
-specific implementations.
+current directory を表す `.` という概念は portable Common Lisp には存在しません。これは特定の filesystem や特定の implementation には存在するかもしれません。
 
-Also `~` to denote the home directory does not exist. They may be
-recognized by some implementations as non-portable extensions.
+home directory を表す `~` も存在しません。いくつかの implementation は non-portable extension として認識することがあります。
 
 
-`*default-pathname-defaults*`provides a default for some pathname
-operations.
+`*default-pathname-defaults*` は一部の pathname operation に default を提供します。
 
 ~~~lisp
 (let ((*default-pathname-defaults* (pathname "/bin/")))
@@ -889,6 +798,6 @@ operations.
 (#P"/bin/zsh" #P"/bin/tcsh" #P"/bin/sh" #P"/bin/ksh" #P"/bin/csh" #P"/bin/bash")
 ~~~
 
-See also `(user-homedir-pathname)`.
+`(user-homedir-pathname)` も参照してください。
 
 [cl-fad]: https://edicl.github.io/cl-fad/

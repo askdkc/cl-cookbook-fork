@@ -1,169 +1,96 @@
 ---
-title: Threads, concurrency, parallelism
+title: スレッド、並行性、並列性
 ---
 
 
 <a name="intro"></a>
 
-## Introduction
+## はじめに
 
-By _threads_, we mean separate execution strands within a single Lisp
-process, sharing the same address space. Typically, execution is
-automatically switched between these strands by the system (either by
-the lisp kernel or by the operating system) so that tasks appear to be
-completed in parallel (asynchronously). This page discusses the
-creation and management of threads and some aspects of interactions
-between them. For information about the interaction between lisp and
-other _processes_, see [Interfacing with your OS](os.html).
+_スレッド_ とは、単一の Lisp プロセス内にあり、同じアドレス空間を共有する、独立した実行の流れを指します。通常、これらの流れの間ではシステム（Lisp カーネルまたは OS）によって実行が自動的に切り替えられるため、タスクは並列に（非同期に）完了しているように見えます。このページでは、スレッドの作成と管理、およびスレッド間の相互作用の一部について説明します。Lisp と他の _プロセス_ との相互作用については、[OS とのインターフェイス](os.html) を参照してください。
 
-An instant pitfall for the unwary is that most implementations refer
-(in nomenclature) to threads as _processes_ - this is a historical
-feature of a language which has been around for much longer than the
-term _thread_. Call this maturity a sign of stable implementations, if
-you will.
+不慣れな人がすぐにつまずく点として、多くの処理系では（用語上）スレッドを _processes_ と呼びます。これは、_thread_ という用語よりずっと長く存在してきた言語の歴史的な特徴です。望むなら、これを安定した処理系の成熟のしるしと呼んでもよいでしょう。
 
-The ANSI Common Lisp standard doesn't mention this topic. We will
-present here the portable
+ANSI Common Lisp 標準はこの話題に触れていません。ここでは、ポータブルな
 [bordeaux-threads](https://github.com/sionescu/bordeaux-threads)
-library, an example implementation via [SBCL threads](http://www.sbcl.org/manual/#Threading) from the [SBCL Manual](http://www.sbcl.org/manual/), and the [lparallel](https://lparallel.org)
-library ([GitHub](https://github.com/sharplispers/lparallel)).
+ライブラリ、[SBCL Manual](http://www.sbcl.org/manual/) の [SBCL threads](http://www.sbcl.org/manual/#Threading) による実装例、そして [lparallel](https://lparallel.org)
+ライブラリ（[GitHub](https://github.com/sharplispers/lparallel)）を紹介します。
 
-Bordeaux-threads is a de-facto standard portable library, that exposes
-rather low-level primitives. Lparallel builds on it and features:
+Bordeaux-threads は、事実上の標準となっているポータブルなライブラリで、かなり低レベルなプリミティブを公開しています。Lparallel はその上に構築されており、次の機能を備えています。
 
--  a simple model of task submission with receiving queue
--  constructs for expressing fine-grained parallelism
--  **asynchronous condition handling** across thread boundaries
--  **parallel versions of map, reduce, sort, remove**, and many others
--  **promises**, futures, and delayed evaluation constructs
--  computation trees for parallelizing interconnected tasks
--  bounded and unbounded FIFO **queues**
+-  受信用キューを使う単純なタスク投入モデル
+-  細粒度の並列性を表現するための構文
+-  スレッド境界を越えた **非同期 condition ハンドリング**
+-  **map、reduce、sort、remove の並列版**、その他多数
+-  **promises**、futures、遅延評価構文
+-  相互に接続されたタスクを並列化するための計算木
+-  有界および無界の FIFO **queues**
 -  **channels**
--  high and low priority tasks
--  task killing by category
--  integrated timeouts
+-  高優先度および低優先度のタスク
+-  カテゴリによるタスクの kill
+-  統合されたタイムアウト
 
-For more libraries on parallelism and concurrency, see the [Awesome CL list](https://github.com/CodyReichert/awesome-cl#parallelism-and-concurrency)
-and [Quickdocs](http://quickdocs.org/) such as quickdocks on [thread](https://quickdocs.org/-/search?q=thread) and [concurrency](https://quickdocs.org/-/search?q=concurrency).
+並列性と並行性に関する他のライブラリについては、[Awesome CL list](https://github.com/CodyReichert/awesome-cl#parallelism-and-concurrency)
+および [Quickdocs](http://quickdocs.org/) の [thread](https://quickdocs.org/-/search?q=thread) や [concurrency](https://quickdocs.org/-/search?q=concurrency) などを参照してください。
 
 <a name="why_bother"></a>
 
-### Why bother?
+### なぜわざわざ使うのか？
 
-The first question to resolve is: why bother with threads? Sometimes
-your answer will simply be that your application is so straightforward
-that you need not concern yourself with threads at all. But in many
-other cases it's difficult to imagine how a sophisticated application
-can be written without multi-threading. For example:
+最初に解決すべき問いは、「なぜわざわざスレッドを使うのか」です。アプリケーションが非常に単純なので、スレッドをまったく気にする必要がない、という答えになる場合もあります。しかし、それ以外の多くの場合では、高度なアプリケーションをマルチスレッドなしで書く方法を想像するのは困難です。たとえば次のような場合です。
 
-*   you might be writing a server which needs to be able to respond to
-    more than one user / connection at a time (for instance: a web
-    server) on the Sockets page);
-*   you might want to perform some background activity, without
-    halting the main application while this is going on;
-*   you might want your application to be notified when a certain time
-    has elapsed;
-*   you might want to keep the application running and active while
-    waiting for some system resource to become available;
-*   you might need to interface with some other system which requires
-    multithreading (for example, "windows" under Windows which
-    generally run in their own threads);
-*   you might want to associate different contexts (e.g. different
-    dynamic bindings) with different parts of the application;
-*   you might even have the simple need to do two things at once.
+*   一度に複数のユーザーや接続に応答できる必要があるサーバー（たとえば Web
+    サーバー。Sockets のページを参照）を書いている。
+*   その処理中にメインアプリケーションを停止させず、何らかのバックグラウンド処理を行いたい。
+*   一定時間が経過したときにアプリケーションへ通知したい。
+*   何らかのシステムリソースが利用可能になるのを待つ間も、アプリケーションを実行中かつアクティブに保ちたい。
+*   マルチスレッドを必要とする別のシステムと連携する必要がある（たとえば Windows 上の「ウィンドウ」は一般にそれぞれ自身のスレッドで動く）。
+*   アプリケーションの異なる部分に、異なるコンテキスト（例: 異なる動的束縛）を対応付けたい。
+*   単に 2 つのことを同時に行う必要がある。
 
 
 <a name="emergency"></a>
 
-### What is Concurrency? What is Parallelism?
+### Concurrency とは何か？ Parallelism とは何か？
 
-*Credit: The following was first written on
+*Credit: 以下はもともと
 [z0ltan.wordpress.com](https://z0ltan.wordpress.com/2016/09/02/basic-concurrency-and-parallelism-in-common-lisp-part-3-concurrency-using-bordeaux-and-sbcl-threads/)
-by Timmy Jose.*
+に Timmy Jose によって書かれたものです。*
 
-Concurrency is a way of running different, possibly related, tasks
-seemingly simultaneously. What this means is that even on a single
-processor machine, you can simulate simultaneity using threads (for
-instance) and context-switching them.
+Concurrency は、異なる、場合によっては関連するタスクを、見かけ上同時に実行する方法です。つまり、単一プロセッサのマシン上でも、たとえばスレッドを使い、それらをコンテキストスイッチすることで同時性をシミュレートできます。
 
-In the case of system (native OS) threads, the scheduling and context
-switching is ultimately determined by the OS. This is the case with
-Java threads and Common Lisp threads.
+システム（ネイティブ OS）スレッドの場合、スケジューリングとコンテキストスイッチは最終的に OS によって決定されます。Java のスレッドや Common Lisp のスレッドはこの例です。
 
-In the case of “green” threads, that is to say threads that are
-completely managed by the program, the scheduling can be completely
-controlled by the program itself. Erlang is a great example of this
-approach.
+「グリーン」スレッド、つまりプログラムによって完全に管理されるスレッドの場合、スケジューリングはプログラム自身が完全に制御できます。Erlang はこのアプローチの優れた例です。
 
-So what is the difference between Concurrency and Parallelism?
-Parallelism is usually defined in a very strict sense to mean
-independent tasks being run in parallel, simultaneously, on different
-processors or on different cores. In this narrow sense, you really
-cannot have parallelism on a single-core, single-processor machine.
+では、Concurrency と Parallelism の違いは何でしょうか？ Parallelism は通常、非常に厳密な意味では、独立したタスクが異なるプロセッサまたは異なるコア上で同時に並列実行されることを意味します。この狭い意味では、単一コア、単一プロセッサのマシンで真の parallelism を得ることはできません。
 
-It rather helps to differentiate between these two related concepts on
-a more abstract level – concurrency primarily deals with providing the
-illusion of simultaneity to clients so that the system doesn’t appear
-locked when a long running operation is underway. GUI systems are a
-wonderful example of this kind of system. Concurrency is therefore
-concerned with providing good user experience and not necessarily
-concerned with performance benefits.
+これら 2 つの関連する概念は、より抽象的なレベルで区別すると分かりやすくなります。Concurrency は主に、長時間実行される操作の最中でもシステムがロックされているように見えないよう、クライアントに同時性の錯覚を提供することを扱います。GUI システムはこの種のシステムの素晴らしい例です。したがって concurrency は、必ずしも性能上の利点ではなく、良いユーザー体験を提供することに関心があります。
 
-Java’s Swing toolkit and JavaScript are both single-threaded, and yet
-they can give the appearance of simultaneity because of the context
-switching behind the scenes. Of course, concurrency is implemented
-using multiple threads/processes in most cases.
+Java の Swing ツールキットと JavaScript はどちらもシングルスレッドですが、背後のコンテキストスイッチにより同時性があるように見せられます。もちろん、多くの場合 concurrency は複数のスレッドやプロセスを使って実装されます。
 
-Parallelism, on the other hand, is mostly concerned with pure
-performance gains. For instance, if we are given a task to find the
-squares of all the even numbers in a given range, we could divide the
-range into chunks which are then run in parallel on different cores or
-different processors, and then the results can be collated together to
-form the final result. This is an example of Map-Reduce in action.
+一方、Parallelism は主に純粋な性能向上に関心があります。たとえば、与えられた範囲内のすべての偶数の二乗を求めるタスクがあるとします。この範囲をチャンクに分割し、それらを異なるコアまたは異なるプロセッサ上で並列に実行し、結果を集約して最終結果を作れます。これは Map-Reduce が実際に働いている例です。
 
-So now that we have separated the abstract meaning of Concurrency from
-that of Parallelism, we can talk a bit about the actual mechanism used
-to implement them. This is where most of the confusion arise for a lot
-of people. They tend to tie down abstract concepts with specific means
-of implementing them. In essence, both abstract concepts may be
-implemented using the same mechanisms! For instance, we may implement
-concurrent features and parallel features using the same basic thread
-mechanism in Java. It’s only the conceptual intertwining or
-independence of tasks at an abstract level that makes the difference
-for us.
+Concurrency の抽象的な意味を Parallelism の抽象的な意味から切り分けたので、次にそれらを実装するために使われる実際の機構について少し話せます。多くの人にとって混乱が生じるのはここです。抽象概念を、それを実装する具体的手段に結び付けてしまいがちなのです。本質的には、どちらの抽象概念も同じ機構で実装されることがあります。たとえば Java では、同じ基本的なスレッド機構を使って concurrent な機能と parallel な機能を実装できます。私たちにとって違いを生むのは、抽象レベルでのタスク同士の概念的な絡み合い、または独立性だけです。
 
-For instance, if we have a task where part of the work can be done on
-a different thread (possibly on a different core/processor), but the
-thread which spawns this thread is logically dependent on the results
-of the spawned thread (and as such has to “join” on that thread), it
-is still Concurrency!
+たとえば、作業の一部を別スレッド（場合によっては別コアや別プロセッサ）で行えるタスクがあるとします。しかし、そのスレッドを生成したスレッドが、生成されたスレッドの結果に論理的に依存している（そのためそのスレッドに “join” しなければならない）なら、それは依然として Concurrency です。
 
-So the bottomline is this – Concurrency and Parallelism are different
-concepts, but their implementations may be done using the same
-mechanisms — threads, processes, etc.
+要するに、Concurrency と Parallelism は異なる概念ですが、その実装は同じ機構、すなわちスレッド、プロセスなどで行われることがあります。
 
 
 ## Bordeaux threads
 
-The Bordeaux library provides a platform independent way to handle
-basic threading on multiple Common Lisp implementations. The
-interesting bit is that it itself does not really create any native
-threads — it relies entirely on the underlying implementation to do
-so.
+Bordeaux ライブラリは、複数の Common Lisp 処理系で基本的なスレッド処理を扱うための、プラットフォーム非依存な方法を提供します。興味深い点は、それ自体が実際にネイティブスレッドを作成するわけではないことです。完全に下位の処理系に依存してそれを行います。
 
-On the other hand, it does provide some useful extra features in its
-own abstractions over the lower-level threads.
+一方で、低レベルなスレッドの上に独自の抽象化を置き、いくつかの便利な追加機能を提供します。
 
-Also, you can see from the demo programs that a lot of the Bordeaux
-functions seem quite similar to those used in SBCL. I don’t really
-think that this is a coincidence.
+また、デモプログラムを見ると、多くの Bordeaux 関数が SBCL で使われるものとかなり似ていることが分かります。これは偶然ではないと思います。
 
-You can refer to the documentation for more details (check the
-“Wrap-up” section).
+詳細についてはドキュメントを参照してください（“Wrap-up” セクションを確認してください）。
 
-### Installing Bordeaux Threads
+### Bordeaux Threads のインストール
 
-First let’s load up the Bordeaux library using Quicklisp:
+まず Quicklisp を使って Bordeaux ライブラリをロードしましょう。
 
 ~~~lisp
 CL-USER> (ql:quickload "bordeaux-threads")
@@ -176,10 +103,9 @@ To load "bordeaux-threads":
 ~~~
 
 
-### Checking for thread support in Common Lisp
+### Common Lisp でのスレッドサポートの確認
 
-Regardless of the Common Lisp implementation, there is a standard way
-to check for thread support availability:
+Common Lisp 処理系にかかわらず、スレッドサポートが利用可能か確認する標準的な方法があります。
 
 ~~~lisp
 CL-USER> (member :thread-support *FEATURES*)
@@ -201,39 +127,32 @@ CL-USER> (member :thread-support *FEATURES*)
  :UNWIND-TO-FRAME-AND-CALL-VOP :X86-64)
 ~~~
 
-If there were no thread support, it would show “NIL” as the value of the expression.
+スレッドサポートがない場合、この式の値として “NIL” が表示されます。
 
-Depending on the specific library being used, we may also have
-different ways of checking for concurrency support, which may be used
-instead of the common check mentioned above.
+使用する具体的なライブラリによっては、concurrency サポートを確認する別の方法が用意されていることもあり、上で述べた共通の確認方法の代わりに使えます。
 
-For instance, in our case, we are interested in using the Bordeaux
-library. To check whether there is support for threads using this
-library, we can see whether the `*supports-threads-p*` global variable
-is set to NIL (no support) or T (support available):
+たとえばここでは Bordeaux ライブラリを使うことに関心があります。このライブラリでスレッドのサポートがあるかを確認するには、グローバル変数 `*supports-threads-p*` が NIL（サポートなし）または T（サポートあり）のどちらに設定されているかを見ます。
 
 ~~~lisp
 CL-USER> bt:*supports-threads-p*
 T
 ~~~
 
-Okay, now that we’ve got that out of the way, let’s test out both the
-platform-independent library (Bordeaux) as well as the
-platform-specific support (SBCL in this case).
+さて、これで準備ができたので、プラットフォーム非依存のライブラリ（Bordeaux）と、プラットフォーム固有のサポート（この場合は SBCL）の両方を試してみましょう。
 
-To do this, let us work our way through a number of simple examples:
+そのために、いくつかの簡単な例を順に見ていきます。
 
--    Basics — list current thread, list all threads, get thread name
--    Update a global variable from a thread
--    Print a message onto the top-level using a thread
--    Print a message onto the top-level — fixed
--    Print a message onto the top-level — better
--    Modify a shared resource from multiple threads
--    Modify a shared resource from multiple threads — fixed using locks
--    Modify a shared resource from multiple threads — using atomic operations
--    Joining on a thread, destroying a thread example
+-    基本 — 現在のスレッドを列挙する、すべてのスレッドを列挙する、スレッド名を取得する
+-    スレッドからグローバル変数を更新する
+-    スレッドを使って top-level にメッセージを表示する
+-    top-level にメッセージを表示する — 修正版
+-    top-level にメッセージを表示する — より良い版
+-    複数のスレッドから共有リソースを変更する
+-    複数のスレッドから共有リソースを変更する — ロックを使った修正版
+-    複数のスレッドから共有リソースを変更する — アトミック操作を使う
+-    スレッドに join する例、スレッドを破棄する例
 
-### Basics — list current thread, list all threads, get thread name
+### 基本 — 現在のスレッドを列挙する、すべてのスレッドを列挙する、スレッド名を取得する
 
 ~~~lisp
     ;;; Print the current thread, all the threads, and the current thread's name
@@ -247,7 +166,7 @@ To do this, let us work our way through a number of simple examples:
       nil)
 ~~~
 
-And the output:
+出力は次のとおりです。
 
 ~~~lisp
     CL-USER> (print-thread-info)
@@ -267,7 +186,7 @@ And the output:
     NIL
 ~~~
 
-Update a global variable from a thread:
+スレッドからグローバル変数を更新します。
 
 ~~~lisp
     (defparameter *counter* 0)
@@ -280,16 +199,11 @@ Update a global variable from a thread:
       *counter*)
 ~~~
 
-We create a new thread using `bt:make-thread`, which takes a lambda
-abstraction as a parameter. Note that this lambda abstraction cannot
-take any parameters.
+`bt:make-thread` を使って新しいスレッドを作成します。この関数は lambda 抽象を引数として受け取ります。この lambda 抽象は引数を取れないことに注意してください。
 
-Another point to note is that unlike some other languages (Java, for
-instance), there is no separation from creating the thread object and
-starting/running it. In this case, as soon as the thread is created,
-it is executed.
+もう 1 つ注意すべき点は、他の一部の言語（たとえば Java）とは異なり、スレッドオブジェクトの作成と、その開始や実行が分離されていないことです。この場合、スレッドは作成されるとすぐに実行されます。
 
-The output:
+出力は次のとおりです。
 
 ~~~lisp
     CL-USER> (test-update-global-variable)
@@ -299,11 +213,9 @@ The output:
     1
 ~~~
 
-As we can see, because the main thread returned immediately, the
-initial value of `*counter*` is 0, and then around a second later, it
-gets updated to 1 by the anonymous thread.
+見てのとおり、メインスレッドがただちに戻るため、`*counter*` の初期値は 0 です。その約 1 秒後、無名スレッドによって 1 に更新されます。
 
-### Create a thread: print a message onto the top-level
+### スレッドを作成する: top-level にメッセージを表示する
 
 ~~~lisp
     ;;; Print a message onto the top-level using a thread
@@ -315,29 +227,20 @@ gets updated to 1 by the anonymous thread.
       nil)
 ~~~
 
-And the output:
+出力は次のとおりです。
 
 ~~~lisp
     CL-USER> (print-message-top-level-wrong)
     NIL
 ~~~
 
-So what went wrong? The problem is variable binding. Now, the ’t’
-parameter to the format function refers to the top-level, which is a
-Common Lisp term for the main console stream, also referred to by the
-global variable `*standard-output*`. So we could have expected the
-output to be shown on the main console screen.
+何が問題だったのでしょうか？ 問題は変数束縛です。`format` 関数の `t` 引数は top-level を指します。top-level はメインのコンソールストリームを表す Common Lisp の用語で、グローバル変数 `*standard-output*` によっても参照されます。そのため、出力はメインのコンソール画面に表示されると期待したかもしれません。
 
-The same code would have run fine if we had not run it in a separate
-    thread. What happens is that each thread has its own stack where
-    the variables are rebound. In this case, even for
-    `*standard-output*`, which being a global variable, we would assume
-    should be available to all threads, is rebound inside each thread!
-    This is similar to the concept of ThreadLocal storage in Java.
+同じコードは、別スレッドで実行していなければ問題なく動いたでしょう。実際に起こることは、各スレッドが独自のスタックを持ち、そこで変数が再束縛されるということです。この場合、グローバル変数なので全スレッドで利用できるはずだと思いがちな `*standard-output*` でさえ、各スレッド内で再束縛されます。これは Java の ThreadLocal ストレージの概念に似ています。
 
-### Print a message onto the top-level — fixed
+### top-level にメッセージを表示する — 修正版
 
-So how do we fix the problem of the previous example? By binding the top-level at the time of thread creation of course. Pure lexical scoping to the rescue!
+では、前の例の問題をどう修正すればよいでしょうか？ もちろん、スレッド作成時に top-level を束縛します。純粋なレキシカルスコープの出番です。
 
 ~~~lisp
     ;;; Print a message onto the top-level using a thread — fixed
@@ -350,7 +253,7 @@ So how do we fix the problem of the previous example? By binding the top-level a
       nil)
 ~~~
 
-Which produces:
+これにより次の出力が得られます。
 
 ~~~lisp
     CL-USER> (print-message-top-level-fixed)
@@ -358,12 +261,11 @@ Which produces:
     NIL
 ~~~
 
-Phew! However, there is another way of producing the same result using
-a very interesting reader macro as we’ll see next.
+これで一安心です。ただし、次に見るように、非常に興味深い reader macro を使って同じ結果を得る別の方法もあります。
 
-### Print a message onto the top-level — read-time eval macro
+### top-level にメッセージを表示する — 読み込み時 eval マクロ
 
-Let’s take a look at the code first:
+まずコードを見てみましょう。
 
 ~~~lisp
     ;;; Print a message onto the top-level using a thread - reader macro
@@ -378,7 +280,7 @@ Let’s take a look at the code first:
     (print-message-top-level-reader-macro)
 ~~~
 
-And the output:
+出力は次のとおりです。
 
 ~~~lisp
     CL-USER> (print-message-top-level-reader-macro)
@@ -386,29 +288,15 @@ And the output:
     NIL
 ~~~
 
-So it works, but what’s the deal with the `eval-when` and what is that
-strange `#.` symbol before `*standard-output*`?
+動きました。では `eval-when` は何をしているのでしょうか。また、`*standard-output*` の前にある奇妙な `#.` という記号は何でしょうか？
 
-`eval-when` controls when evaluation of Lisp expressions takes place. We
-can have three targets — `:compile-toplevel`, `:load-toplevel`, and
-`:execute`.
+`eval-when` は Lisp 式の評価がいつ行われるかを制御します。指定できる対象は `:compile-toplevel`、`:load-toplevel`、`:execute` の 3 つです。
 
-The `#.` symbol is what is called a “Reader macro”. A reader (or read)
-macro is called so because it has special meaning to the Common Lisp
-Reader, which is the component that is responsible for reading in
-Common Lisp expressions and making sense out of them. This specific
-reader macro ensures that the binding of `*standard-output*` is done
-at read time.
+`#.` 記号はいわゆる “Reader macro” です。reader（または read）macro と呼ばれるのは、Common Lisp 式を読み込み解釈する責任を持つ Common Lisp Reader に対して特別な意味を持つためです。この特定の reader macro は、`*standard-output*` の束縛が読み込み時に行われることを保証します。
 
-Binding the value at read-time ensures that the original value of
-`*standard-output*` is maintained when the thread is run, and the output
-is shown on the correct top-level.
+読み込み時に値を束縛することで、スレッド実行時にも `*standard-output*` の元の値が維持され、出力が正しい top-level に表示されます。
 
-Now this is where the `eval-when` bit comes into play. By wrapping the
-whole function definition inside the `eval-when`, and ensuring that
-evaluation takes place during compile time, the correct value of
-`*standard-output*` is bound. If we had skipped the `eval-when`, we would
-see the following error:
+ここで `eval-when` が効いてきます。関数定義全体を `eval-when` の中に包み、コンパイル時に評価が行われるようにすることで、`*standard-output*` の正しい値が束縛されます。`eval-when` を省略していた場合、次のエラーが表示されます。
 
 ~~~lisp
       error:
@@ -426,19 +314,14 @@ see the following error:
     Compilation failed.
 ~~~
 
-And that makes sense because SBCL cannot make sense of what this
-output stream returns since it is a stream and not really a defined
-value (which is what the ‘format’ function expects). That is why we
-see the “unreachable code” error.
+これは理にかなっています。この出力ストリームが返すものはストリームであり、`format` 関数が期待するような、実際に定義された値ではないため、SBCL はそれを解釈できません。そのため “unreachable code” エラーが表示されます。
 
-Note that if the same code had been run on the REPL directly, there
-would be no problem since the resolution of all the symbols would be
-done correctly by the REPL thread.
+同じコードを REPL 上で直接実行していた場合は、すべてのシンボル解決が REPL スレッドによって正しく行われるため、問題はありません。
 
 
-### Modify a shared resource from multiple threads
+### 複数のスレッドから共有リソースを変更する
 
-Suppose we have the following setup with a minimal bank-account class (no error checks):
+最小限の bank-account クラス（エラーチェックなし）を使った次の設定があるとします。
 
 ~~~lisp
     ;;; Modify a shared resource from multiple threads
@@ -467,7 +350,7 @@ Suppose we have the following setup with a minimal bank-account class (no error 
       (decf (:balance account) amount))
 ~~~
 
-And we have a simple client which apparently does not believe in any form of synchronisation:
+そして、どうやらどのような同期も信じていない単純なクライアントがあるとします。
 
 ~~~lisp
     (defparameter *rich*
@@ -486,13 +369,9 @@ And we have a simple client which apparently does not believe in any form of syn
               (loop repeat 10000 do (withdraw *rich* 100))))))
 ~~~
 
-This is all we are doing – create a new bank account instance (balance
-0), and then create a 100 threads, each of which simply deposits an
-amount of 100 10000 times, and then withdraws the same amount the same
-number of times. So the final result should be the same as that of the
-opening balance, which is 0, right? Let’s check that and see.
+ここで行っているのはこれだけです。新しい銀行口座インスタンス（残高 0）を作成し、その後 100 個のスレッドを作成します。それぞれのスレッドは単に 100 という金額を 10000 回預け入れ、その後同じ金額を同じ回数だけ引き出します。したがって最終結果は開始時の残高、つまり 0 と同じになるはずです。確認してみましょう。
 
-On a sample run, we might get the following results:
+サンプル実行では、次のような結果になることがあります。
 
 ~~~lisp
     CL-USER> (:balance *rich*)
@@ -504,20 +383,13 @@ On a sample run, we might get the following results:
     22844600
 ~~~
 
-Whoa! The reason for this discrepancy is that incf and decf are not
-atomic operations — they consist of multiple sub-operations, and the
-order in which they are executed is not in our control.
+おっと！ この不一致の理由は、incf と decf がアトミック操作ではないことです。これらは複数の下位操作から成り、その実行順序は私たちの制御下にありません。
 
-This is what is called a “race condition” — multiple threads
-contending for the same shared resource with at least one modifying
-thread which, more likely than not, reads the wrong value of the
-object while modifying it. How do we fix it? One simple way it to use
-locks (mutex in this case, could be semaphores for more complex
-situations).
+これが “race condition” と呼ばれるものです。複数のスレッドが同じ共有リソースを奪い合い、少なくとも 1 つの変更スレッドが、変更中に誤ったオブジェクト値を読み取ってしまう可能性が高い状態です。どう修正すればよいでしょうか？ 単純な方法の 1 つはロックを使うことです（この場合は mutex、より複雑な状況では semaphore もあり得ます）。
 
-### Modify a shared resource from multiple threads — fixed using locks
+### 複数のスレッドから共有リソースを変更する — ロックを使った修正版
 
-Let’s rest the balance for the account back to 0 first:
+まず口座の残高を 0 に戻しましょう。
 
 ~~~lisp
     CL-USER> (setf (:balance *rich*) 0)
@@ -526,7 +398,7 @@ Let’s rest the balance for the account back to 0 first:
     0
 ~~~
 
-Now let’s modify the `demo-race-condition` function to access the shared resource using locks (created using `bt:make-lock` and used as shown):
+次に、ロックを使って共有リソースにアクセスするように `demo-race-condition` 関数を変更します（`bt:make-lock` で作成し、示したように使用します）。
 
 ~~~lisp
     (defvar *lock* (bt:make-lock))
@@ -544,7 +416,7 @@ Now let’s modify the `demo-race-condition` function to access the shared resou
     ; compiling (DEFUN DEMO-RACE-CONDITION-LOCKS ...)
 ~~~
 
-And let’s do a bigger sample run this time around:
+今度は、より大きなサンプル実行を行ってみましょう。
 
 ~~~lisp
     CL-USER> (dotimes (i 100)
@@ -554,36 +426,21 @@ And let’s do a bigger sample run this time around:
     0
 ~~~
 
-Excellent! Now this is better. Of course, one has to remember that
-using a mutex like this is bound to affect performance. There is a
-better way in quite a few circumstances — using atomic operations when
-possible. We’ll cover that next.
+素晴らしい。これで改善されました。もちろん、このように mutex を使うと性能に影響することを覚えておく必要があります。かなり多くの状況では、より良い方法があります。可能な場合はアトミック操作を使うことです。次にそれを扱います。
 
-### Modify a shared resource from multiple threads — using atomic operations
+### 複数のスレッドから共有リソースを変更する — アトミック操作を使う
 
-Atomic operations are operations that are guaranteed by the system to
-all occur inside a conceptual transaction, i.e., all the
-sub-operations of the main operation all take place together without
-any interference from outside. The operation succeeds completely or
-fails completely. There is no middle ground, and there is no
-inconsistent state.
+アトミック操作とは、概念上のトランザクション内ですべて発生することがシステムによって保証される操作です。つまり、主操作のすべての下位操作が外部からの干渉なしにまとめて行われます。操作は完全に成功するか、完全に失敗します。中間状態はなく、不整合な状態もありません。
 
-Another advantage is that performance is far superior to using locks
-to protect access to the shared state. We will see this difference in
-the actual demo run.
+もう 1 つの利点は、共有状態へのアクセスを保護するためにロックを使う場合より、性能がはるかに優れていることです。この違いは実際のデモ実行で確認します。
 
-The Bordeaux library does not provide any real support for atomics, so
-we will have to depend on the specific implementation support for
-that. In our case, that is SBCL, and so we will have to defer this
-demo to the SBCL section.
+Bordeaux ライブラリはアトミック操作に対する実質的なサポートを提供していないため、その点では特定の処理系のサポートに依存する必要があります。ここではそれが SBCL なので、このデモは SBCL セクションに回します。
 
-### Joining on a thread, destroying a thread
+### スレッドに join する、スレッドを破棄する
 
-To join on a thread, we use the `bt:join-thread` function, and for
-destroying a thread (not a recommended operation), we can use the
-`bt:destroy-thread` function.
+スレッドに join するには `bt:join-thread` 関数を使います。スレッドを破棄するには（推奨される操作ではありませんが）`bt:destroy-thread` 関数を使えます。
 
-A simple demo:
+単純なデモです。
 
 ~~~lisp
     (defmacro until (condition &body body)
@@ -625,7 +482,7 @@ A simple demo:
         (format t "~%[Main Thread] Adios!~%")))
 ~~~
 
-And the output on a run:
+ある実行での出力は次のとおりです。
 
 ~~~lisp
     CL-USER> (join-destroy-thread)
@@ -649,32 +506,20 @@ And the output on a run:
     NIL
 ~~~
 
-The until macro simply loops around until the condition becomes
-true. The rest of the code is pretty much self-explanatory — the main
-thread waits for the joiner-thread to finish, but it immediately
-destroys the destroyer-thread.
+until マクロは、条件が真になるまで単純にループします。残りのコードはほぼ自明です。メインスレッドは joiner-thread の終了を待ちますが、destroyer-thread はただちに破棄します。
 
-Again, it is not recommended to use `bt:destroy-thread`. Any conceivable
-situation which requires this function can probably be done better
-with another approach.
+繰り返しますが、`bt:destroy-thread` の使用は推奨されません。この関数を必要とするように見える状況は、たいてい別のアプローチでより良く実現できます。
 
-Now let’s move onto some more comprehensive examples which tie
-together all the concepts discussed thus far.
+では、ここまで説明したすべての概念を結び付ける、もう少し総合的な例に進みましょう。
 
-### Timeouts
+### タイムアウト
 
-We can use `bt:with-timeout`.
+`bt:with-timeout` を使えます。
 
-Sometimes we want to run a background operation, but we want to ensure
-that it doesn't take a maximum time limit. We can use `bt:with-timeout
-(n)` where n is a number of seconds. In case of a timeout,
-Bordeaux-threads signals a `bt:timeout` error.
+バックグラウンド操作を実行したいが、最大時間制限を超えないようにしたい場合があります。その場合、n を秒数として `bt:with-timeout
+(n)` を使えます。タイムアウトした場合、Bordeaux-threads は `bt:timeout` エラーを signal します。
 
-In our scenario below, we create a thread that launches a potentially
-long operation, we `join` the thread with a timeout, and we handle any
-timeout error. In our case, we destroy the running thread. This also
-kills its underlying processes (were they run with
-`uiop:run-program`).
+以下のシナリオでは、長時間かかる可能性のある操作を起動するスレッドを作成し、タイムアウト付きでそのスレッドに `join` し、タイムアウトエラーを処理します。ここでは、実行中のスレッドを破棄します。これにより、（`uiop:run-program` で実行されていた場合は）その下位プロセスも kill されます。
 
 ~~~lisp
 (defun maybe-costly-operation ()
@@ -694,47 +539,37 @@ kills its underlying processes (were they run with
 ~~~
 
 
-### Useful functions
+### 便利な関数
 
-Here is a summary of the functions, macros and global variables which
-were used in the demo examples along with some extras. These should
-cover most of the basic programming scenarios:
+デモ例で使用した関数、マクロ、グローバル変数に、いくつかの追加項目を加えた要約です。これらで基本的なプログラミングシナリオの大半をカバーできるはずです。
 
-- `bt:*supports-thread-p*` (to check for basic thread support)
-- `bt:make-thread` (create a new thread)
-- `bt:current-thread` (return the current thread object)
-- `bt:all-threads` (return a list of all running threads)
-- `bt:thread-alive-p` (checks if the thread is still alive)
-- `bt:thread-name` (return the name of the thread)
-- `bt:join-thread` (join on the supplied thread)
-- `bt:interrupt-thread` (interrupt the given thread)
-- `bt:destroy-thread` (attempt to abort the thread)
-- `bt:make-lock` (create a mutex)
-- `bt:with-lock-held` (use the supplied lock to protect critical code)
-- `bt:with-timeout` (to signal a timeout error)
+- `bt:*supports-thread-p*`（基本的なスレッドサポートを確認する）
+- `bt:make-thread`（新しいスレッドを作成する）
+- `bt:current-thread`（現在のスレッドオブジェクトを返す）
+- `bt:all-threads`（実行中のすべてのスレッドのリストを返す）
+- `bt:thread-alive-p`（スレッドがまだ生きているか確認する）
+- `bt:thread-name`（スレッドの名前を返す）
+- `bt:join-thread`（指定されたスレッドに join する）
+- `bt:interrupt-thread`（指定されたスレッドに interrupt する）
+- `bt:destroy-thread`（スレッドの abort を試みる）
+- `bt:make-lock`（mutex を作成する）
+- `bt:with-lock-held`（指定されたロックを使ってクリティカルコードを保護する）
+- `bt:with-timeout`（タイムアウトエラーを signal する）
 
 ## SBCL threads
 
-[SBCL](http://www.sbcl.org/) provides support for native threads via its [sb-thread](http://www.sbcl.org/manual/#Threading)
-package. These are very low-level functions, but we can build our own
-abstractions on top of these as shown in the demo examples.
+[SBCL](http://www.sbcl.org/) は [sb-thread](http://www.sbcl.org/manual/#Threading)
+パッケージを通じてネイティブスレッドのサポートを提供します。これらは非常に低レベルな関数ですが、デモ例で示すように、その上に独自の抽象化を構築できます。
 
-You can refer to the documentation for more details (check the
-“Wrap-up” section).
+詳細についてはドキュメントを参照してください（“Wrap-up” セクションを確認してください）。
 
-You can see from the examples below that there is a strong
-correspondence between Bordeaux and SBCL Thread functions. In most
-cases, the only difference is the change of package name from bt to
-sb-thread.
+以下の例から、Bordeaux と SBCL Thread の関数の間には強い対応関係があることが分かります。ほとんどの場合、違いはパッケージ名が bt から sb-thread に変わることだけです。
 
-It is evident that the Bordeaux thread library was more or less based
-on the SBCL implementation. As such, explanation will be provided only
-in those cases where there is a major difference in syntax or
-semantics.
+Bordeaux thread ライブラリがおおむね SBCL の実装を基にしていることは明らかです。そのため、構文または意味論に大きな違いがある場合にのみ説明を加えます。
 
-### Basics — list current thread, list all threads, get thread name
+### 基本 — 現在のスレッドを列挙する、すべてのスレッドを列挙する、スレッド名を取得する
 
-The code:
+コードです。
 
 
 ~~~lisp
@@ -750,7 +585,7 @@ The code:
       nil)
 ~~~
 
-And the output:
+出力は次のとおりです。
 
 ~~~lisp
     CL-USER> (print-thread-info)
@@ -770,9 +605,9 @@ And the output:
     NIL
 ~~~
 
-### Update a global variable from a thread
+### スレッドからグローバル変数を更新する
 
-The code:
+コードです。
 
 ~~~lisp
     ;;; Update a global variable from a thread
@@ -787,16 +622,16 @@ The code:
       *counter*)
 ~~~
 
-And the output:
+出力は次のとおりです。
 
 ~~~lisp
     CL-USER> (test-update-global-variable)
     0
 ~~~
 
-### Print a message onto the top-level using a thread
+### スレッドを使って top-level にメッセージを表示する
 
-The code:
+コードです。
 
 ~~~lisp
     ;;; Print a message onto the top-level using a thread
@@ -808,16 +643,16 @@ The code:
       nil)
 ~~~
 
-And the output:
+出力は次のとおりです。
 
 ~~~lisp
     CL-USER> (print-message-top-level-wrong)
     NIL
 ~~~
 
-Print a message onto the top-level — fixed:
+top-level にメッセージを表示する — 修正版:
 
-The code:
+コードです。
 
 ~~~lisp
     ;;; Print a message onto the top-level using a thread - fixed
@@ -830,7 +665,7 @@ The code:
       nil)
 ~~~
 
-And the output:
+出力は次のとおりです。
 
 ~~~lisp
     CL-USER> (print-message-top-level-fixed)
@@ -838,9 +673,9 @@ And the output:
     NIL
 ~~~
 
-### Print a message onto the top-level — better
+### top-level にメッセージを表示する — より良い版
 
-The code:
+コードです。
 
 ~~~lisp
     ;;; Print a message onto the top-level using a thread - reader macro
@@ -853,7 +688,7 @@ The code:
         nil))
 ~~~
 
-And the output:
+出力は次のとおりです。
 
 ~~~lisp
     CL-USER> (print-message-top-level-reader-macro)
@@ -861,9 +696,9 @@ And the output:
     NIL
 ~~~
 
-###    Modify a shared resource from multiple threads
+###    複数のスレッドから共有リソースを変更する
 
-The code:
+コードです。
 
 ~~~lisp
     ;;; Modify a shared resource from multiple threads
@@ -906,7 +741,7 @@ The code:
               (loop repeat 10000 do (withdraw *rich* 100))))))
 ~~~
 
-And the output:
+出力は次のとおりです。
 
 ~~~lisp
     CL-USER> (:balance *rich*)
@@ -917,9 +752,9 @@ And the output:
     3987400
 ~~~
 
-###    Modify a shared resource from multiple threads — fixed using locks
+###    複数のスレッドから共有リソースを変更する — ロックを使った修正版
 
-The code:
+コードです。
 
 ~~~lisp
     (defvar *lock* (sb-thread:make-mutex))
@@ -935,11 +770,9 @@ The code:
                                       (withdraw *rich* 100)))))))
 ~~~
 
-The only difference here is that instead of make-lock as in Bordeaux,
-we have `make-mutex` and that is used along with the macro `with-mutex` as
-shown in the example.
+ここでの唯一の違いは、Bordeaux の make-lock の代わりに `make-mutex` があり、それを例に示すように `with-mutex` マクロと一緒に使うことです。
 
-And the output:
+出力は次のとおりです。
 
 ~~~lisp
     CL-USER> (:balance *rich*)
@@ -950,9 +783,9 @@ And the output:
     0
 ~~~
 
-### Modify a shared resource from multiple threads — using atomic operations
+### 複数のスレッドから共有リソースを変更する — アトミック操作を使う
 
-First, the code:
+まずコードです。
 
 ~~~lisp
     ;;; Modify a shared resource from multiple threads - atomics
@@ -977,7 +810,7 @@ First, the code:
                (loop repeat 10000 do (atomic-withdraw *rich* 100))))))
 ~~~
 
-And the output:
+出力は次のとおりです。
 
 ~~~lisp
     CL-USER> (dotimes (i 5)
@@ -1002,9 +835,7 @@ And the output:
     NIL
 ~~~
 
-As you can see, SBCL’s atomic functions are a bit quirky. The two
-functions used here: `sb-ext:incf` and `sb-ext:atomic-decf` have the
-following signatures:
+見てのとおり、SBCL のアトミック関数は少し癖があります。ここで使っている 2 つの関数 `sb-ext:incf` と `sb-ext:atomic-decf` は、次のシグネチャを持ちます。
 
 
     Macro: atomic-incf [sb-ext] place &optional diff
@@ -1014,22 +845,17 @@ and
 
     Macro: atomic-decf [sb-ext] place &optional diff
 
-The interesting bit is that the “place” parameter must be any of the
-following (as per the documentation):
+興味深い点は、“place” 引数が次のいずれかでなければならないことです（ドキュメントによる）。
 
-- a defstruct slot with declared type (unsigned-byte 64) or aref of a (simple-array (unsigned-byte 64) (*)) The type `sb-ext:word` can be used for these purposes.
-- car or cdr (respectively first or REST) of a cons.
-- a variable defined using defglobal with a proclaimed type of fixnum.
+- 宣言型が (unsigned-byte 64) の defstruct スロット、または (simple-array (unsigned-byte 64) (*)) の aref。この目的には `sb-ext:word` 型を使えます。
+- cons の car または cdr（それぞれ first または REST）。
+- fixnum 型として proclaim された、defglobal で定義された変数。
 
-This is the reason for the bizarre construct used in the
-`atomic-deposit` and `atomic-decf` methods.
+これが、`atomic-deposit` メソッドと `atomic-decf` メソッドで奇妙な構文が使われている理由です。
 
-One major incentive to use atomic operations as much as possible is
-performance. Let’s do a quick run of the `demo-race-condition-locks` and
-`demo-race-condition-atomics` functions over 1000 times and check the
-difference in performance (if any):
+アトミック操作をできるだけ使う大きな動機の 1 つは性能です。`demo-race-condition-locks` 関数と `demo-race-condition-atomics` 関数を 1000 回実行して、性能差があるか手早く確認してみましょう。
 
-With locks:
+ロックを使う場合:
 
 ~~~lisp
     CL-USER> (time
@@ -1045,7 +871,7 @@ With locks:
     NIL
 ~~~
 
-With atomics:
+アトミック操作を使う場合:
 
 ~~~lisp
     CL-USER> (time
@@ -1062,12 +888,11 @@ With atomics:
     NIL
 ~~~
 
-The results? The locks version took around 57s whereas the lockless
-atomics version took just 2s! This is a massive difference indeed!
+結果はどうでしょうか？ ロック版は約 57 秒かかったのに対し、ロックなしのアトミック版はわずか 2 秒でした。これは実に大きな差です。
 
-### Joining on a thread, destroying a thread example
+### スレッドに join する例、スレッドを破棄する例
 
-The code:
+コードです。
 
 ~~~lisp
 ;;; Joining on and destroying a thread
@@ -1112,7 +937,7 @@ The code:
     (format t "~%[Main Thread] Adios!~%")))
 ~~~
 
-And the output:
+出力は次のとおりです。
 
 ~~~lisp
     CL-USER> (join-destroy-thread)
@@ -1136,87 +961,61 @@ And the output:
     NIL
 ~~~
 
-### Useful functions
+### 便利な関数
 
-Here is a summarised list of the functions, macros and global
-variables used in the examples along with some extras:
+例で使った関数、マクロ、グローバル変数に、いくつかの追加項目を加えた要約リストです。
 
--    `(member :thread-support *features*)` (check thread support)
--    `sb-thread:make-thread` (create a new thread)
--    `sb-thread:*current-thread*` (holds the current thread object)
--    `sb-thread:list-all-threads` (return a list of all running threads)
--    `sb-thread:thread-alive-p` (checks if the thread is still alive)
--    `sb-thread:thread-name` (return the name of the thread)
--    `sb-thread:join-thread` (join on the supplied thread)
--    `sb-thread:interrupt-thread` (interrupt the given thread)
--    `sb-thread:destroy-thread` (attempt to abort the thread)
--    `sb-thread:make-mutex` (create a mutex)
--    `sb-thread:with-mutex` (use supplied lock to protect critical code)
+-    `(member :thread-support *features*)`（スレッドサポートを確認する）
+-    `sb-thread:make-thread`（新しいスレッドを作成する）
+-    `sb-thread:*current-thread*`（現在のスレッドオブジェクトを保持する）
+-    `sb-thread:list-all-threads`（実行中のすべてのスレッドのリストを返す）
+-    `sb-thread:thread-alive-p`（スレッドがまだ生きているか確認する）
+-    `sb-thread:thread-name`（スレッドの名前を返す）
+-    `sb-thread:join-thread`（指定されたスレッドに join する）
+-    `sb-thread:interrupt-thread`（指定されたスレッドに interrupt する）
+-    `sb-thread:destroy-thread`（スレッドの abort を試みる）
+-    `sb-thread:make-mutex`（mutex を作成する）
+-    `sb-thread:with-mutex`（指定されたロックを使ってクリティカルコードを保護する）
 
-## Wrap-up
+## まとめ
 
-As you can see, concurrency support is rather primitive in Common
-Lisp, but that’s primarily due to the glaring absence of this
-important feature in the ANSI Common Lisp specification. That does not
-detract in the least from the support provided by Common Lisp
-implementations, nor wonderful libraries like the Bordeaux library.
+見てのとおり、Common Lisp における concurrency サポートはかなり原始的です。しかし、それは主に ANSI Common Lisp 仕様にこの重要な機能が明らかに存在しないためです。とはいえ、Common Lisp 処理系が提供するサポートや、Bordeaux ライブラリのような素晴らしいライブラリの価値が少しでも損なわれるわけではありません。
 
-You should follow up on your own by reading a lot more on this
-topic. I share some of my own references here:
+この話題については、さらに多くを読んで自分で深めるべきです。ここに私自身の参考資料をいくつか共有します。
 
 - [Common Lisp Recipes](http://weitz.de/cl-recipes/) by Edmund Weitz
 - [Bordeaux API Reference](https://trac.common-lisp.net/bordeaux-threads/wiki/ApiDocumentation)
 - [SBCL Manual](http://www.sbcl.org/manual/) on [Threading](http://www.sbcl.org/manual/#Threading)
 - [The Common Lisp Hyperspec](https://www.lispworks.com/documentation/HyperSpec/Front/)
 
-Next up, the final post in this mini-series: parallelism in Common
-Lisp using the **lparallel** library.
+次は、このミニシリーズの最後の記事です。**lparallel** ライブラリを使った Common Lisp における parallelism です。
 
-## Parallel programming with lparallel
+## lparallel による並列プログラミング
 
-It is important to note that lparallel also provides extensive support
-for asynchronous programming, and is not a purely parallel programming
-library. As stated before, parallelism is merely an abstract concept
-in which tasks are conceptually independent of one another.
+lparallel は非同期プログラミングに対する広範なサポートも提供しており、純粋な並列プログラミングライブラリではない、という点に注意することが重要です。前述のとおり、parallelism は、タスクが概念上互いに独立しているという抽象概念にすぎません。
 
-The lparallel library is built on top of the Bordeaux threading
-library.
+lparallel ライブラリは Bordeaux threading ライブラリの上に構築されています。
 
-As mentioned previously, parallelism and concurrency can be
-(and usually are) implemented using the same means — threads,
-processes, etc. The difference between lies in their conceptual
-differences.
+前述したように、parallelism と concurrency は同じ手段、すなわちスレッド、プロセスなどを使って実装できます（そして通常そうされています）。違いは、それらの概念上の違いにあります。
 
-Note that not all the examples shown in this post are necessarily
-parallel. Asynchronous constructs such as Promises and Futures are, in
-particular, more suited to concurrent programming than parallel
-programming.
+この記事で示す例のすべてが必ずしも parallel であるとは限らないことに注意してください。特に Promises や Futures のような非同期構文は、並列プログラミングよりも並行プログラミングに適しています。
 
-The modus operandi of using the lparallel library (for a basic use case) is as follows:
+lparallel ライブラリを使う基本的な手順は次のとおりです。
 
-- Create an instance of what the library calls a kernel using
-  `lparallel:make-kernel`. The kernel is the component that schedules
-  and executes tasks.
--    Design the code in terms of futures, promises and other higher
-     level functional concepts. To this end, lparallel provides
-     support for **channels**, **promises**, **futures**, and **cognates**.
--    Perform operations using what the library calls cognates, which
-     are simply functions which have equivalents in the Common Lisp
-     language itself. For instance, the `lparallel:pmap` function is
-     the parallel equivalent of the Common Lisp `map` function.
--    Finally, close the kernel created in the first step using
-     `lparallel:end-kernel`.
+- `lparallel:make-kernel` を使って、ライブラリが kernel と呼ぶもののインスタンスを作成します。kernel はタスクをスケジュールし実行するコンポーネントです。
+-    futures、promises、その他の高レベルな関数的概念の観点からコードを設計します。このために、lparallel は **channels**、**promises**、**futures**、**cognates** のサポートを提供します。
+-    ライブラリが cognates と呼ぶものを使って操作を行います。これは単に、Common Lisp 言語自体に対応物を持つ関数です。たとえば `lparallel:pmap` 関数は、Common Lisp の `map` 関数の並列版です。
+-    最後に、最初のステップで作成した kernel を `lparallel:end-kernel` で閉じます。
 
-Note that the onus of ensuring that the tasks being carried out are
-logically parallelisable as well as taking care of all mutable state
-is on the developer.
+実行されるタスクが論理的に parallelisable であることを保証し、すべての mutable state を適切に扱う責任は開発者にあることに注意してください。
 
-_Credit: this article first appeared on
-[z0ltan.wordpress.com](https://z0ltan.wordpress.com/2016/09/09/basic-concurrency-and-parallelism-in-common-lisp-part-4a-parallelism-using-lparallel-fundamentals/)._
+_Credit: この記事は最初に
+[z0ltan.wordpress.com](https://z0ltan.wordpress.com/2016/09/09/basic-concurrency-and-parallelism-in-common-lisp-part-4a-parallelism-using-lparallel-fundamentals/)
+に掲載されました。_
 
-### Installation
+### インストール
 
-Let’s check if lparallel is available for download using Quicklisp:
+lparallel が Quicklisp でダウンロード可能か確認してみましょう。
 
 ~~~lisp
 CL-USER> (ql:system-apropos "lparallel")
@@ -1226,7 +1025,7 @@ CL-USER> (ql:system-apropos "lparallel")
 ; No value
 ~~~
 
-Looks like it is. Let’s go ahead and install it:
+利用できるようです。インストールしましょう。
 
 ~~~lisp
 CL-USER> (ql:quickload "lparallel")
@@ -1259,40 +1058,35 @@ To load "lparallel":
 (:LPARALLEL)
 ~~~
 
-And that’s all it took! Now let’s see how this library actually works.
+これだけです。では、このライブラリが実際にどのように動くか見てみましょう。
 
-### Preamble - get the number of cores
+### 前準備 - コア数を取得する
 
-First, let’s get hold of the number of threads that we are going to
-use for our parallel examples. Ideally, we’d like to have a 1:1 match
-between the number of worker threads and the number of available
-cores.
+まず、並列処理の例で使用するスレッド数を取得しましょう。理想的には、worker thread の数と利用可能なコア数が 1:1 で対応しているのが望ましいです。
 
-We can use the great **Serapeum** library to this end, which has a
-`count-cpus` function, that works on all major platforms.
+この目的には、主要なすべてのプラットフォームで動作する `count-cpus` 関数を持つ、優れた **Serapeum** ライブラリを使えます。
 
-Install it:
+インストールします。
 
 ~~~lisp
 CL-USER> (ql:quickload "serapeum")
 ~~~
 
-and call it:
+そして呼び出します。
 
 ~~~lisp
 CL-USER> (serapeum:count-cpus)
 8
 ~~~
 
-and check that is correct.
+それが正しいことを確認します。
 
 
-### Common Setup
+### 共通のセットアップ
 
-In this example, we will go through the initial setup bit, and also
-show some useful information once the setup is done.
+この例では、初期セットアップの部分を順に見て、セットアップが完了した後にいくつかの有用な情報も表示します。
 
-Load the library:
+ライブラリをロードします。
 
 ~~~lisp
 CL-USER> (ql:quickload "lparallel")
@@ -1304,7 +1098,7 @@ To load "lparallel":
 (:LPARALLEL)
 ~~~
 
-Initialise the lparallel kernel:
+lparallel kernel を初期化します。
 
 ~~~lisp
 CL-USER> (setf lparallel:*kernel*
@@ -1312,9 +1106,7 @@ CL-USER> (setf lparallel:*kernel*
 #<LPARALLEL.KERNEL:KERNEL :NAME "custom-kernel" :WORKER-COUNT 8 :USE-CALLER NIL :ALIVE T :SPIN-COUNT 2000 {1003141F03}>
 ~~~
 
-Note that the `*kernel*` global variable can be rebound — this allows
-multiple kernels to co-exist during the same run. Now, some useful
-information about the kernel:
+`*kernel*` グローバル変数は再束縛できることに注意してください。これにより、同じ実行中に複数の kernel を共存させられます。では、kernel に関する有用な情報をいくつか見てみましょう。
 
 ~~~lisp
 CL-USER> (defun show-kernel-info ()
@@ -1340,8 +1132,7 @@ Kernel bindings = ((*STANDARD-OUTPUT* . #<SLIME-OUTPUT-STREAM {10044EEEA3}>)
 NIL
 ~~~
 
-End the kernel (this is important since `*kernel*` does not get
-garbage collected until we explicitly end it):
+kernel を終了します（`*kernel*` は明示的に終了するまでガベージコレクトされないため、これは重要です）。
 
 ~~~lisp
 CL-USER> (lparallel:end-kernel :wait t)
@@ -1355,9 +1146,9 @@ CL-USER> (lparallel:end-kernel :wait t)
  #<SB-THREAD:THREAD "custom--kernel" FINISHED values: NIL {1007259403}>)
 ~~~
 
-Let’s move on to some more examples of different aspects of the lparallel library.
+lparallel ライブラリのさまざまな側面について、さらにいくつかの例に進みましょう。
 
-For these demos, we will be using the following initial setup from a coding perspective:
+これらのデモでは、コードの観点から次の初期セットアップを使います。
 
 ~~~lisp
 (require ‘lparallel)
@@ -1375,10 +1166,9 @@ For these demos, we will be using the following initial setup from a coding pers
 (init)
 ~~~
 
-So we will be using a kernel with 8 worker threads (one for each CPU core on the machine).
+したがって、8 個の worker thread（マシン上の各 CPU コアに 1 つ）を持つ kernel を使います。
 
-And once we’re done will all the examples, the following code will be
-run to close the kernel and free all used system resources:
+すべての例が終わったら、次のコードを実行して kernel を閉じ、使用したすべてのシステムリソースを解放します。
 
 ~~~lisp
 ;;; shut the kernel down
@@ -1388,22 +1178,17 @@ run to close the kernel and free all used system resources:
 (shutdown)
 ~~~
 
-### Using channels and queues
+### channels と queues を使う
 
-First some definitions are in order.
+まず、いくつか定義しておきましょう。
 
-A **task** is a job that is submitted to the kernel. It is simply a
-function object along with its arguments.
+**task** は kernel に投入されるジョブです。これは単に、関数オブジェクトとその引数から成ります。
 
-A **channel** in lparallel is similar to the same concept in Go. A channel
-is simply a means of communication with a worker thread. In our case,
-it is one particular way of submitting tasks to the kernel.
+lparallel における **channel** は、Go における同じ概念に似ています。channel は単に、worker thread と通信するための手段です。ここでは、kernel にタスクを投入するための 1 つの方法です。
 
-A channel is created in lparallel using `lparallel:make-channel`. A
-task is submitted using `lparallel:submit-task`, and the results
-received via `lparallel:receive-result`.
+lparallel では `lparallel:make-channel` を使って channel を作成します。タスクは `lparallel:submit-task` で投入し、結果は `lparallel:receive-result` で受け取ります。
 
-For instance, we can calculate the square of a number as:
+たとえば、数の二乗を次のように計算できます。
 
 ~~~lisp
 (defun calculate-square (n)
@@ -1416,7 +1201,7 @@ For instance, we can calculate the square of a number as:
     (format t "Square of ~d = ~d~%" n res)))
 ~~~
 
-And the output:
+出力は次のとおりです。
 
 ~~~lisp
 LPARALLEL-USER> (calculate-square 100)
@@ -1424,11 +1209,9 @@ Square of 100 = 10000
 NIL
 ~~~
 
-Now let’s try submitting multiple tasks to the same channel. In this
-simple example, we are simply creating three tasks that square, triple,
-and quadruple the supplied input respectively.
+次に、同じ channel に複数のタスクを投入してみましょう。この単純な例では、与えられた入力をそれぞれ二乗、三乗、四乗する 3 つのタスクを作成しているだけです。
 
-Note that in case of multiple tasks, the output will be in non-deterministic order:
+複数タスクの場合、出力の順序は非決定的になることに注意してください。
 
 ~~~lisp
 (defun test-basic-channel-multiple-tasks ()
@@ -1447,7 +1230,7 @@ Note that in case of multiple tasks, the output will be in non-deterministic ord
        (push (receive-result channel) res))))
 ~~~
 
-And the output:
+出力は次のとおりです。
 
 ~~~lisp
 LPARALLEL-USER> (dotimes (i 3)
@@ -1459,22 +1242,20 @@ LPARALLEL-USER> (dotimes (i 3)
 NIL
 ~~~
 
-lparallel also provides support for creating a blocking queue in order
-to enable message passing between worker threads. A queue is created
-using `lparallel.queue:make-queue`.
+lparallel は、worker thread 間のメッセージパッシングを可能にするため、blocking queue を作成するサポートも提供します。queue は `lparallel.queue:make-queue` を使って作成します。
 
-Some useful functions for using queues are:
+queue を使うための便利な関数には次のものがあります。
 
--    `lparallel.queue:make-queue`: create a FIFO blocking queue
--    `lparallel.queue:push-queue`: insert an element into the queue
--    `lparallel.queue:pop-queue`: pop an item from the queue
--    `lparallel.queue:peek-queue`: inspect value without popping it
--    `lparallel.queue:queue-count`: the number of entries in the queue
--    `lparallel.queue:queue-full-p`: check if the queue is full
--    `lparallel.queue:queue-empty-p:chec`k if the queue is empty
--    `lparallel.queue:with-locked-queue`: lock the queue during access
+-    `lparallel.queue:make-queue`: FIFO blocking queue を作成する
+-    `lparallel.queue:push-queue`: queue に要素を挿入する
+-    `lparallel.queue:pop-queue`: queue から項目を pop する
+-    `lparallel.queue:peek-queue`: pop せずに値を調べる
+-    `lparallel.queue:queue-count`: queue 内の entry 数
+-    `lparallel.queue:queue-full-p`: queue が満杯か確認する
+-    `lparallel.queue:queue-empty-p`: queue が空か確認する
+-    `lparallel.queue:with-locked-queue`: アクセス中に queue を lock する
 
-A basic demo showing basic queue properties:
+queue の基本的な性質を示す基本デモです。
 
 ~~~lisp
     (defun test-queue-properties ()
@@ -1492,7 +1273,7 @@ A basic demo showing basic queue properties:
       nil)
 ~~~
 
-Which produces:
+これにより次の出力が得られます。
 
 ~~~lisp
     LPARALLEL-USER> (test-queue-properties)
@@ -1507,15 +1288,9 @@ Which produces:
     NIL
 ~~~
 
-Note: `lparallel.queue:make-queue` is a generic interface which is
-actually backed by different types of queues. For instance, in the
-previous example, the actual type of the queue is
-`lparallel.vector-queue` since we specified it to be of fixed size using
-the `:fixed-capacity` keyword argument.
+注: `lparallel.queue:make-queue` は generic interface であり、実際には異なる種類の queue によって裏付けられています。たとえば前の例では、`:fixed-capacity` キーワード引数を使って固定サイズであることを指定したため、queue の実際の型は `lparallel.vector-queue` です。
 
-The documentation doesn’t actually specify what keyword arguments we
-can pass to `lparallel.queue:make-queue`, so let’s and find that out in
-a different way:
+ドキュメントには、`lparallel.queue:make-queue` に渡せるキーワード引数が実際には明記されていません。そのため、別の方法で調べてみましょう。
 
 ~~~lisp
     LPARALLEL-USER> (describe 'lparallel.queue:make-queue)
@@ -1541,14 +1316,10 @@ a different way:
     ; No value
 ~~~
 
-So, as we can see, it supports the following keyword arguments:
-*:fixed-capacity*, and *initial-contents*.
+見てのとおり、次のキーワード引数をサポートしています。
+*:fixed-capacity* と *initial-contents* です。
 
-Now, if we do specify `:fixed-capacity`, then the actual type of the
-queue will be `lparallel.vector-queue`, and if we skip that keyword
-argument, the queue will be of type `lparallel.cons-queue` (which is a
-queue of unlimited size), as can be seen from the output of the
-following snippet:
+`:fixed-capacity` を指定した場合、queue の実際の型は `lparallel.vector-queue` になります。このキーワード引数を省略した場合、queue は `lparallel.cons-queue` 型（サイズ無制限の queue）になります。これは次のスニペットの出力から分かります。
 
 ~~~lisp
     (defun check-queue-types ()
@@ -1564,12 +1335,9 @@ following snippet:
     NIL
 ~~~
 
-Of course, you can always create instances of the specific queue types
-yourself, but it is always better, when you can, to stick to the
-generic interface and letting the library create the proper type of
-queue for you.
+もちろん、特定の queue 型のインスタンスを自分で作成することもいつでもできます。しかし可能な場合は、generic interface を使い、適切な queue 型の作成をライブラリに任せる方が常によいでしょう。
 
-Now, let’s just see the queue in action!
+では、queue が実際に動く様子を見てみましょう。
 
 ~~~lisp
     (defun test-basic-queue ()
@@ -1587,10 +1355,9 @@ Now, let’s just see the queue in action!
         (format t "~{~d ~}~%" res)))
 ~~~
 
-Here we submit a single task that repeatedly scans the queue till it’s
-empty, pops the available values, and pushes them into the res list.
+ここでは、queue が空になるまで繰り返し走査し、利用可能な値を pop して res リストに push する単一のタスクを投入しています。
 
-And the output:
+出力は次のとおりです。
 
 ~~~lisp
     LPARALLEL-USER> (test-basic-queue)
@@ -1598,16 +1365,11 @@ And the output:
     NIL
 ~~~
 
-###    Killing tasks
+###    タスクを kill する
 
-A small note mentioning the `lparallel:kill-task` function would be
-apropos at this juncture. This function is useful in those cases when
-tasks are unresponsive. The lparallel documentation clearly states
-that this must only be used as a last resort.
+ここで `lparallel:kill-task` 関数について少し触れておくのがよいでしょう。この関数は、タスクが応答しない場合に有用です。lparallel のドキュメントは、これを最後の手段としてのみ使うべきだと明確に述べています。
 
-All tasks which are created are by default assigned a category of
-:default. The dynamic property, `*task-category*` holds this value, and
-can be dynamically bound to different values (as we shall see).
+作成されたすべてのタスクには、デフォルトで :default というカテゴリが割り当てられます。動的プロパティ `*task-category*` がこの値を保持しており、（後で見るように）別の値へ動的に束縛できます。
 
 ~~~lisp
 ;;; kill default tasks
@@ -1624,7 +1386,7 @@ can be dynamically bound to different values (as we shall see).
     (kill-tasks :default)))
 ~~~
 
-Sample run:
+サンプル実行:
 
 ~~~lisp
 LPARALLEL-USER> (test-kill-all-tasks)
@@ -1641,25 +1403,13 @@ WARNING: lparallel: Replacing lost or dead worker.
 WARNING: lparallel: Replacing lost or dead worker.
 ~~~
 
-Since we had created 10 tasks, all the 8 kernel worker threads were
-presumably busy with a task each. When we killed tasks of category
-:default, all these threads were killed as well and had to be
-regenerated (which is an expensive operation). This is part of the
-reason why `lparallel:kill-tasks` must be avoided.
+10 個のタスクを作成していたため、8 個の kernel worker thread はすべて、それぞれ 1 つのタスクで忙しかったはずです。カテゴリ :default のタスクを kill すると、これらのスレッドもすべて kill され、再生成が必要になります（これは高コストな操作です）。これが `lparallel:kill-tasks` を避けるべき理由の一部です。
 
-Now, in the example above, all running tasks were killed since all of
-them belonged to the :default category. Suppose we wish to kill only
-specific tasks, we can do that by binding `*task-category*` when we
-create those tasks, and then specifying the category when we invoke
-`lparallel:kill-tasks`.
+上の例では、実行中のすべてのタスクが :default カテゴリに属していたため、すべて kill されました。特定のタスクだけを kill したい場合は、それらのタスクを作成するときに `*task-category*` を束縛し、`lparallel:kill-tasks` を呼び出すときにカテゴリを指定すれば実現できます。
 
-For example, suppose we have two categories of tasks – tasks which
-square their arguments, and tasks which cube theirs. Let’s assign them
-categories ’squaring-tasks and ’cubing-tasks respectively. Let’s then
-kill tasks of a randomly chosen category ’squaring-tasks or
-’cubing-tasks.
+たとえば、引数を二乗するタスクと三乗するタスクという 2 つのカテゴリがあるとします。それぞれに ’squaring-tasks と ’cubing-tasks というカテゴリを割り当てます。そして、ランダムに選んだカテゴリ ’squaring-tasks または ’cubing-tasks のタスクを kill します。
 
-Here is the code:
+コードは次のとおりです。
 
 ~~~lisp
 ;;; kill tasks of a randomly chosen category
@@ -1690,7 +1440,7 @@ Here is the code:
           (kill-tasks 'cubing-tasks)))))
 ~~~
 
-And here is a sample run:
+サンプル実行は次のとおりです。
 
 ~~~lisp
 LPARALLEL-USER> (test-kill-random-tasks)
@@ -1727,21 +1477,15 @@ WARNING: lparallel: Replacing lost or dead worker.
 [Squaring] 4 = 16
 ~~~
 
-### Using promises and futures
+### promises と futures を使う
 
-Promises and Futures provide support for Asynchronous Programming.
+Promises と Futures は非同期プログラミングのサポートを提供します。
 
-In lparallel-speak, a `lparallel:promise` is a placeholder for a
-result which is fulfilled by providing it with a value. The promise
-object itself is created using `lparallel:promise`, and the promise is
-given a value using the `lparallel:fulfill` macro.
+lparallel の用語では、`lparallel:promise` は、値を与えることで fulfilled される結果のプレースホルダーです。promise オブジェクト自体は `lparallel:promise` を使って作成し、`lparallel:fulfill` マクロを使って promise に値を与えます。
 
-To check whether the promise has been fulfilled yet or not, we can use the
-`lparallel:fulfilledp` predicate function. Finally, the `lparallel:force`
-function is used to extract the value out of the promise. Note that this
-function blocks until the operation is complete.
+promise がすでに fulfilled されているかどうかを確認するには、`lparallel:fulfilledp` 述語関数を使えます。最後に、`lparallel:force` 関数を使って promise から値を取り出します。この関数は操作が完了するまでブロックすることに注意してください。
 
-Let’s solidify these concepts with a very simple example first:
+まず非常に単純な例で、これらの概念を固めましょう。
 
 ~~~lisp
 (defun test-promise ()
@@ -1754,7 +1498,7 @@ Let’s solidify these concepts with a very simple example first:
     (force p)))
 ~~~
 
-Which generates the output:
+これにより次の出力が生成されます。
 
 ~~~lisp
 LPARALLEL-USER> (test-promise)
@@ -1765,20 +1509,11 @@ LPARALLEL-USER> (test-promise)
 EVEN-RECEIVED!
 ~~~
 
-Explanation: This simple example simply keeps looping forever until an
-even number has been entered. The promise is fulfilled inside the loop
-using `lparallel:fulfill`, and the value is then returned from the
-function by forcing it with `lparallel:force`.
+説明: この単純な例は、偶数が入力されるまで単に永久にループし続けます。ループ内で `lparallel:fulfill` を使って promise を fulfilled し、その後 `lparallel:force` で force することで値を関数から返します。
 
-Now, let’s take a bigger example. Assuming that we don’t want to have
-to wait for the promise to be fulfilled, and instead have the current
-do some useful work, we can delegate the promise fulfillment to
-external explicitly as seen in the next example.
+次に、もう少し大きな例を見てみましょう。promise が fulfilled されるのを待ちたくなく、その代わり現在の処理に有用な作業をさせたいとします。次の例のように、promise の fulfillment を明示的に外部へ委譲できます。
 
-Consider we have a function that squares its argument. And, for the
-sake of argument, it consumes a lot of time doing so. From our client
-code, we want to invoke it, and wait till the squared value is
-available.
+引数を二乗する関数があるとしましょう。議論のために、その処理には長い時間がかかるとします。クライアントコードからそれを呼び出し、二乗された値が利用可能になるまで待ちたいとします。
 
 
 ~~~lisp
@@ -1806,7 +1541,7 @@ available.
             (force p))))
 ~~~
 
-And the output:
+出力は次のとおりです。
 
 ~~~lisp
 LPARALLEL-USER> (promise-with-threads)
@@ -1823,28 +1558,15 @@ Inside main function, received value: 361
 NIL
 ~~~
 
-Explanation: There is nothing much in this example. We create a
-promise object p, and we spawn off a thread that sleeps for some
-random time and then fulfills the promise by giving it a value.
+説明: この例にはそれほど多くのことはありません。promise オブジェクト p を作成し、ランダムな時間 sleep した後、値を与えて promise を fulfill するスレッドを生成します。
 
-Meanwhile, in the main thread, we spawn off another thread that keeps
-checking if the promise has been fulfilled or not. If not, it prints
-some random number and continues checking. Once the promise has been
-fulfilled, we can extract the value using `lparallel:force` in the main
-thread as shown.
+一方、メインスレッドでは、promise が fulfilled されているかどうかを確認し続ける別のスレッドを生成します。まだであれば、いくつかのランダムな数を表示して確認を続けます。promise が fulfilled されると、示したようにメインスレッドで `lparallel:force` を使って値を取り出せます。
 
-This shows that promises can be fulfilled by different threads while
-the code that created the promise need not wait for the promise to be
-fulfilled. This is especially important since, as mentioned before,
-`lparallel:force` is a blocking call. We want to delay forcing the
-promise until the value is actually available.
+これは、promise を作成したコードが promise の fulfillment を待つ必要なしに、別のスレッドが promise を fulfill できることを示しています。前述のとおり `lparallel:force` はブロッキング呼び出しなので、これは特に重要です。実際に値が利用可能になるまで、promise の force を遅らせたいのです。
 
-Another point to note when using promises is that once a promise has
-been fulfilled, invoking force on the same object will always return
-the same value. That is to say, a promise can be successfully
-fulfilled only once.
+promises を使う際にもう 1 つ注意すべき点は、promise が一度 fulfilled されると、同じオブジェクトに対して force を呼び出しても常に同じ値が返ることです。つまり、promise は正常には一度だけ fulfilled できます。
 
-For instance:
+たとえば次のとおりです。
 
 ~~~lisp
 (defun multiple-fulfilling ()
@@ -1854,7 +1576,7 @@ For instance:
       (format t "~d~%" (force p)))))
 ~~~
 
-Which produces:
+これにより次の出力が得られます。
 
 ~~~lisp
 LPARALLEL-USER> (multiple-fulfilling)
@@ -1871,14 +1593,11 @@ LPARALLEL-USER> (multiple-fulfilling)
 NIL
 ~~~
 
-So how does a future differ from a promise?
+では、future は promise とどう違うのでしょうか？
 
-A `lparallel:future` is simply a promise that is run in parallel, and as
-such, it does not block the main thread like a default use of
-`lparallel:promise` would. It is executed in its own thread (by
-the lparallel library, of course).
+`lparallel:future` は、単に並列に実行される promise です。そのため、`lparallel:promise` のデフォルトの使い方のようにメインスレッドをブロックしません。もちろん lparallel ライブラリによって、自身のスレッドで実行されます。
 
-Here is a simple example of a future:
+future の単純な例です。
 
 ~~~lisp
 (defun test-future ()
@@ -1893,7 +1612,7 @@ Here is a simple example of a future:
     (format t "~d~%" (force f))))
 ~~~
 
-And the output:
+出力は次のとおりです。
 
 ~~~lisp
 LPARALLEL-USER> (test-future)
@@ -1905,38 +1624,19 @@ Hello from future!
 NIL
 ~~~
 
-Explanation: This exactly is similar to the `promise-with-threads`
-example. Observe two differences, however - first of all, the
-`lparallel:future` macro has a body as well. This allows the future to
-fulfill itself! What this means is that as soon as the body of the
-future is done executing, `lparallel:fulfilledp` will always return true
-for the future object.
+説明: これは `promise-with-threads` の例とまったく似ています。ただし 2 つの違いがあります。まず、`lparallel:future` マクロにも本体があります。これにより future は自分自身を fulfill できます。つまり、future の本体の実行が完了するとすぐに、`lparallel:fulfilledp` はその future オブジェクトに対して常に true を返します。
 
-Secondly, the future itself is spawned off on a separate thread by the
-library, so it does not interfere with the execution of the current
-thread very much unlike promises as could be seen in the
-promise-with-threads example (which needed an explicit thread for the
-fulfilling code in order to avoid blocking the current thread).
+次に、future 自体はライブラリによって別スレッドに生成されるため、現在のスレッドの実行をあまり妨げません。これは、現在のスレッドをブロックしないよう fulfillment コード用に明示的なスレッドが必要だった promise-with-threads の例で見た promises とは異なります。
 
-The most interesting bit is that (even in terms of the actual theory
-propounded by Dan Friedman and others), a Future is conceptually
-something that fulfills a Promise. That is to say, a promise is a
-contract that some value will be generated sometime in the future, and
-a future is precisely that “something” that does that job.
+最も興味深い点は、（Dan Friedman らが提唱した実際の理論の観点でも）Future は概念上 Promise を fulfill するものだということです。つまり、promise は将来のある時点で何らかの値が生成されるという契約であり、future はまさにその仕事を行う「何か」です。
 
-What this means is that even when using the lparallel library, the
-basic use of a future would be to fulfill a promise. This means that
-hacks like promise-with-threads need not be made by the user.
+これは、lparallel ライブラリを使う場合でも、future の基本的な使い方は promise を fulfill することだ、という意味です。つまり promise-with-threads のようなハックをユーザーが書く必要はありません。
 
-Let’s take a small example to demonstrate this point (a pretty
-contrived example, I must admit!).
+この点を示すため、小さな例を見てみましょう（かなり作為的な例であることは認めます）。
 
-Here’s the scenario: we want to read in a number and calculate its
-square. So we offload this work to another function, and continue with
-our own work. When the result is ready, we want it to be printed on
-the console without any intervention from us.
+シナリオは次のとおりです。数を読み込み、その二乗を計算したいとします。そこで、この作業を別の関数にオフロードし、自分自身の作業を続けます。結果が準備できたら、こちらが介入しなくてもコンソールに表示されてほしいとします。
 
-Here’s how the code looks:
+コードは次のようになります。
 
 ~~~lisp
 ;;; Callback example using promises and futures
@@ -1958,7 +1658,7 @@ Here’s how the code looks:
        do (sleep (* 0.01 (random 100))))))
 ~~~
 
-And the output:
+出力は次のとおりです。
 
 ~~~lisp
 LPARALLEL-USER> (callback-promise-future-demo)
@@ -1967,22 +1667,13 @@ Square of 19 = 361
 NIL
 ~~~
 
-Explanation: All right, so first off, we create a promise to hold the
-squared value when it is generated. This is the p object. The input
-value is stored in the local variable n.
+説明: まず、生成された二乗値を保持するための promise を作成します。これが p オブジェクトです。入力値はローカル変数 n に格納されます。
 
-Then we create a future object f. This future simply squares the input
-value and fulfills the promise with this value. Finally, since we want
-to print the output in its own time, we force an anonymous future
-which simply prints the output string as shown.
+次に future オブジェクト f を作成します。この future は単に入力値を二乗し、その値で promise を fulfill します。最後に、出力を適切なタイミングで表示したいので、示したように出力文字列を表示するだけの無名 future を force します。
 
-Note that this is very similar to the situation in an environment like
-Node, where we pass callback functions to other functions with the
-understanding that the callback will be called when the invoked
-function is done with its work.
+これは Node のような環境に非常によく似ていることに注意してください。そこでは、呼び出された関数が作業を終えたときに callback が呼ばれるという理解のもと、callback 関数を他の関数に渡します。
 
-Finally note that the following snippet is still fine (even if it uses
-the blocking `lparallel:force` call because it’s on a separate thread):
+最後に、次のスニペットは（ブロッキングな `lparallel:force` 呼び出しを使っていても、別スレッド上なので）依然として問題ないことに注意してください。
 
 
 ~~~lisp
@@ -1990,41 +1681,27 @@ the blocking `lparallel:force` call because it’s on a separate thread):
 (format stream "Square of ~d = ~d~%" n (force p))))
 ~~~
 
-To summarise, the general idiom of usage is: **define objects which will
-hold the results of asynchronous computations in promises, and use
-futures to fulfill those promises**.
+まとめると、一般的な使用イディオムは次のとおりです。**非同期計算の結果を保持するオブジェクトを promises として定義し、それらの promises を fulfill するために futures を使う**。
 
-### Using cognates - parallel equivalents of Common Lisp counterparts
+### cognates を使う - Common Lisp の対応物の並列版
 
-Cognates are arguably the raison d’etre of the lparallel
-library. These constructs are what truly provide parallelism in the
-lparallel. Note, however, that most (if not all) of these constructs
-are built on top of futures and promises.
+Cognates は、おそらく lparallel ライブラリの存在理由です。これらの構文こそが、lparallel に真の parallelism を提供します。ただし、これらの構文のほとんど（すべてではないにせよ）は futures と promises の上に構築されていることに注意してください。
 
-To put it in a nutshell, cognates are simply functions that are
-intended to be the parallel equivalents of their Common Lisp
-counterparts. However, there are a few extra lparallel cognates that
-have no Common Lisp equivalents.
+簡潔に言えば、cognates は Common Lisp の対応物の並列版となることを意図した関数です。ただし、Common Lisp に対応物を持たない lparallel 独自の cognates もいくつかあります。
 
-At this juncture, it is important to know that cognates come in two basic flavours:
+ここで、cognates には基本的に 2 種類あることを知っておくことが重要です。
 
--    Constructs for fine-grained parallelism: `defpun`, `plet`, `plet-if`, etc.
--   Explicit functions and macros for performing parallel operations -
-    `pmap`, `preduce`, `psort`, `pdotimes`, etc.
+-    細粒度の parallelism のための構文: `defpun`、`plet`、`plet-if` など。
+-   並列操作を行う明示的な関数とマクロ -
+    `pmap`、`preduce`、`psort`、`pdotimes` など。
 
-In the first case we don’t have much explicit control over the
-operations themselves. We mostly rely on the fact that the library
-itself will optimise and parallelise the forms to whatever extent it
-can. In this post, we will focus on the second category of cognates.
+最初の場合、操作自体に対する明示的な制御はあまりありません。ライブラリ自身が可能な範囲でフォームを最適化し並列化する、という事実にほぼ依存します。この記事では、2 つ目のカテゴリの cognates に焦点を当てます。
 
-Take, for instance, the cognate function `lparallel:pmap` is exactly
-the same as the Common Lisp equivalent, `map`, but it runs in
-parallel. Let’s demonstrate that through an example.
+たとえば、cognate 関数 `lparallel:pmap` は Common Lisp の対応物である `map` とまったく同じですが、並列に実行されます。例で示しましょう。
 
-Suppose we had a list of random strings of length varying from 3 to
-10, and we wished to collect their lengths in a vector.
+長さが 3 から 10 まで変化するランダムな文字列のリストがあり、その長さを vector に集めたいとします。
 
-Let’s first set up the helper functions that will generate the random strings:
+まず、ランダム文字列を生成する helper 関数を用意しましょう。
 
 ~~~lisp
 (defvar *chars*
@@ -2043,7 +1720,7 @@ Let’s first set up the helper functions that will generate the random strings:
                            collect (nth (random 26) *chars*)))))
 ~~~
 
-And here’s how the Common Lisp map version of the solution might look like:
+Common Lisp の map による解決策は次のようになります。
 
 ~~~lisp
 ;;; map demo
@@ -2051,14 +1728,14 @@ And here’s how the Common Lisp map version of the solution might look like:
   (map 'vector #'length (get-random-strings 100)))
 ~~~
 
-And let’s have a test run:
+テスト実行してみましょう。
 
 ~~~lisp
 LPARALLEL-USER> (test-map)
 #(7 5 10 8 7 5 3 4 4 10)
 ~~~
 
-And here’s the `lparallel:pmap` equivalent:
+そして、これが `lparallel:pmap` による対応版です。
 
 ~~~lisp
 ;;;pmap demo
@@ -2066,7 +1743,7 @@ And here’s the `lparallel:pmap` equivalent:
   (pmap 'vector #'length (get-random-strings 100)))
 ~~~
 
-which produces:
+これにより次の出力が得られます。
 
 ~~~lisp
 LPARALLEL-USER> (test-pmap)
@@ -2074,25 +1751,16 @@ LPARALLEL-USER> (test-pmap)
 LPARALLEL-USER>
 ~~~
 
-As you can see from the definitions of test-map and test-pmap, the
-syntax of the `lparallel:map` and `lparallel:pmap` functions are exactly
-the same (well, almost - `lparallel:pmap` has a few more optional
-arguments).
+test-map と test-pmap の定義から分かるように、`lparallel:map` 関数と `lparallel:pmap` 関数の構文はまったく同じです（ほぼ同じ、というべきでしょう。`lparallel:pmap` には追加の optional arguments がいくつかあります）。
 
-Some useful cognate functions and macros (all of them are functions
-except when marked so explicitly. Note that there are quite a few
-cognates, and I have chosen a few to try and represent every category
-through an example:
+便利な cognate 関数とマクロをいくつか挙げます（明示的に示したものを除き、すべて関数です）。cognates はかなり多くありますが、各カテゴリを例で代表できるよう、いくつかを選びました。
 
-#### lparallel:pmap: parallel version of map.
+#### lparallel:pmap: map の並列版。
 
-Note that all the mapping functions (`lparallel:pmap`,
-**lparallel:pmapc**,`lparallel:pmapcar`, etc.) take two special keyword arguments:
+すべての mapping 関数（`lparallel:pmap`、**lparallel:pmapc**、`lparallel:pmapcar` など）は、2 つの特別なキーワード引数を取ることに注意してください。
 
-- `:size`, specifying the number of elements of the input
-sequence(s) to process.
-- `:parts` which specifies the number of parallel parts to divide the
-sequence(s) into.
+- `:size`: 処理する入力 sequence の要素数を指定します。
+- `:parts`: sequence を分割する並列 part 数を指定します。
 
 ~~~lisp
     ;;; pmap - function
@@ -2105,7 +1773,7 @@ sequence(s) into.
               numbers)))
 ~~~
 
-Sample run:
+サンプル実行:
 
 ~~~lisp
     LPARALLEL-USER> (test-pmap)
@@ -2113,11 +1781,9 @@ Sample run:
     #(0 1 4 9 16 25 36 49 64 81)
 ~~~
 
-#### lparallel:por: parallel version of or.
+#### lparallel:por: or の並列版。
 
-The behaviour is that it returns the first non-nil element amongst its
-arguments. However, due to the parallel nature of this macro, that
-element varies.
+動作としては、引数のうち最初の non-nil 要素を返します。ただし、このマクロの並列性により、その要素は変化します。
 
 
 ~~~lisp
@@ -2130,7 +1796,7 @@ element varies.
         (por a b c d)))
 ~~~
 
-Sample run:
+サンプル実行:
 
 ~~~lisp
     LPARALLEL-USER> (dotimes (i 10)
@@ -2149,13 +1815,12 @@ Sample run:
     NIL
 ~~~
 
-In the case of the normal or operator, it would always have returned
-the first non-nil element viz. 100.
+通常の or 演算子の場合、常に最初の non-nil 要素、すなわち 100 を返していたでしょう。
 
 
-#### lparallel:pdotimes: parallel version of dotimes.
+#### lparallel:pdotimes: dotimes の並列版。
 
-Note that this macro also take an optional `:parts` argument.
+このマクロも optional な `:parts` 引数を取ることに注意してください。
 
 
 ~~~lisp
@@ -2166,7 +1831,7 @@ Note that this macro also take an optional `:parts` argument.
         (print (random 100))))
 ~~~
 
-Sample run:
+サンプル実行:
 
 ~~~lisp
     LPARALLEL-USER> (test-pdotimes)
@@ -2179,7 +1844,7 @@ Sample run:
     NIL
 ~~~
 
-####  lparallel:pfuncall: parallel version of funcall.
+####  lparallel:pfuncall: funcall の並列版。
 
 
 ~~~lisp
@@ -2188,7 +1853,7 @@ Sample run:
       (pfuncall #'* 1 2 3 4 5))
 ~~~
 
-Sample run:
+サンプル実行:
 
 ~~~lisp
     LPARALLEL-USER> (test-pfuncall)
@@ -2196,12 +1861,9 @@ Sample run:
     120
 ~~~
 
-####    lparallel:preduce: parallel version of reduce.
+####    lparallel:preduce: reduce の並列版。
 
-This very important function also takes two optional keyword
-arguments:  `:parts` (same meaning as explained), and `:recurse`. If
-`:recurse` is non-nil, it recursively applies `lparallel:preduce` to its
-arguments, otherwise it default to using reduce.
+この非常に重要な関数も、2 つの optional keyword arguments を取ります。`:parts`（説明したものと同じ意味）と `:recurse` です。`:recurse` が non-nil の場合、引数に対して `lparallel:preduce` を再帰的に適用します。そうでなければ、デフォルトで reduce を使います。
 
 ~~~lisp
     ;;; preduce - function
@@ -2214,7 +1876,7 @@ arguments, otherwise it default to using reduce.
                  :recurse t)))
 ~~~
 
-Sample run:
+サンプル実行:
 
 ~~~lisp
     LPARALLEL-USER> (test-preduce)
@@ -2222,9 +1884,9 @@ Sample run:
     5050
 ~~~
 
-####    lparallel:premove-if-not: parallel version of remove-if-not.
+####    lparallel:premove-if-not: remove-if-not の並列版。
 
-This is essentially equivalent to “filter” in Functional Programming parlance.
+これは関数型プログラミングの用語でいう “filter” と本質的に同等です。
 
 
 ~~~lisp
@@ -2235,7 +1897,7 @@ This is essentially equivalent to “filter” in Functional Programming parlanc
         (premove-if-not #'evenp numbers)))
 ~~~
 
-Sample run:
+サンプル実行:
 
 ~~~lisp
     LPARALLEL-USER> (test-premove-if-not)
@@ -2244,7 +1906,7 @@ Sample run:
      56 58 60 62 64 66 68 70 72 74 76 78 80 82 84 86 88 90 92 94 96 98 100)
 ~~~
 
-####    lparallel:pevery: parallel version of every.
+####    lparallel:pevery: every の並列版。
 
 
 ~~~lisp
@@ -2256,7 +1918,7 @@ Sample run:
               (pevery #'integerp numbers))))
 ~~~
 
-Sample run:
+サンプル実行:
 
 ~~~lisp
     LPARALLEL-USER> (test-pevery)
@@ -2264,11 +1926,9 @@ Sample run:
     (NIL T)
 ~~~
 
-In this example, we are performing two checks - firstly, whether all
-the numbers in the range [1,100] are even, and secondly, whether all
-the numbers in the same range are integers.
+この例では 2 つの確認を行っています。まず、範囲 [1,100] のすべての数が偶数かどうか。次に、同じ範囲のすべての数が整数かどうかです。
 
-#### lparallel:count: parallel version of count.
+#### lparallel:count: count の並列版。
 
 ~~~lisp
     ;;; pcount - function
@@ -2277,7 +1937,7 @@ the numbers in the same range are integers.
         (pcount #\e chars)))
 ~~~
 
-Sample run:
+サンプル実行:
 
 ~~~lisp
     LPARALLEL-USER> (test-pcount)
@@ -2285,7 +1945,7 @@ Sample run:
     3
 ~~~
 
-####    lparallel:psort: parallel version of sort.
+####    lparallel:psort: sort の並列版。
 
 
 ~~~lisp
@@ -2312,7 +1972,7 @@ Sample run:
          :test #'=)))
 ~~~
 
-Sample run:
+サンプル実行:
 
 ~~~lisp
     LPARALLEL-USER> (test-psort)
@@ -2328,48 +1988,33 @@ Sample run:
      #S(PERSON :NAME "Olga" :AGE 33))
 ~~~
 
-In this example, we first define a structure of type person for
-storing information about people. Then we create a list of 7 people
-with randomly generated ages (between 20 and 39). Finally, we sort
-them by age in non-decreasing order.
+この例では、まず人に関する情報を保存するための person 型の構造体を定義します。次に、ランダムに生成された年齢（20 から 39 の間）を持つ 7 人のリストを作成します。最後に、年齢の非減少順でソートします。
 
-### Error handling
+### エラーハンドリング
 
-To see how lparallel handles error handling (hint: with
-`lparallel:task-handler-bind`), please read
-[lparallel-error-handling](https://z0ltan.wordpress.com/2016/09/10/basic-concurrency-and-parallelism-in-common-lisp-part-4b-parallelism-using-lparallel-error-handling/).
+lparallel がエラーハンドリングをどのように扱うか（ヒント: `lparallel:task-handler-bind`）については、
+[lparallel-error-handling](https://z0ltan.wordpress.com/2016/09/10/basic-concurrency-and-parallelism-in-common-lisp-part-4b-parallelism-using-lparallel-error-handling/)
+を読んでください。
 
 
-## Monitoring and controlling threads with Slime
+## Slime でスレッドを監視・制御する
 
-**M-x slime-list-threads** (you can also access it through the
-*slime-selector*, shortcut **t**) will list running threads by their
-names, and their statuses.
+**M-x slime-list-threads**（*slime-selector* からショートカット **t** でもアクセスできます）は、実行中のスレッドを名前と状態付きで一覧表示します。
 
-The thread on the current line can be killed with **k**, or if there’s a
-lot of threads to kill, several lines can be selected and **k** will kill
-all the threads in the selected region.
+現在行のスレッドは **k** で kill できます。kill したいスレッドが多い場合は、複数行を選択して **k** を押すと、選択範囲内のすべてのスレッドを kill できます。
 
-**g** will update the thread list, but when you have a lot of threads
-starting and stopping it may be too cumbersome to always press **g**, so
-there’s a variable `slime-threads-update-interval`, when set to a number
-X the thread list will be automatically updated each X seconds, a
-reasonable value would be 0.5.
+**g** はスレッド一覧を更新します。しかし、多くのスレッドが開始・停止している場合、毎回 **g** を押すのは面倒かもしれません。そのため `slime-threads-update-interval` という変数があります。数値 X に設定すると、スレッド一覧は X 秒ごとに自動更新されます。妥当な値は 0.5 でしょう。
 
-Thanks to [Slime tips](https://slime-tips.tumblr.com/).
+[Slime tips](https://slime-tips.tumblr.com/) に感謝します。
 
 
-## References
+## 参考資料
 
-There are, of course, a lot more functions, objects, and idiomatic
-ways of performing parallel computations using the lparallel
-library. This post barely scratches the surface on those. However, the
-general flow of operation is amply demonstrated here, and for further
-reading, you may find the following resources useful:
+もちろん、lparallel ライブラリを使って並列計算を行うための関数、オブジェクト、イディオムは他にもたくさんあります。この記事はそれらの表面をかすめているにすぎません。しかし、操作の一般的な流れはここで十分に示されています。さらに読むには、次の資料が役立つでしょう。
 
-- [The official homepage of the lparallel library, including documentation](https://lparallel.org/)
-- [The Common Lisp Hyperspec](https://www.lispworks.com/documentation/HyperSpec/Front/), and, of course
-- Your Common Lisp implementation’s
-  manual. [For SBCL, here is a link to the official manual](http://www.sbcl.org/manual/)
-- [Common Lisp recipes](http://weitz.de/cl-recipes/) by the venerable Edi Weitz.
-- more concurrency and threading libraries on the [Awesome-cl#parallelism-and-concurrency](https://github.com/CodyReichert/awesome-cl#parallelism-and-concurrency) list.
+- [ドキュメントを含む lparallel ライブラリの公式ホームページ](https://lparallel.org/)
+- [The Common Lisp Hyperspec](https://www.lispworks.com/documentation/HyperSpec/Front/)、そしてもちろん
+- 使用している Common Lisp 処理系の
+  マニュアル。[SBCL については、公式マニュアルへのリンクがここにあります](http://www.sbcl.org/manual/)
+- 尊敬すべき Edi Weitz による [Common Lisp recipes](http://weitz.de/cl-recipes/)。
+- [Awesome-cl#parallelism-and-concurrency](https://github.com/CodyReichert/awesome-cl#parallelism-and-concurrency) リストにある、より多くの concurrency および threading ライブラリ。

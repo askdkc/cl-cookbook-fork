@@ -1,50 +1,47 @@
 ---
-title: Data structures
+title: データ構造
 ---
 
-We hope to give here a clear reference of the common data
-structures. To really learn the language, you should take the time to
-read other resources. The following resources, which we relied upon,
-also have many more details:
+ここでは、よく使われるデータ構造について明快なリファレンスを示すことを目指します。
+言語を本当に学ぶには、時間を取って他の資料も読むべきです。私たちが参考にした
+以下の資料には、さらに多くの詳細があります。
 
-- [Practical CL](http://gigamonkeys.com/book/they-called-it-lisp-for-a-reason-list-processing.html), by Peter Seibel
-- [CL Recipes](http://weitz.de/cl-recipes/), by E. Weitz, full of explanations and tips,
-- the
-  [CL standard](https://franz.com/support/documentation/cl-ansi-standard-draft-w-sidebar.pdf)
-  with -- in the sidebar of your PDF reader -- a nice TOC, functions reference, extensive descriptions, more
-  examples and warnings (i.e: everything). [PDF mirror](https://gitlab.com/vancan1ty/clstandard_build/-/blob/master/cl-ansi-standard-draft-w-sidebar.pdf)
-- a [Common Lisp quick reference](http://clqr.boundp.org/)
+- Peter Seibel による [Practical CL](http://gigamonkeys.com/book/they-called-it-lisp-for-a-reason-list-processing.html)
+- E. Weitz による [CL Recipes](http://weitz.de/cl-recipes/)。説明とヒントが豊富です。
+- [CL standard](https://franz.com/support/documentation/cl-ansi-standard-draft-w-sidebar.pdf)
+  には、PDF リーダーのサイドバーに見やすい目次があり、関数リファレンス、詳細な説明、
+  さらに多くの例と注意事項、つまりほとんどすべてが含まれています。
+  [PDF mirror](https://gitlab.com/vancan1ty/clstandard_build/-/blob/master/cl-ansi-standard-draft-w-sidebar.pdf)
+- [Common Lisp quick reference](http://clqr.boundp.org/)
 
-Don't miss the appendix and when you need more data structures, have a
-look at the
+付録も見逃さないでください。さらに多くのデータ構造が必要な場合は、
 [awesome-cl](https://github.com/CodyReichert/awesome-cl#data-structures)
-list and [Quickdocs](https://quickdocs.org/-/search?q=data%20structure).
+のリストと [Quickdocs](https://quickdocs.org/-/search?q=data%20structure) を見てください。
 
-## Lists
+## リスト
 
-The simplest way to create a list is with `list`:
+リストを作成する最も単純な方法は `list` を使うことです。
 
 ~~~lisp
 (list 1 2 3)
 ~~~
 
-but there are more constructors, and you should also know that lists
-are made of `cons` cells.
+ただし、他にもコンストラクタがあります。また、リストは `cons` セルからできていることも
+知っておくべきです。
 
 
-### Building lists. Cons cells, lists.
+### リストの構築。Cons セル、リスト。
 
-_A list is also a sequence, so we can use the functions shown below._
+_リストはシーケンスでもあるため、後述の関数を使えます。_
 
-The list basic element is the cons cell. We build lists by assembling
-cons cells.
+リストの基本要素は cons セルです。cons セルを組み合わせてリストを構築します。
 
 ~~~lisp
 (cons 1 2)
-;; => (1 . 2) ;; representation with a point, a dotted pair.
+;; => (1 . 2) ;; ドットを使った表現、ドット対。
 ~~~
 
-It looks like this:
+これは次のようになります。
 
 ```
 [o|o]--- 2
@@ -52,63 +49,60 @@ It looks like this:
  1
 ```
 
-If the `cdr` of the first cell is another cons cell, and if the `cdr` of
-this last one is `nil`, we build a list:
+最初のセルの `cdr` が別の cons セルで、その最後の `cdr` が `nil` なら、
+リストを構築したことになります。
 
 ~~~lisp
 (cons 1 (cons 2 nil))
 ;; => (1 2)
 ~~~
 
-It looks like this:
+これは次のようになります。
 
 ```
 [o|o]---[o|/]
  |       |
  1       2
 ```
-(ascii art by [draw-cons-tree](https://github.com/cbaggers/draw-cons-tree)).
+（ASCII アートは [draw-cons-tree](https://github.com/cbaggers/draw-cons-tree) によるものです）。
 
-See that the representation is not a dotted pair ? The Lisp printer
-understands the convention.
+表現がドット対ではないことに注目してください。Lisp のプリンタはこの慣習を理解します。
 
-Finally we can simply build a literal list with `list`:
+最後に、`list` で単純にリテラルリストを構築できます。
 
 ~~~lisp
 (list 1 2)
 ;; => (1 2)
 ~~~
 
-or by calling quote:
+または quote を呼び出します。
 
 ~~~lisp
 '(1 2)
 ;; => (1 2)
 ~~~
 
-which is shorthand notation for the function call `(quote (1 2))`.
+これは関数呼び出し `(quote (1 2))` の短縮表記です。
 
-### Circular lists
+### 循環リスト
 
-A cons cell car or cdr can refer to other objects, including itself or
-other cells in the same list. They can therefore be used to define
-self-referential structures such as circular lists.
+cons セルの car や cdr は、同じリスト内の自分自身や他のセルを含む、
+他のオブジェクトを参照できます。そのため、循環リストのような自己参照構造を
+定義するために使えます。
 
-Before working with circular lists, tell the printer to recognise them
-and not try to print the whole list by setting
+循環リストを扱う前に、プリンタがそれを認識し、リスト全体を印字しようとしないように、
 [\*print-circle\*](http://clhs.lisp.se/Body/v_pr_cir.htm)
-to `T`:
+を `T` に設定します。
 
 ~~~lisp
 (setf *print-circle* t)
 ~~~
 
-A function which modifies a list, so that the last `cdr` points to the
-start of the list is:
+最後の `cdr` がリストの先頭を指すようにリストを変更する関数は次のようになります。
 
 ~~~lisp
 (defun circular! (items)
-  "Modifies the last cdr of list ITEMS, returning a circular list"
+  "リスト ITEMS の最後の cdr を変更し、循環リストを返す"
   (setf (cdr (last items)) items))
 
 (circular! (list 1 2 3))
@@ -118,30 +112,29 @@ start of the list is:
 ;; => 2
 ~~~
 
-The [list-length](http://www.lispworks.com/documentation/HyperSpec/Body/f_list_l.htm#list-length)
-function recognises circular lists, returning `nil`.
+[list-length](http://www.lispworks.com/documentation/HyperSpec/Body/f_list_l.htm#list-length)
+関数は循環リストを認識し、`nil` を返します。
 
-The reader can also create circular lists, using
+リーダも
 [Sharpsign Equal-Sign](http://www.lispworks.com/documentation/HyperSpec/Body/02_dho.htm)
-notation. An object (like a list) can be prefixed with `#n=` where `n`
-is an unsigned decimal integer (one or more digits). The
-label `#n#` can be used to refer to the object later in the
-expression:
+記法を使って循環リストを作成できます。リストのようなオブジェクトには `#n=` という
+接頭辞を付けられます。ここで `n` は符号なし 10 進整数（1 桁以上）です。
+ラベル `#n#` は、式の後の部分でそのオブジェクトを参照するために使えます。
 
 ~~~lisp
 '#42=(1 2 3 . #42#)
 ;; => #1=(1 2 3 . #1#)
 ~~~
 
-Note that the label given to the reader (`n=42`) is discarded after
-reading, and the printer defines a new label (`n=1`).
+リーダに与えたラベル（`n=42`）は読み込み後に破棄され、プリンタが新しいラベル
+（`n=1`）を定義することに注意してください。
 
-Further reading
+参考資料
 
-* [Let over Lambda](https://letoverlambda.com/index.cl/guest/chap4.html#sec_5) section on cyclic expressions
+* [Let over Lambda](https://letoverlambda.com/index.cl/guest/chap4.html#sec_5) の循環式に関する節
 
 
-### car/cdr or first/rest (and second... to tenth)
+### car/cdr または first/rest（second... tenth まで）
 
 ~~~lisp
 (car (cons 1 2)) ;; => 1
@@ -151,22 +144,23 @@ Further reading
 (rest '(1 2 3)) ;; => (2 3)
 ~~~
 
-We can assign *any* new value with `setf`.
+`setf` を使うと、*任意の* 新しい値を代入できます。
 
 ### last, butlast, nbutlast (&optional n)
 
-return the last cons cell in a list (or the nth last cons cells).
+リスト内の最後の cons セル（または末尾から n 番目の cons セル）を返します。
 
 ~~~lisp
 (last '(1 2 3))
 ;; => (3)
-(car (last '(1 2 3)) ) ;; or (first (last …))
+(car (last '(1 2 3)) ) ;; または (first (last …))
 ;; => 3
 (butlast '(1 2 3))
 ;; => (1 2)
 ~~~
 
-In [Alexandria](https://common-lisp.net/project/alexandria/draft/alexandria.html#Conses), `lastcar` is equivalent of `(first (last …))`:
+[Alexandria](https://common-lisp.net/project/alexandria/draft/alexandria.html#Conses) では、
+`lastcar` は `(first (last …))` と等価です。
 
 ~~~lisp
 (alexandria:lastcar '(1 2 3))
@@ -176,11 +170,11 @@ In [Alexandria](https://common-lisp.net/project/alexandria/draft/alexandria.html
 
 ### reverse, nreverse
 
-`reverse` and `nreverse` return a new sequence.
+`reverse` と `nreverse` は新しいシーケンスを返します。
 
-`nreverse` is destructive. The N stands for **non-consing**, meaning
-it doesn't need to allocate any new cons cells. It *might* (but in
-practice, does) reuse and modify the original sequence:
+`nreverse` は破壊的です。N は **non-consing** を意味し、新しい cons セルを
+割り当てる必要がないという意味です。元のシーケンスを再利用して変更する
+*可能性があります*（実際にはそうします）。
 
 ~~~lisp
 (defparameter mylist '(1 2 3))
@@ -192,53 +186,52 @@ mylist
 (nreverse mylist)
 ;; => (3 2 1)
 mylist
-;; => (1) in SBCL but implementation dependent.
+;; => (1) SBCL ではこうなるが、実装依存。
 ~~~
 
 
-### append, nconc (and revappend, nreconc)
+### append, nconc（および revappend, nreconc）
 
-`append` takes any number of list arguments and returns a new list
-containing the elements of all its arguments:
+`append` は任意個数のリスト引数を取り、すべての引数の要素を含む新しいリストを返します。
 
 ~~~lisp
 (append (list 1 2) (list 3 4))
 ;; => (1 2 3 4)
 ~~~
 
-The new list shares some cons cells with the `(3 4)`:
+新しいリストは `(3 4)` と一部の cons セルを共有します。
 
 ![](assets/gigamonkeys-after-append.png)
 
-`nconc` is the recycling equivalent.
+`nconc` は再利用版に相当します。
 
-`revappend` and `nreconc` are two functions you might not use often :)
+`revappend` と `nreconc` は、あまり頻繁には使わないかもしれない 2 つの関数です :)
 
-`revappend` does `(append (reverse x) y)`:
+`revappend` は `(append (reverse x) y)` を行います。
 
 ~~~lisp
 (revappend (list 1 2 3) (list :a :b :c))
 ;; => (3 2 1 :A :B :C)
 ~~~
 
-`nreconc` does `(nconc (nreverse x) Y)`:
+`nreconc` は `(nconc (nreverse x) Y)` を行います。
 
 ~~~lisp
 (nreconc (list 1 2 3) (list :a :b :c))
 ;; => (3 2 1 :A :B :C)
 ~~~
 
-You will thank us later.
+後でありがたみが分かるでしょう。
 
 
 ### push, pushnew (item, place)
 
-`push` prepends *item* to the list that is stored in *place*, stores
-the resulting list in *place*, and returns the list.
+`push` は *place* に格納されているリストの先頭に *item* を追加し、結果のリストを
+*place* に格納して、そのリストを返します。
 
-`pushnew` is similar, but it does nothing if the element already exists in the place.
+`pushnew` も似ていますが、その要素がすでに place に存在する場合は何もしません。
 
-See also `adjoin` below that doesn't modify the target list.
+対象のリストを変更しない `adjoin` についても後述します。
 
 ~~~lisp
 (defparameter mylist '(1 2 3))
@@ -255,30 +248,27 @@ x
 ;; => (A (5 B C) D)
 ~~~
 
-`push` is equivalent to `(setf place (cons item place ))` except that
-the subforms of *place* are evaluated only once, and *item* is evaluated
-before *place*.
+`push` は `(setf place (cons item place ))` と等価ですが、*place* の部分式が
+一度だけ評価され、*item* が *place* より先に評価される点が異なります。
 
-There is no built-in function to **add to the end of a list**. It is a
-more costly operation (have to traverse the whole list). So if you
-need to do this: either consider using another data structure, either
-just `reverse` your list when needed.
+**リストの末尾に追加する** 組み込み関数はありません。これはよりコストの高い操作です
+（リスト全体を走査する必要があります）。これが必要なら、別のデータ構造の利用を検討するか、
+必要なときに単にリストを `reverse` してください。
 
-`pushnew` accepts key arguments: `:key`, `:test`, `:test-not`.
+`pushnew` はキーワード引数 `:key`、`:test`、`:test-not` を受け取ります。
 
 
 ### pop
 
-a destructive operation.
+破壊的な操作です。
 
 ### nthcdr (index, list)
 
-Use this if `first`, `second` and the rest up to `tenth` are not
-enough.
+`first`、`second`、そして `tenth` まででは足りない場合に使います。
 
-### car/cdr and composites (cadr, caadr…) - accessing lists inside lists
+### car/cdr と合成形（cadr、caadr…） - リスト内のリストへのアクセス
 
-They make sense when applied to lists containing other lists.
+他のリストを含むリストに適用すると意味があります。
 
 ~~~lisp
 (caar (list 1 2 3))                  ==> error
@@ -287,20 +277,18 @@ They make sense when applied to lists containing other lists.
 (caadr (list (list 1 2) (list 3 4))) ==> 3
 ~~~
 
-### destructuring-bind (parameter*, list): pattern matching
+### destructuring-bind (parameter*, list): パターンマッチング
 
-This macro does simple pattern matching on lists.
+このマクロはリストに対して単純なパターンマッチングを行います。
 
-From a declaration of parameters, it binds each parameter to its value
-taken from the input list.
+パラメータ宣言に基づいて、入力リストから取り出した値を各パラメータに束縛します。
 
-We can destructure lists and nested lists, with a fixed or a variable
-number of elements, we can provide defaults to absent elements, and we
-can match the keys of property lists, using the lambla list keywords
-we know from a `defun` or a `defmacro`: `&key`, `&rest`,
-`&allow-other-keys`, etc.
+固定個数または可変個数の要素を持つリストやネストしたリストを分配束縛できます。
+存在しない要素にデフォルト値を与えたり、`defun` や `defmacro` でおなじみの
+ラムダリストキーワード `&key`、`&rest`、`&allow-other-keys` などを使って
+プロパティリストのキーにマッチさせたりできます。
 
-Example:
+例:
 
 ~~~lisp
 (destructuring-bind (x y z)
@@ -309,11 +297,11 @@ Example:
 ;; x= 1, y= 2, z= 3
 ~~~
 
-On this example we want to match exactly `(x y z)`, so the list we
-match on must provide x, y and z.
+この例では正確に `(x y z)` にマッチさせたいので、対象のリストは x、y、z を
+提供しなければなりません。
 
-Below we make the presence of `z` optional. Now we can match againt a
-list of 2 elements and a list of 3 elements:
+以下では `z` の存在を省略可能にします。これで 2 要素のリストにも 3 要素のリストにも
+マッチできます。
 
 ~~~lisp
 (destructuring-bind (x y &optional z)
@@ -322,17 +310,16 @@ list of 2 elements and a list of 3 elements:
 ;; x= 1, y= 2, z=NIL
 ~~~
 
-But if we wanted to match against a list of a variable number of
-arguments, it wouldn't work:
+しかし、可変個数の引数を持つリストにマッチさせたい場合、これは動作しません。
 
 ~~~lisp
-;; DOESN't WORK:
+;; 動作しない:
 (destructuring-bind (x y &optional z)
     (list 1 2 3 4 5)
   (format t "x= ~s, y= ~s, z=~s" x y z))
 ~~~
 
-we get an error:
+次のエラーになります。
 
 ```
 Error while parsing arguments to DESTRUCTURING-BIND:
@@ -343,8 +330,7 @@ Error while parsing arguments to DESTRUCTURING-BIND:
   between 1 and 3 expected, but got 5
 ```
 
-We can bind the variable number of elements to `z` with `&rest`. Now
-`z` is bound to a list:
+`&rest` を使うと、可変個数の要素を `z` に束縛できます。これで `z` はリストに束縛されます。
 
 ~~~lisp
 (destructuring-bind (x y &rest z)
@@ -353,8 +339,8 @@ We can bind the variable number of elements to `z` with `&rest`. Now
 ;; x= 1, y= 2, z=(3 4 5)
 ~~~
 
-The `&whole` parameter is bound to the whole list. It must be the
-first one and others can follow:
+`&whole` パラメータはリスト全体に束縛されます。これは最初に置く必要があり、
+その後に他のパラメータを続けられます。
 
 ~~~lisp
 (destructuring-bind (&whole whole-list x y &optional z)
@@ -364,7 +350,7 @@ first one and others can follow:
 ~~~
 
 
-We can match inside sublists:
+サブリストの内部にもマッチできます。
 
 ~~~lisp
 (destructuring-bind (x (y1 y2) z)
@@ -374,9 +360,8 @@ We can match inside sublists:
 ~~~
 
 
-Another useful feature is destructuring a plist, a list alternating a
-keyword and a value. We can tell what keys to match, and they
-can appear in any order in the input:
+もう 1 つ便利な機能は、キーワードと値が交互に並ぶリストである plist の分配束縛です。
+どのキーにマッチさせるかを指定でき、入力内での順序は任意です。
 
 ~~~lisp
 (destructuring-bind (&key a b c)
@@ -385,7 +370,7 @@ can appear in any order in the input:
 ;; a= 1, b= 2, c=3
 ~~~
 
-If a key is not present, it's OK. No need to mark it optional:
+キーが存在しなくても問題ありません。optional として指定する必要はありません。
 
 ~~~lisp
 (destructuring-bind (&key a b c)
@@ -394,24 +379,24 @@ If a key is not present, it's OK. No need to mark it optional:
 a= 1, b= 2, c=NIL
 ~~~
 
-But we can't have an input with undeclared keys, we should use `&allow-other-keys`:
+ただし、宣言していないキーを含む入力は扱えません。その場合は `&allow-other-keys` を使います。
 
 ~~~lisp
-;; DOESN'T WORK
+;; 動作しない
 (destructuring-bind (&key a b c)
     (list :b 2 :a 1 :foo t)
-    ;;              ^^^ unknown
+    ;;              ^^^ 不明
   (format t "a= ~s, b= ~s, c=~s" a b c))
 ~~~
 
-We get a clear error again:
+ここでも明確なエラーが出ます。
 
 ```
 Error while parsing arguments to DESTRUCTURING-BIND:
   unknown keyword: :FOO; expected one of :A, :B, :C
 ```
 
-Now we use `&allow-other-keys`:
+今度は `&allow-other-keys` を使います。
 
 ~~~lisp
 (destructuring-bind (&key a b c &allow-other-keys)
@@ -421,8 +406,8 @@ Now we use `&allow-other-keys`:
 ~~~
 
 
-That's not all. Like in a `defun` lambda list, we can give
-defaults, by using a cons cell `(key default)`:
+これだけではありません。`defun` のラムダリストと同じように、cons セル
+`(key default)` を使ってデフォルト値を与えられます。
 
 
 ~~~lisp
@@ -432,14 +417,13 @@ defaults, by using a cons cell `(key default)`:
 ;; a= 1, b= 2, c=42
 ~~~
 
-A destructuring lambda list can contain all the same keywords as a
-macro lambda list, except for `&environment`. This includes `&aux` and
-`&body`.
+分配束縛ラムダリストには、`&environment` を除き、マクロラムダリストと同じ
+キーワードをすべて含められます。これには `&aux` と `&body` も含まれます。
 
-`destructuring-bind`'s structure is: a lambda-list, an input list, an
-optional declaration using `declare`, one or many forms in the body.
+`destructuring-bind` の構造は、ラムダリスト、入力リスト、省略可能な `declare` による宣言、
+そして本体内の 1 つ以上のフォームです。
 
-The input list can be an expression that will be evaluated:
+入力リストは評価される式でもかまいません。
 
 ~~~lisp
 (destructuring-bind ((a &optional (b 'beta)) one two three)
@@ -448,35 +432,34 @@ The input list can be an expression that will be evaluated:
 ;; => (ALPHA BETA 1 2 3)
 ~~~
 
-If this gives you the will to do pattern matching, see
+これでパターンマッチングをしたくなったら、
 [pattern matching](pattern_matching.html).
+を参照してください。
 
 
-### Predicates: null, listp, consp, atom
+### 述語: null, listp, consp, atom
 
-`null` is equivalent to `not`, but considered better style.
+`null` は `not` と等価ですが、より良いスタイルと考えられています。
 
-`listp` tests whether an object is a list or nil.
+`listp` はオブジェクトがリストまたは nil かどうかを調べます。
 
-`consp` tests wether an object is a cons cell.
+`consp` はオブジェクトが cons セルかどうかを調べます。
 
-The empty list is *not* a cons, so `(consp nil)` is falsy, while
-`(listp nil)` is truthy.
+空リストは cons ではないため、`(consp nil)` は偽ですが、`(listp nil)` は真です。
 
-`atom` checks if its argument is an atom, in other words, if it isn't
-a `cons`. `atom` is also a type.
+`atom` は引数がアトムかどうか、言い換えると `cons` ではないかどうかを調べます。
+`atom` は型でもあります。
 
 ~~~lisp
 (atom '()) ;; => true
 ~~~
 
-and see also all the sequences' predicates.
+シーケンスの述語もあわせて参照してください。
 
 
 ### list*, make-list
 
-`make-list` allows to create a list of a given size, with an optional
-initial element to fill it up:
+`make-list` を使うと、指定したサイズのリストを作成し、省略可能な初期要素で埋められます。
 
 ~~~lisp
 (make-list 3 :initial-element "ta")
@@ -490,9 +473,8 @@ initial element to fill it up:
 ;; => ("hello" "hello" "hello")
 ~~~
 
-`list*` is similar to `list` in various aspects. it is handy to push
-one (or many) element(s) in front of an existing list and to return a
-new list:
+`list*` はさまざまな面で `list` に似ています。既存のリストの前に 1 つまたは複数の
+要素を追加し、新しいリストを返すのに便利です。
 
 ~~~lisp
 (list* :foo (list 1 2 3))
@@ -502,71 +484,70 @@ new list:
 ;; => (A B C D E F)
 ~~~
 
-note that `:foo` was added in front of the list and the result list is flat, whereas in:
+`:foo` がリストの先頭に追加され、結果のリストが平坦であることに注意してください。一方で次の場合は:
 
 ~~~lisp
 (list :foo (list 1 2 3))
 ;; => (:FOO (1 2 3))
 ~~~
 
-we get a new list of two elements.
+2 要素の新しいリストが得られます。
 
-`list*`, like `list`, accepts a variable number of arguments. But a
-difference is that the last element of the list is a cons cell with
-the last 2 elements, denoted with a dotted pair below:
+`list*` は `list` と同じく可変個数の引数を受け取ります。ただし違いとして、
+リストの最後の要素は最後の 2 要素からなる cons セルになります。以下ではドット対で示されています。
 
 ~~~lisp
 (list*  1 2 3)
 ;; => (1 2 . 3)
 ~~~
 
-and this result is not a proper list: it is a suite of cons cells.
+そしてこの結果は proper list ではありません。cons セルの連なりです。
 
-whereas with `list`:
+一方、`list` では:
 
 ~~~lisp
 (list 1 2 3)
 ;; => (1 2 3)
 ~~~
 
-the last cons cell is the number 3 and `nil`, which is the termination for a proper list.
+最後の cons セルは数値 3 と `nil` で、`nil` が proper list の終端です。
 
 
 ### ldiff, tailp
 
 <!-- TODO redact -->
 
-If object is the same as some tail of list, `tailp` returns true; otherwise, it returns false.
+オブジェクトが list のいずれかの末尾と同一であれば、`tailp` は true を返します。
+そうでなければ false を返します。
 
-If object is the same as some tail of list, `ldiff` returns a fresh list
-of the elements of list that precede object in the list structure of
-list; otherwise, it returns a copy of list.
+オブジェクトが list のいずれかの末尾と同一であれば、`ldiff` は list のリスト構造内で
+オブジェクトに先行する要素からなる新しいリストを返します。そうでなければ list のコピーを返します。
 
 <!-- ~~~lisp -->
 <!-- (ldiff '(1 2) (list 9 8 1 2 3)) -->
 <!-- ;; => (1 2) -->
 <!-- ~~~ -->
 
-What happens with a circular list? Check your implementation's
-documentation. If it detects circularity it must return false.
+循環リストではどうなるでしょうか。実装のドキュメントを確認してください。
+循環性を検出した場合は false を返さなければなりません。
 
 
 ### member (elt, list)
 
-Returns the tail of `list` beginning with the first element satisfying `eql`ity.
+`eql` による等価性を満たす最初の要素から始まる `list` の末尾を返します。
 
-Accepts `:test`, `:test-not`, `:key` (functions or symbols).
+`:test`、`:test-not`、`:key`（関数またはシンボル）を受け取ります。
 
 ~~~lisp
 (member 2 '(1 2 3))
 ;; (2 3)
 ~~~
 
-### Replacing objects in a tree: subst, sublis
+### ツリー内のオブジェクトの置換: subst, sublis
 
 [subst](http://www.lispworks.com/documentation/HyperSpec/Body/f_substc.htm) and
-`subst-if` search and replace occurrences of an element
-or subexpression in a tree (when it satisfies the optional `test`):
+`subst-if` は、ツリー内の要素または部分式の出現箇所を検索して置換します
+（省略可能な `test` を満たす場合）。
 
 ~~~lisp
 (subst 'one 1 '(1 2 3))
@@ -577,9 +558,8 @@ or subexpression in a tree (when it satisfies the optional `test`):
 ~~~
 
 [sublis](http://www.lispworks.com/documentation/HyperSpec/Body/f_sublis.htm)
-allows to replace many objects at once. It substitutes the objects
-given in `alist` and found in `tree` with their new values given in
-the alist:
+を使うと、多くのオブジェクトを一度に置換できます。`tree` 内で見つかった
+`alist` に指定されたオブジェクトを、alist に与えられた新しい値で置き換えます。
 
 ~~~lisp
 (sublis '((x . 10) (y . 20))
@@ -587,8 +567,8 @@ the alist:
 ;; (* 10 (+ 10 20) (* 20 20))
 ~~~
 
-`sublis` accepts the `:test` and `:key` arguments. `:test` is a
-function that takes two arguments, the key and the subtree.
+`sublis` は `:test` と `:key` 引数を受け取ります。`:test` はキーとサブツリーという
+2 つの引数を取る関数です。
 
 ~~~lisp
 (sublis '((t . "foo"))
@@ -598,21 +578,19 @@ function that takes two arguments, the key and the subtree.
 ~~~
 
 
-## Sequences
+## シーケンス
 
-**lists** and **vectors** (and thus **strings**) are sequences.
+**リスト** と **ベクタ**（したがって **文字列**）はシーケンスです。
 
-_Note_: see also the [strings](strings.html) page.
+_注_: [strings](strings.html) のページも参照してください。
 
-Many of the sequence functions take keyword arguments. All keyword
-arguments are optional and, if specified, may appear in any order.
+シーケンス関数の多くはキーワード引数を取ります。すべてのキーワード引数は省略可能で、
+指定する場合は任意の順序で現れてかまいません。
 
-Pay attention to the `:test` argument. It defaults to `eql`. For
-strings, use `:equal`.
+`:test` 引数に注意してください。デフォルトは `eql` です。文字列には `:equal` を使います。
 
-The `:key` argument can be passed a function of one
-argument. This key function is used as a filter through which the
-elements of the sequence are seen. For instance, this:
+`:key` 引数には 1 引数の関数を渡せます。このキー関数は、シーケンスの要素を見るための
+フィルタとして使われます。たとえば次の例では:
 
 ~~~lisp
 (defparameter *list-of-pairs* '((1 2) (41 42)))
@@ -621,22 +599,18 @@ elements of the sequence are seen. For instance, this:
 ;; => (41 42)
 ~~~
 
-searches for an element in the sequence
-whose `second` element equals 42, rather than for an element which equals 42
-itself. If `:key` is omitted or nil, the filter is effectively the
-`identity` function.
+42 そのものに等しい要素ではなく、`second` 要素が 42 に等しいシーケンス内の要素を
+検索します。`:key` が省略されるか nil の場合、フィルタは実質的に `identity` 関数です。
 
-You can use a `lambda` function or any function that accepts one
-argument.
+`lambda` 関数、または 1 引数を受け取る任意の関数を使えます。
 
 
-### Predicates: every, some, notany
+### 述語: every, some, notany
 
-`every, notevery (test, sequence)`: they return nil or t, respectively, as
-soon as one test on any set of the corresponding elements of sequences
-returns nil.
+`every, notevery (test, sequence)`: シーケンスの対応する要素集合に対するいずれかの
+テストが nil を返した時点で、それぞれ nil または t を返します。
 
-`some`, `notany` *(test, sequence)*: they return either the value of the test, or nil.
+`some`, `notany` *(test, sequence)*: テストの値または nil を返します。
 
 ~~~lisp
 (defparameter foo '(1 2 3))
@@ -646,7 +620,7 @@ returns nil.
 ;; => T
 ~~~
 
-Example with a list of strings:
+文字列リストの例:
 
 ~~~lisp
 (defparameter *list-of-strings* '("foo" "bar" "team"))
@@ -660,25 +634,25 @@ Example with a list of strings:
 ~~~
 
 
-### Functions
+### 関数
 
-See also sequence functions defined in
+次で定義されているシーケンス関数も参照してください。
 [Alexandria](https://common-lisp.net/project/alexandria/draft/alexandria.html#Sequences):
 `starts-with`, `ends-with`, `ends-with-subseq`, `length=`, `emptyp`,…
 
 #### length (sequence)
 
-#### elt (sequence, index) - find by index
+#### elt (sequence, index) - インデックスで探す
 
-beware, here the sequence comes first.
+ここではシーケンスが先に来ることに注意してください。
 
 #### count (foo sequence)
 
-Return the number of elements in sequence that match *foo*.
+sequence 内で *foo* にマッチする要素数を返します。
 
-Additional paramaters: `:from-end`, `:start`, `:end`.
+追加パラメータ: `:from-end`、`:start`、`:end`。
 
-See also `count-if`, `count-not` *(test-function sequence)*.
+`count-if`、`count-not` *(test-function sequence)* も参照してください。
 
 #### subseq (sequence start, [end])
 
@@ -689,7 +663,7 @@ See also `count-if`, `count-not` *(test-function sequence)*.
 ;; (2)
 ~~~
 
-However, watch out if the `end` is larger than the list:
+ただし、`end` がリストより大きい場合は注意してください。
 
 ~~~lisp
 (subseq (list 1 2 3) 0 99)
@@ -697,40 +671,38 @@ However, watch out if the `end` is larger than the list:
 ;; are bad for a sequence of length 3.
 ~~~
 
-To this end, use `alexandria-2:subseq*`:
+この目的には `alexandria-2:subseq*` を使います。
 
 ~~~lisp
 (alexandria-2:subseq* (list 1 2 3) 0 99)
 ;; (1 2 3)
 ~~~
 
-`subseq` is "setf"able, but only works if the new sequence has the same
-length of the one to replace.
+`subseq` は "setf" 可能ですが、新しいシーケンスが置換対象と同じ長さの場合にのみ動作します。
 
 
-#### sort, stable-sort (sequence, test [, key function]) (destructive)
+#### sort, stable-sort (sequence, test [, key function]) (破壊的)
 
-These sort functions are destructive, so one may prefer to copy the sequence with `copy-seq` before sorting:
+これらのソート関数は破壊的なので、ソート前に `copy-seq` でシーケンスをコピーした方がよい場合があります。
 
 ~~~lisp
 (sort (copy-seq seq) #'string<)
 ~~~
 
-Unlike `sort`, `stable-sort` guarantees to keep the order of the argument.
-In theory, the result of this:
+`sort` と異なり、`stable-sort` は引数の順序を保つことを保証します。理論上、次の結果は:
 
 ~~~lisp
 (sort '((1 :a) (1 :b)) #'< :key #'first)
 ~~~
 
-could be either `((1 :A) (1 :B))`, either `((1 :B) (1 :A))`. On my tests, the order is preserved, but the standard does not guarantee it.
+`((1 :A) (1 :B))` にも `((1 :B) (1 :A))` にもなり得ます。私のテストでは順序は保たれましたが、標準はそれを保証していません。
 
 
-#### fill (sequence item &keys start end) (destructive)
+#### fill (sequence item &keys start end) (破壊的)
 
-`fill` is a **destructive** operation.
+`fill` は **破壊的** な操作です。
 
-It destructively replaces the elements in `sequence`, in-between the `start` and `end` position, by `item` (a sequence).
+`sequence` 内の `start` と `end` の位置の間にある要素を、`item`（シーケンス）で破壊的に置き換えます。
 
 ~~~lisp
 (make-list 3)
@@ -739,13 +711,13 @@ It destructively replaces the elements in `sequence`, in-between the `start` and
 ;; (NIL :HELLO :HELLO)
 ~~~
 
-See also `substitute`.
+`substitute` も参照してください。
 
 
-#### find, position (foo, sequence) - get index
+#### find, position (foo, sequence) - インデックスを得る
 
-also `find-if`, `find-if-not`, `position-if`, `position-if-not` *(test
-sequence)*. See `:key` and `:test` parameters.
+`find-if`、`find-if-not`、`position-if`、`position-if-not` *(test sequence)* もあります。
+`:key` と `:test` パラメータを参照してください。
 
 ~~~lisp
 (find 20 '(10 20 30))
@@ -754,11 +726,11 @@ sequence)*. See `:key` and `:test` parameters.
 ;; 1
 ~~~
 
-#### search and mismatch (sequence-a, sequence-b)
+#### search と mismatch (sequence-a, sequence-b)
 
-`search` searches in sequence-b for a subsequence that matches sequence-a. It returns the
-*position* in sequence-b, or NIL. It has the `from-end`, `end1`, `end2` and the usual `test` and `key`
-parameters.
+`search` は sequence-b の中から sequence-a にマッチするサブシーケンスを検索します。
+sequence-b 内の *位置*、または NIL を返します。`from-end`、`end1`、`end2` と、
+通常の `test`、`key` パラメータを持ちます。
 
 ~~~lisp
 (search '(20 30) '(10 20 30 40))
@@ -771,7 +743,7 @@ parameters.
 ;; 1
 ~~~
 
-`mismatch` returns the position where the two sequences start to differ:
+`mismatch` は 2 つのシーケンスが異なり始める位置を返します。
 
 ~~~lisp
 (mismatch '(10 20 99) '(10 20 30))
@@ -786,8 +758,7 @@ parameters.
 
 #### substitute, nsubstitute[if,if-not]
 
-Return a sequence of the same kind as `sequence` with the same elements,
-except that all elements equal to `old` are replaced with `new`.
+`old` と等しいすべての要素を `new` に置き換えた、`sequence` と同じ種類のシーケンスを返します。
 
 ~~~lisp
 (substitute #\o #\x "hellx") ;; => "hello"
@@ -796,14 +767,14 @@ except that all elements equal to `old` are replaced with `new`.
 ;; => ("a" "a" "a")
 ~~~
 
-`nsubstitute` is the "non-consing", destructive version.
+`nsubstitute` は "non-consing" な破壊的バージョンです。
 
 
-#### merge (result-type, sequence1, sequence2, predicate) (destructive)
+#### merge (result-type, sequence1, sequence2, predicate) (破壊的)
 
-The `merge` function is destructive.
+`merge` 関数は破壊的です。
 
-> destructively merge `sequence1` with `sequence2` according to an order determined by the predicate.
+> 述語によって決まる順序に従って、`sequence1` と `sequence2` を破壊的にマージします。
 
 ~~~lisp
 (setq test1 (list 1 3 5 7))
@@ -812,21 +783,20 @@ The `merge` function is destructive.
 ;; => (1 2 3 4 5 6 7 8)
 ~~~
 
-Now look at `test1`:
+ここで `test1` を見てみます。
 
 ~~~lisp
 test1
 ;; => (1 2 3 4 5 6 7 8)
-;; at least on SBCL, your result may vary.
+;; 少なくとも SBCL ではこうなるが、結果は異なる場合があります。
 ~~~
 
 
-#### replace (sequence-a, sequence-b, &key start1, end1) (destructive)
+#### replace (sequence-a, sequence-b, &key start1, end1) (破壊的)
 
-Destructively replace elements of sequence-a with elements of
-sequence-b.
+sequence-a の要素を sequence-b の要素で破壊的に置き換えます。
 
-The full signature is:
+完全なシグネチャは次のとおりです。
 
 ~~~lisp
 (replace sequence1 sequence2
@@ -834,10 +804,9 @@ The full signature is:
       &key (start1 0) (end1 nil) (start2 0) (end2 nil))
 ~~~
 
-Elements are copied to the subsequence bounded by START1 and END1,
-from the subsequence bounded by START2 and END2. If these subsequences
-are not of the same length, then the shorter length determines how
-many elements are copied.
+START1 と END1 で区切られたサブシーケンスへ、START2 と END2 で区切られた
+サブシーケンスから要素がコピーされます。これらのサブシーケンスの長さが同じでない場合、
+短い方の長さによってコピーされる要素数が決まります。
 
 ~~~lisp
 (replace "xxx" "foo")
@@ -856,26 +825,24 @@ many elements are copied.
 
 #### remove, delete (foo sequence)
 
-Make a copy of sequence without elements matching foo. Has
-`:start/end`, `:key` and `:count` parameters.
+foo にマッチする要素を除いた sequence のコピーを作ります。`:start/end`、`:key`、
+`:count` パラメータがあります。
 
-`delete` is the recycling version of `remove`.
+`delete` は `remove` の再利用版です。
 
 ~~~lisp
 (remove "foo" '("foo" "bar" "foo") :test 'equal)
 ;; => ("bar")
 ~~~
 
-see also `remove-if[-not]` below.
+下記の `remove-if[-not]` も参照してください。
 
 #### remove-duplicates, delete-duplicates (sequence)
 
-[remove-duplicates](http://clhs.lisp.se/Body/f_rm_dup.htm) returns a
-new sequence with unique elements. `delete-duplicates` may modify the
-original sequence.
+[remove-duplicates](http://clhs.lisp.se/Body/f_rm_dup.htm) は一意な要素を持つ
+新しいシーケンスを返します。`delete-duplicates` は元のシーケンスを変更する場合があります。
 
-`remove-duplicates` accepts the following, usual arguments: `from-end
-test test-not start end key`.
+`remove-duplicates` は通常の引数 `from-end test test-not start end key` を受け取ります。
 
 ~~~lisp
 (remove-duplicates '(:foo :foo :bar))
@@ -889,24 +856,23 @@ test test-not start end key`.
 ~~~
 
 
-### mapping (map, mapcar, remove-if[-not],...)
+### マッピング (map, mapcar, remove-if[-not],...)
 
-If you're used to map and filter in other languages, you probably want
-`mapcar`. But it only works on lists, so to iterate on vectors (and
-produce either a vector or a list, use `(map 'list function vector)`.
+他の言語の map や filter に慣れているなら、おそらく `mapcar` が欲しくなるでしょう。
+ただしこれはリストでしか動作しないため、ベクタを反復処理するには
+（そしてベクタまたはリストを生成するには）`(map 'list function vector)` を使います。
 
-mapcar also accepts multiple lists with `&rest more-seqs`.  The
-mapping stops as soon as the shortest sequence runs out.
+mapcar は `&rest more-seqs` で複数のリストも受け取ります。最短のシーケンスが尽きると
+マッピングは停止します。
 
-`map` takes the output-type as first argument (`'list`, `'vector` or
-`'string`):
+`map` は出力型を第 1 引数として取ります（`'list`、`'vector`、`'string`）。
 
 ~~~lisp
 (defparameter foo '(1 2 3))
 (map 'list (lambda (it) (* 10 it)) foo)
 ~~~
 
-`reduce` *(function, sequence)*. Special parameter: `:initial-value`.
+`reduce` *(function, sequence)*。特別なパラメータ: `:initial-value`。
 
 ~~~lisp
 (reduce '- '(1 2 3 4))
@@ -915,76 +881,74 @@ mapping stops as soon as the shortest sequence runs out.
 ;; => 90
 ~~~
 
-**Filter** is here called `remove-if-not`.
+ここでいう **Filter** は `remove-if-not` と呼ばれます。
 
-### Flatten a list (Alexandria)
+### リストを平坦化する (Alexandria)
 
-With
+次の
 [Alexandria](https://common-lisp.net/project/alexandria/draft/alexandria.html),
-we have the `flatten` function.
+には `flatten` 関数があります。
 
 
-### Creating lists with variables
+### 変数を使ってリストを作成する
 
-That's one use of the `backquote`:
+これは `backquote` の用途の 1 つです。
 
 ~~~lisp
 (defparameter *var* "bar")
-;; First try:
-'("foo" *var* "baz") ;; no backquote
-;; => ("foo" *VAR* "baz") ;; nope
+;; 1 回目:
+'("foo" *var* "baz") ;; バッククォートなし
+;; => ("foo" *VAR* "baz") ;; だめ
 ~~~
 
-Second try, with backquote interpolation:
+2 回目は、バッククォート補間を使います。
 
 ~~~lisp
-`("foo" ,*var* "baz")     ;; backquote, comma
-;; => ("foo" "bar" "baz") ;; good
+`("foo" ,*var* "baz")     ;; バッククォート、カンマ
+;; => ("foo" "bar" "baz") ;; よい
 ~~~
 
-The backquote first warns we'll do interpolation, the comma introduces
-the value of the variable.
+バッククォートはまず補間を行うことを示し、カンマは変数の値を導入します。
 
-If our variable is a list:
+変数がリストの場合:
 
 ~~~lisp
 (defparameter *var* '("bar" "baz"))
-;; First try:
+;; 1 回目:
 `("foo" ,*var*)
-;; => ("foo" ("bar" "baz")) ;; nested list
-`("foo" ,@*var*)            ;; backquote, comma-@ to
+;; => ("foo" ("bar" "baz")) ;; ネストしたリスト
+`("foo" ,@*var*)            ;; バッククォート、comma-@
 ;; => ("foo" "bar" "baz")
 ~~~
 
-E. Weitz warns that "objects generated this way will very likely share
-structure (see Recipe 2-7)".
+E. Weitz は、「この方法で生成されたオブジェクトはかなり高い確率で構造を共有する
+（Recipe 2-7 を参照）」と警告しています。
 
 
-### Comparing lists
+### リストの比較
 
-We can use sets functions.
+集合関数を使えます。
 
-## Set
+## 集合
 
-We show below how to use set operations on lists.
+以下では、リストに対して集合演算を使う方法を示します。
 
-A set doesn't contain the same element twice and is unordered.
+集合は同じ要素を 2 回含まず、順序を持ちません。
 
-Most of these functions have recycling (modifying) counterparts,
-starting with "n", e.g.`nintersection` and `nreverse`. The "n" is for
-"non-consing", a lisp parlance for "don't create objects in memory".
+これらの関数の多くには、"n" で始まる再利用（変更）版があります。たとえば
+`nintersection` や `nreverse` です。"n" は "non-consing"、つまり
+「メモリ内にオブジェクトを作らない」という Lisp の言い回しです。
 
-They all accept the usual `:key`
-and `:test` arguments, so use the test `#'string=` or `#'equal` if you
-are working with strings.
+これらはすべて通常の `:key` と `:test` 引数を受け取るため、文字列を扱う場合は
+テストとして `#'string=` または `#'equal` を使ってください。
 
-For more, see functions in
+詳しくは
 [Alexandria](https://common-lisp.net/project/alexandria/draft/alexandria.html#Conses):
-`setp`, `set-equal`,… and the FSet library, shown in the next section.
+の `setp`、`set-equal` などの関数と、次の節で示す FSet ライブラリを参照してください。
 
-### `intersection` of lists
+### リストの `intersection`
 
-What elements are both in list-a and list-b ?
+list-a と list-b の両方にある要素は何でしょうか。
 
 ~~~lisp
 (defparameter list-a '(0 1 2 3))
@@ -993,7 +957,7 @@ What elements are both in list-a and list-b ?
 ;; => (2 0)
 ~~~
 
-### Remove the elements of list-b from list-a (`set-difference`)
+### list-a から list-b の要素を取り除く (`set-difference`)
 
 ~~~lisp
 (set-difference list-a list-b)
@@ -1002,41 +966,41 @@ What elements are both in list-a and list-b ?
 ;; => (4)
 ~~~
 
-### Join two lists with unique elements (`union`, `nunion`)
+### 一意な要素を持つ 2 つのリストを結合する (`union`, `nunion`)
 
 ~~~lisp
 (union list-a list-b)
-;; => (3 1 0 2 4) ;; order can be different in your lisp
+;; => (3 1 0 2 4) ;; 使用する Lisp では順序が異なる場合があります
 ~~~
 
-`nunion` is the recycling, destructive version.
+`nunion` は再利用する破壊的バージョンです。
 
-### Remove elements that are in both lists (`set-exclusive-or`)
+### 両方のリストにある要素を取り除く (`set-exclusive-or`)
 
 ~~~lisp
 (set-exclusive-or list-a list-b)
 ;; => (4 3 1)
 ~~~
 
-### Add an element to a set (`adjoin`)
+### 集合に要素を追加する (`adjoin`)
 
-A new set is returned, the original set is not modified.
+新しい集合が返され、元の集合は変更されません。
 
 ~~~lisp
 (adjoin 3 list-a)
-;; => (0 1 2 3)   ;; <-- nothing was changed, 3 was already there.
+;; => (0 1 2 3)   ;; <-- 何も変更されない。3 はすでに存在していた。
 
 (adjoin 5 list-a)
-;; => (5 0 1 2 3) ;; <-- element added in front.
+;; => (5 0 1 2 3) ;; <-- 要素が先頭に追加された。
 
 list-a
-;; => (0 1 2 3)  ;; <-- original list unmodified.
+;; => (0 1 2 3)  ;; <-- 元のリストは変更されていない。
 ~~~
 
-You can also use `pushnew`, that modifies the list (see above).
+リストを変更する `pushnew` も使えます（上記参照）。
 
 
-### Check if this is a subset (`subsetp`)
+### 部分集合かどうかを調べる (`subsetp`)
 
 ~~~lisp
 (subsetp '(1 2 3) list-a)
@@ -1053,34 +1017,31 @@ You can also use `pushnew`, that modifies the list (see above).
 ~~~
 
 
-## Arrays and vectors
+## 配列とベクタ
 
-**Arrays** have constant-time access characteristics.
+**配列** は定数時間アクセスの性質を持ちます。
 
-They can be fixed or adjustable. A *simple array* is neither displaced
-(using `:displaced-to`, to point to another array) nor adjustable
-(`:adjust-array`), nor does it have a fill pointer (`fill-pointer`,
-that moves when we add or remove elements).
+配列は固定長にも調整可能にもできます。*simple array* は、displaced
+（`:displaced-to` を使って別の配列を指すもの）でも調整可能（`:adjust-array`）でもなく、
+fill pointer（要素を追加または削除すると移動する `fill-pointer`）も持ちません。
 
-A **vector** is an array with rank 1 (of one dimension). It is also a
-*sequence* (see above).
+**ベクタ** は rank 1（1 次元）の配列です。これは *シーケンス* でもあります（上記参照）。
 
-A *simple vector* is a simple array that is also not specialized (it
-doesn't use `:element-type` to set the types of the elements).
+*simple vector* は、特殊化もされていない simple array です
+（要素の型を設定するために `:element-type` を使いません）。
 
 
-### Create an array, one or many dimensions
+### 1 次元または多次元の配列を作成する
 
 `make-array` *(sizes-list :adjustable bool)*
 
 `adjust-array` *(array, sizes-list, :element-type, :initial-element)*
 
-### Access: aref (array i [j …])
+### アクセス: aref (array i [j …])
 
-`aref` *(array i j k …)* or `row-major-aref` *(array i)* equivalent to
-`(aref i i i …)`.
+`aref` *(array i j k …)*、または `(aref i i i …)` と等価な `row-major-aref` *(array i)*。
 
-The result is `setf`able.
+結果は `setf` 可能です。
 
 ~~~lisp
 (defparameter myarray (make-array '(2 2 2) :initial-element 1))
@@ -1095,15 +1056,15 @@ myarray
 ~~~
 
 
-### Sizes
+### サイズ
 
-`array-total-size` *(array)*: how many elements will fit in the array ?
+`array-total-size` *(array)*: 配列に入る要素数。
 
-`array-dimensions` *(array)*: list containing the length of the array's dimensions.
+`array-dimensions` *(array)*: 配列の各次元の長さを含むリスト。
 
-`array-dimension` *(array i)*: length of the *i*th dimension.
+`array-dimension` *(array i)*: *i* 番目の次元の長さ。
 
-`array-rank` number of dimensions of the array.
+`array-rank`: 配列の次元数。
 
 ~~~lisp
 (defparameter myarray (make-array '(2 2 2)))
@@ -1121,10 +1082,9 @@ myarray
 ~~~
 
 
-### Vectors
+### ベクタ
 
-Create with `vector` or the reader macro `#()`. It returns a _simple
-vector._
+`vector` またはリーダマクロ `#()` で作成します。これは _simple vector_ を返します。
 
 ~~~lisp
 (vector 1 2 3)
@@ -1133,16 +1093,18 @@ vector._
 ;; => #(1 2 3)
 ~~~
 
-The following interface is available for vectors (or vector-like arrays):
+ベクタ（またはベクタに似た配列）には次のインターフェイスが利用できます。
 
-* `vector-push` *(new-element vector)*: replace the vector element pointed to by the fill pointer by `new-element`, then increment the fill pointer by one. Returns the index at which the new element was placed, or NIL if there's not enough space.
-* `vector-push-extend` *(new-element vector [extension])*: like `vector-push`, but if the fill pointer gets too large then the array is extended using `adjust-array`. `extension` is the minimum number of elements to add to the array if it must be extended.
-* `vector-pop` *(vector)*: decrement the fill pointer, and return the element that it now points to.
-* `fill-pointer` *(vector)*. `setf`able.
+* `vector-push` *(new-element vector)*: fill pointer が指すベクタ要素を `new-element` に置き換え、その後 fill pointer を 1 増やします。新しい要素が置かれたインデックス、または十分な空きがなければ NIL を返します。
+* `vector-push-extend` *(new-element vector [extension])*: `vector-push` と同様ですが、fill pointer が大きくなりすぎた場合は `adjust-array` を使って配列を拡張します。`extension` は、拡張が必要な場合に配列へ追加する最小要素数です。
+* `vector-pop` *(vector)*: fill pointer を減らし、それが新たに指す要素を返します。
+* `fill-pointer` *(vector)*. `setf` 可能。
 
-and see also the *sequence* functions.
+*シーケンス* 関数も参照してください。
 
-The following shows how to create an array that can be pushed to and popped from arbitrarily, growing its storage capacity as needed. This is roughly equivalent to a `list` in Python, an `ArrayList` in Java, or a `vector<T>` in C++ -- though note that elements are not erased when they're popped.
+以下は、必要に応じて格納容量を増やしながら、任意に push/pop できる配列を作る方法を示しています。
+これは Python の `list`、Java の `ArrayList`、C++ の `vector<T>` におおよそ相当します。
+ただし、pop されたときに要素が消去されるわけではない点に注意してください。
 
 ~~~lisp
 CL-USER> (defparameter *v* (make-array 0 :fill-pointer t :adjustable t))
@@ -1157,60 +1119,54 @@ CL-USER> (vector-pop *v*)
 43
 CL-USER> *v*
 #(42)
-CL-USER> (aref *v* 1) ; beware, the element is still there!
+CL-USER> (aref *v* 1) ; 注意、要素はまだそこにある!
 43
-CL-USER> (setf (aref *v* 1) nil) ; manually erase elements if necessary
+CL-USER> (setf (aref *v* 1) nil) ; 必要なら手動で要素を消去する
 ~~~
 
-### Transforming a vector to a list.
+### ベクタをリストに変換する
 
-If you're mapping over it, see the `map` function whose first parameter
-is the result type.
+それを map している場合は、第 1 パラメータが結果型である `map` 関数を参照してください。
 
-Or use `(coerce vector 'list)`.
+または `(coerce vector 'list)` を使います。
 
-## Hash Table
+## ハッシュテーブル
 
-Hash Tables are a powerful data structure, associating keys with
-values in a very efficient way. Hash Tables are often preferred over
-association lists whenever performance is an issue, but they introduce
-a little overhead that makes assoc lists better if there are only a
-few key-value pairs to maintain.
+ハッシュテーブルは、キーと値を非常に効率よく関連付ける強力なデータ構造です。
+性能が問題になる場合、ハッシュテーブルは連想リストより好まれることが多いですが、
+少しオーバーヘッドがあるため、維持するキー値ペアが少数だけなら assoc リストの方が適しています。
 
-Alists can be used sometimes differently though:
+ただし、alist は別の使い方ができることもあります。
 
-- they can be ordered
-- we can push cons cells that have the same key, remove the one in
-  front and we have a stack
-- they have a human-readable printed representation
-- they can be easily (de)serialized
-- because of RASSOC, keys and values in alists are essentially
-interchangeable; whereas in hash tables, keys and values play very
-different roles (as usual, see "Common Lisp Recipes" by Edmund Weitz
-for more).
+- 順序を持たせられます
+- 同じキーを持つ cons セルを push し、先頭のものを取り除けばスタックになります
+- 人間が読める印字表現を持ちます
+- 簡単にシリアライズ/デシリアライズできます
+- RASSOC があるため、alist のキーと値は本質的に交換可能です。一方、ハッシュテーブルではキーと値は非常に異なる役割を持ちます（いつものように、詳しくは Edmund Weitz の "Common Lisp Recipes" を参照してください）。
 
 
 <a name="create"></a>
 
-### Creating a Hash Table
+### ハッシュテーブルの作成
 
-Hash Tables are created using the function
-[`make-hash-table`](http://www.lispworks.com/documentation/HyperSpec/Body/f_mk_has.htm). It
-has no required argument. Its most used optional keyword argument is
-`:test`, specifying the function used to test the equality of keys.
+ハッシュテーブルは関数
+[`make-hash-table`](http://www.lispworks.com/documentation/HyperSpec/Body/f_mk_has.htm)
+を使って作成します。必須引数はありません。最もよく使われる省略可能なキーワード引数は
+`:test` で、キーの等価性をテストするために使う関数を指定します。
 
 <div class="info-box info">
-<strong>Note:</strong> see shorter notations in the <a href="https://github.com/ruricolist/serapeum/">Serapeum</a> or <a href="https://github.com/vseloved/rutils">Rutils</a> libraries. For example, Serapeum has <code>dict</code>, and Rutils a <code>#h</code> reader macro.
+<strong>注:</strong> より短い記法については、<a href="https://github.com/ruricolist/serapeum/">Serapeum</a> や <a href="https://github.com/vseloved/rutils">Rutils</a> ライブラリを参照してください。たとえば Serapeum には <code>dict</code> があり、Rutils には <code>#h</code> リーダマクロがあります。
 </div>
 
 <a name="add"></a>
 
-### Adding an Element to a Hash Table
+### ハッシュテーブルへの要素の追加
 
-If you want to add an element to a hash table, you can use `gethash`,
-the function to retrieve elements from the hash table, in conjunction
-with
-[`setf`](http://www.lispworks.com/documentation/HyperSpec/Body/m_setf_.htm).
+ハッシュテーブルに要素を追加したい場合は、ハッシュテーブルから要素を取り出す関数
+`gethash` を
+[`setf`](http://www.lispworks.com/documentation/HyperSpec/Body/m_setf_.htm)
+と組み合わせて使えます。
+と組み合わせて使えます。
 
 ~~~lisp
 CL-USER> (defparameter *my-hash* (make-hash-table))
@@ -1227,8 +1183,7 @@ CL-USER> (gethash 'another-entry *my-hash*)
 T
 ~~~
 
-With Serapeum's `dict`, we can create a hash-table and add elements to
-it in one go:
+Serapeum の `dict` を使うと、ハッシュテーブルを作成し、要素を一度に追加できます。
 
 ~~~lisp
 (defparameter *my-hash* (dict :one-entry "one"
@@ -1242,20 +1197,19 @@ it in one go:
 
 <a name="get"></a>
 
-### Getting a value from a Hash Table
+### ハッシュテーブルから値を取得する
 
-The function
+関数
 [`gethash`](http://www.lispworks.com/documentation/HyperSpec/Body/f_gethas.htm)
-takes two required arguments: a key and a hash table. It returns two
-values: the value corresponding to the key in the hash table (or `nil`
-if not found), and a boolean indicating whether the key was found in
-the table. That second value is necessary since `nil` is a valid value
-in a key-value pair, so getting `nil` as first value from `gethash`
-does not necessarily mean that the key was not found in the table.
+は 2 つの必須引数、キーとハッシュテーブルを取ります。返り値は 2 つあります。
+ハッシュテーブル内でキーに対応する値（見つからなければ `nil`）と、そのキーが
+テーブル内で見つかったかどうかを示すブール値です。キー値ペアの値として `nil` は
+有効なので、この第 2 値が必要です。`gethash` の第 1 値として `nil` が得られても、
+必ずしもキーがテーブル内に見つからなかったことを意味しません。
 
-#### Getting a key that does not exist with a default value
+#### 存在しないキーをデフォルト値付きで取得する
 
-`gethash` has an optional third argument:
+`gethash` には省略可能な第 3 引数があります。
 
 ~~~lisp
 (gethash 'bar *my-hash* "default-bar")
@@ -1263,12 +1217,12 @@ does not necessarily mean that the key was not found in the table.
 ;;     NIL
 ~~~
 
-#### Getting all keys or all values of a hash table
+#### ハッシュテーブルのすべてのキーまたはすべての値を取得する
 
-The
+次の
 [Alexandria](https://common-lisp.net/project/alexandria/draft/alexandria.html)
-library (in Quicklisp) has the functions `hash-table-keys` and
-`hash-table-values` for that.
+ライブラリ（Quicklisp 内）には、そのための関数 `hash-table-keys` と
+`hash-table-values` があります。
 
 ~~~lisp
 (ql:quickload "alexandria")
@@ -1280,21 +1234,19 @@ library (in Quicklisp) has the functions `hash-table-keys` and
 
 <a name="test"></a>
 
-### Comparing hash-tables
+### ハッシュテーブルの比較
 
-Use `equalp` to compare the equality of hash-tables, element by
-element. `equalp` is case-insensitive for strings. Read more in our
-[equality](equality.html) section.
+ハッシュテーブルの等価性を要素ごとに比較するには `equalp` を使います。`equalp` は
+文字列について大文字小文字を区別しません。詳しくは [equality](equality.html) の節を参照してください。
 
 
-### Testing for the Presence of a Key in a Hash Table
+### ハッシュテーブル内のキーの存在をテストする
 
-The first value returned by `gethash` is the object in the hash table
-that's associated with the key you provided as an argument to
-`gethash` or `nil` if no value exists for this key. This value can act
-as a
+`gethash` が返す第 1 値は、`gethash` の引数として与えたキーに関連付けられた
+ハッシュテーブル内のオブジェクト、またはそのキーに値が存在しない場合の `nil` です。
+この値は、キーの存在をテストしたい場合に
 [generalized boolean](http://www.lispworks.com/documentation/HyperSpec/Body/26_glo_g.htm#generalized_boolean">generalized
-boolean) if you want to test for the presence of keys.
+boolean) として振る舞えます。
 
 ~~~lisp
 CL-USER> (defparameter *my-hash* (make-hash-table))
@@ -1311,8 +1263,7 @@ CL-USER> (if (gethash 'another-entry *my-hash*)
 "Key does not exist"
 ~~~
 
-But note that this does _not_ work if `nil` is amongst the values that
-you want to store in the hash.
+ただし、ハッシュに格納したい値の中に `nil` がある場合、これは動作しないことに注意してください。
 
 ~~~lisp
 CL-USER> (setf (gethash 'another-entry *my-hash*) nil)
@@ -1323,7 +1274,7 @@ CL-USER> (if (gethash 'another-entry *my-hash*)
 "Key does not exist"
 ~~~
 
-In this case you'll have to check the _second_ return value of `gethash` which will always return `nil` if no value is found and T otherwise.
+この場合、`gethash` の _第 2_ 返り値を確認する必要があります。これは値が見つからなければ常に `nil`、そうでなければ T を返します。
 
 ~~~lisp
 CL-USER> (if (nth-value 1 (gethash 'another-entry *my-hash*))
@@ -1339,13 +1290,12 @@ CL-USER> (if (nth-value 1 (gethash 'no-entry *my-hash*))
 
 <a name="del"></a>
 
-### Deleting from a Hash Table
+### ハッシュテーブルからの削除
 
-Use
+ハッシュエントリを削除するには
 [`remhash`](http://www.lispworks.com/documentation/HyperSpec/Body/f_remhas.htm)
-to delete a hash entry. Both the key and its associated value will be
-removed from the hash table. `remhash` returns T if there was such an
-entry, `nil` otherwise.
+を使います。キーとそれに関連付けられた値の両方がハッシュテーブルから取り除かれます。
+そのようなエントリがあれば `remhash` は T を返し、そうでなければ `nil` を返します。
 
 ~~~lisp
 CL-USER> (defparameter *my-hash* (make-hash-table))
@@ -1373,11 +1323,11 @@ NIL
 
 <a name="del-tab"></a>
 
-### Deleting a Hash Table
+### ハッシュテーブルの削除
 
-Use
+ハッシュテーブルを削除するには
 [`clrhash`](http://www.lispworks.com/documentation/HyperSpec/Body/f_clrhas.htm)
-to delete a hash table. This will remove all of the data from the hash table and return the deleted table.
+を使います。これはハッシュテーブルからすべてのデータを取り除き、削除済みのテーブルを返します。
 
 ~~~lisp
 CL-USER> (defparameter *my-hash* (make-hash-table))
@@ -1401,17 +1351,17 @@ NIL
 
 <a name="traverse"></a>
 
-### Traversing a Hash Table: `loop`, `maphash`, `with-hash-table-iterator`
+### ハッシュテーブルの走査: `loop`, `maphash`, `with-hash-table-iterator`
 
-If you want to perform an action on each entry (i.e., each key-value
-pair) in a hash table, you have several options:
+ハッシュテーブル内の各エントリ（つまり各キー値ペア）に対して操作を行いたい場合、
+いくつかの選択肢があります。
 
-- of course, `loop`, but also
+- もちろん `loop`、さらに
 - `maphash`
 - `with-hash-table-iterator`
-- as well as alexandria, serapeum and other third-party libraries.
+- alexandria、serapeum、その他のサードパーティライブラリもあります。
 
-=> please see our [iteration page](/cl-cookbook/iteration.html#looping-over-a-hash-table).
+=> [iteration page](/cl-cookbook/iteration.html#looping-over-a-hash-table) を参照してください。
 
 ~~~lisp
 (loop :for k :being :the :hash-key :of *my-hash-table* :collect k)
@@ -1432,10 +1382,9 @@ NIL
 
 <a name="count"></a>
 
-### Counting the Entries in a Hash Table
+### ハッシュテーブル内のエントリ数を数える
 
-No need to use your fingers - Common Lisp has a built-in function to
-do it for you:
+指で数える必要はありません。Common Lisp にはそのための組み込み関数があります。
 [`hash-table-count`](http://www.lispworks.com/documentation/HyperSpec/Body/f_hash_1.htm).
 
 ~~~lisp
@@ -1461,13 +1410,12 @@ CL-USER> (hash-table-count *my-hash*)
 0
 ~~~
 
-### Printing a Hash Table readably
+### ハッシュテーブルを読み戻し可能に印字する
 
-**With print-object** (non portable)
+**print-object を使う**（移植性なし）
 
-It is very tempting to use `print-object`. It works under several
-implementations, but this method is actually not portable. The
-standard doesn't permit to do so, so this is undefined behaviour.
+`print-object` を使いたくなるのは自然です。これはいくつかの実装では動作しますが、
+実際には移植性のある方法ではありません。標準はこれを許していないため、未定義動作です。
 
 ~~~lisp
 (defmethod print-object ((object hash-table) stream)
@@ -1477,7 +1425,7 @@ standard doesn't permit to do so, so this is undefined behaviour.
                 collect (list key value))))
 ~~~
 
-gives:
+次のようになります。
 
 ~~~
 ;; WARNING:
@@ -1486,7 +1434,7 @@ gives:
 ;; #<STANDARD-METHOD COMMON-LISP:PRINT-OBJECT (HASH-TABLE T) {1006A0D063}>
 ~~~
 
-and let's try it:
+試してみましょう。
 
 ~~~lisp
 (let ((ht (make-hash-table)))
@@ -1495,19 +1443,19 @@ and let's try it:
 ;; #HASH{(FOO : BAR)}
 ~~~
 
-**With a custom function** (portable way)
+**カスタム関数を使う**（移植性のある方法）
 
-Here's a portable way.
+移植性のある方法は次のとおりです。
 
-This snippets prints the keys, values and the test function of a
-hash-table, and uses `alexandria:alist-hash-table` to read it back in:
+このスニペットはハッシュテーブルのキー、値、テスト関数を印字し、
+`alexandria:alist-hash-table` を使って読み戻します。
 
 ~~~lisp
 ;; https://github.com/phoe/phoe-toolbox/blob/master/phoe-toolbox.lisp
 (defun print-hash-table-readably (hash-table
                                   &optional
                                   (stream *standard-output*))
-  "Prints a hash table readably using ALEXANDRIA:ALIST-HASH-TABLE."
+  "ALEXANDRIA:ALIST-HASH-TABLE を使ってハッシュテーブルを読み戻し可能に印字する。"
   (let ((test (hash-table-test hash-table))
         (*print-circle* t)
         (*print-readably* t))
@@ -1517,7 +1465,7 @@ hash-table, and uses `alexandria:alist-hash-table` to read it back in:
     hash-table))
 ~~~
 
-Example output:
+出力例:
 
 ```
 #.(ALEXANDRIA:ALIST-HASH-TABLE
@@ -1526,7 +1474,7 @@ Example output:
 #<HASH-TABLE :TEST EQL :COUNT 1 {10046D4863}>
 ```
 
-This output can be read back in to create a hash-table:
+この出力は読み戻してハッシュテーブルを作成できます。
 
 ~~~lisp
 (read-from-string
@@ -1538,12 +1486,12 @@ This output can be read back in to create a hash-table:
 ;; 83
 ~~~
 
-**With Serapeum** (readable and portable)
+**Serapeum を使う**（読み戻し可能で移植性あり）
 
-The [Serapeum library](https://github.com/ruricolist/serapeum/blob/master/REFERENCE.md#hash-tables)
-has the `dict` constructor, the function `pretty-print-hash-table` and
-the `toggle-pretty-print-hash-table` switch, all which do *not* use
-`print-object` under the hood.
+[Serapeum library](https://github.com/ruricolist/serapeum/blob/master/REFERENCE.md#hash-tables)
+には `dict` コンストラクタ、`pretty-print-hash-table` 関数、
+`toggle-pretty-print-hash-table` スイッチがあります。これらはいずれも内部で
+`print-object` を使いません。
 
 ~~~lisp
 CL-USER> (serapeum:toggle-pretty-print-hash-table)
@@ -1556,61 +1504,57 @@ CL-USER> (serapeum:dict :a 1 :b 2 :c 3)
  )
 ~~~
 
-This printed representation can be read back in.
+この印字表現は読み戻せます。
 
 
 <a name="size"></a>
 
-### Thread-safe Hash Tables
+### スレッドセーフなハッシュテーブル
 
-The standard hash-table in Common Lisp is not thread-safe. That means
-that simple access operations can be interrupted in the middle and
-return a wrong result.
+Common Lisp の標準ハッシュテーブルはスレッドセーフではありません。つまり、単純な
+アクセス操作が途中で中断され、誤った結果を返す可能性があります。
 
-Implementations offer different solutions.
+実装ごとに異なる解決策があります。
 
-With **SBCL**, we can create thread-safe hash tables with the `:synchronized` keyword to `make-hash-table`: [http://www.sbcl.org/manual/#Hash-Table-Extensions](http://www.sbcl.org/manual/#Hash-Table-Extensions).
+**SBCL** では、`make-hash-table` に `:synchronized` キーワードを指定してスレッドセーフなハッシュテーブルを作成できます: [http://www.sbcl.org/manual/#Hash-Table-Extensions](http://www.sbcl.org/manual/#Hash-Table-Extensions).
 
-> If nil (the default), the hash-table may have multiple concurrent readers, but results are undefined if a thread writes to the hash-table concurrently with another reader or writer. If t, all concurrent accesses are safe, but note that [clhs 3.6 (Traversal Rules and Side Effects)](http://www.lispworks.com/documentation/HyperSpec/Body/03_f.htm) remains in force. See also: sb-ext:with-locked-hash-table.
+> nil（デフォルト）の場合、ハッシュテーブルには複数の同時読み取りがあり得ますが、別の読み取りまたは書き込みと同時にスレッドがハッシュテーブルへ書き込む場合、結果は未定義です。t の場合、すべての同時アクセスは安全ですが、[clhs 3.6 (Traversal Rules and Side Effects)](http://www.lispworks.com/documentation/HyperSpec/Body/03_f.htm) は引き続き有効であることに注意してください。関連項目: sb-ext:with-locked-hash-table。
 
 ~~~lisp
 (defparameter *my-hash* (make-hash-table :synchronized t))
 ~~~
 
-But, operations that expand to two accesses, like the modify macros (`incf`) or this:
+ただし、変更マクロ（`incf`）や次のように、2 回のアクセスへ展開される操作は:
 
 ~~~lisp
 (setf (gethash :a *my-hash*) :new-value)
 ~~~
 
-need to be wrapped around `sb-ext:with-locked-hash-table`:
+`sb-ext:with-locked-hash-table` で包む必要があります。
 
-> Limits concurrent accesses to HASH-TABLE for the duration of BODY.  If HASH-TABLE is synchronized, BODY will execute with exclusive ownership of the table. If HASH-TABLE is not synchronized, BODY will execute with other WITH-LOCKED-HASH-TABLE bodies excluded -- exclusion of hash-table accesses not surrounded by WITH-LOCKED-HASH-TABLE is unspecified.
+> BODY の実行中、HASH-TABLE への同時アクセスを制限します。HASH-TABLE が synchronized の場合、BODY はテーブルを排他的に所有して実行されます。HASH-TABLE が synchronized でない場合、BODY は他の WITH-LOCKED-HASH-TABLE 本体を排除して実行されます。WITH-LOCKED-HASH-TABLE で囲まれていないハッシュテーブルアクセスの排除は未規定です。
 
 ~~~lisp
 (sb-ext:with-locked-hash-table (*my-hash*)
   (setf (gethash :a *my-hash*) :new-value))
 ~~~
 
-In **LispWorks**, hash-tables are thread-safe by default. But
-likewise, there is no guarantee of atomicity *between* access
-operations, so we can use
+**LispWorks** では、ハッシュテーブルはデフォルトでスレッドセーフです。ただし同様に、
+アクセス操作 *間* の原子性は保証されないため、
 [with-hash-table-locked](http://www.lispworks.com/documentation/lw71/LW/html/lw-144.htm#pgfId-900768).
+を使えます。
 
-Ultimately, you might like what the [**cl-gserver library**](https://mdbergmann.github.io/cl-gserver/index.html#toc-2-4-1-hash-table-agent)
-proposes. It offers helper functions around hash-tables and its
-actors/agent system to allow thread-safety. They also maintain the
-order of updates and reads.
+最終的には、[**cl-gserver library**](https://mdbergmann.github.io/cl-gserver/index.html#toc-2-4-1-hash-table-agent)
+が提案するものが好みに合うかもしれません。これはハッシュテーブルと actors/agent
+システムの周辺にヘルパー関数を提供し、スレッドセーフ性を可能にします。また、更新と読み取りの順序も維持します。
 
 
-### Performance Issues: The Size of your Hash Table
+### 性能上の問題: ハッシュテーブルのサイズ
 
-The `make-hash-table` function has a couple of optional parameters
-which control the initial size of your hash table and how it'll grow
-if it needs to grow. This can be an important performance issue if
-you're working with large hash tables. Here's an (admittedly not very
-scientific) example with [CMUCL](http://www.cons.org/cmucl) pre-18d on
-Linux:
+`make-hash-table` 関数には、ハッシュテーブルの初期サイズと、拡張が必要になった場合の
+成長方法を制御する省略可能なパラメータがいくつかあります。大きなハッシュテーブルを
+扱う場合、これは重要な性能上の問題になり得ます。以下は Linux 上の
+[CMUCL](http://www.cons.org/cmucl) pre-18d による（率直に言ってあまり科学的ではない）例です。
 
 ~~~lisp
 CL-USER> (defparameter *my-hash* (make-hash-table))
@@ -1645,14 +1589,13 @@ Evaluation took:
 NIL
 ~~~
 
-The values for
+次の値は
 [`hash-table-size`](http://www.lispworks.com/documentation/HyperSpec/Body/f_hash_4.htm)
-and
+と
 [`hash-table-rehash-size`](http://www.lispworks.com/documentation/HyperSpec/Body/f_hash_2.htm)
-are implementation-dependent. In our case, CMUCL chooses and initial
-size of 65, and it will increase the size of the hash by 50 percent
-whenever it needs to grow. Let's see how often we have to re-size the
-hash until we reach the final size...
+については実装依存です。この例では、CMUCL は初期サイズとして 65 を選び、
+成長が必要になるたびにハッシュのサイズを 50 パーセント増やします。
+最終サイズに達するまで、何回リサイズする必要があるか見てみましょう。
 
 ~~~lisp
 CL-USER> (log (/ 100000 65) 1.5)
@@ -1684,14 +1627,12 @@ CL-USER> (let ((size 65))
 NIL
 ~~~
 
-The hash has to be re-sized 19 times until it's big enough to hold
-100,000 entries. That explains why we saw a lot of consing and why it
-took rather long to fill the hash table. It also explains why the
-second run was much faster - the hash table already had the correct
-size.
+ハッシュは 100,000 個のエントリを保持できるほど大きくなるまでに 19 回リサイズされる必要があります。
+そのため、多くの consing が発生し、ハッシュテーブルを埋めるのにかなり時間がかかったのです。
+また、2 回目の実行がずっと速かった理由も説明できます。ハッシュテーブルはすでに正しいサイズだったからです。
 
-Here's a faster way to do it:
-If we know in advance how big our hash will be, we can start with the right size:
+もっと速い方法があります。
+ハッシュがどれくらい大きくなるか事前に分かっているなら、適切なサイズから始められます。
 
 ~~~lisp
 CL-USER> (defparameter *my-hash* (make-hash-table :size 100000))
@@ -1712,12 +1653,10 @@ Evaluation took:
 NIL
 ~~~
 
-That's obviously much faster. And there was no consing involved
-because we didn't have to re-size at all. If we don't know the final
-size in advance but can guess the growth behaviour of our hash table
-we can also provide this value to `make-hash-table`. We can provide an
-integer to specify absolute growth or a float to specify relative
-growth.
+これは明らかにずっと高速です。また、まったくリサイズする必要がなかったため consing も発生しませんでした。
+最終サイズが事前に分からなくても、ハッシュテーブルの成長の仕方を推測できるなら、
+その値を `make-hash-table` に与えることもできます。絶対的な成長を指定するには整数を、
+相対的な成長を指定するには浮動小数点数を与えられます。
 
 ~~~lisp
 CL-USER> (defparameter *my-hash* (make-hash-table :rehash-size 100000))
@@ -1740,24 +1679,22 @@ Evaluation took:
 NIL
 ~~~
 
-Also rather fast (we only needed one re-size) but much more consing
-because almost the whole hash table (minus 65 initial elements) had to
-be built during the loop.
+これもかなり高速です（リサイズは 1 回だけで済みました）が、ほぼハッシュテーブル全体
+（初期の 65 要素を除く）をループ中に構築する必要があったため、consing はずっと多くなります。
 
-Note that you can also specify the `rehash-threshold` while creating a
-new hash table. One final remark: Your implementation is allowed to
-_completely ignore_ the values provided for `rehash-size` and
-`rehash-threshold`...
+新しいハッシュテーブルを作成するときに `rehash-threshold` も指定できることに注意してください。
+最後に 1 つ。実装は、`rehash-size` と `rehash-threshold` に与えられた値を
+_完全に無視_ することも許されています。
 
 ## Alist
 
-### Definition
+### 定義
 
-An association list is a list of cons cells.
+連想リストは cons セルのリストです。
 
-Its keys and values can be of any type.
+キーと値は任意の型にできます。
 
-This simple example:
+この単純な例は:
 
 ~~~lisp
 (defparameter *my-alist* (list (cons 'foo "foo")
@@ -1765,7 +1702,7 @@ This simple example:
 ;; => ((FOO . "foo") (BAR . "bar"))
 ~~~
 
-looks like this:
+次のようになります。
 
 ```
 [o|o]---[o|/]
@@ -1779,19 +1716,18 @@ looks like this:
 FOO
 ```
 
-### Construction
+### 構築
 
-Besides constructing a list of cons cells like above, we can
-construct an alist following its dotted representation:
+上記のように cons セルのリストを構築するほかに、ドット表現に従って alist を構築できます。
 
 ~~~lisp
 (setf *my-alist* '((:foo . "foo")
                    (:bar . "bar")))
 ~~~
 
-Keep in mind that using quote doesn't evaluate the expressions inside it.
+quote を使うと、その内側の式は評価されないことを覚えておいてください。
 
-The constructor `pairlis` associates a list of keys and a list of values:
+コンストラクタ `pairlis` はキーのリストと値のリストを対応付けます。
 
 ~~~lisp
 (pairlis (list :foo :bar)
@@ -1799,7 +1735,7 @@ The constructor `pairlis` associates a list of keys and a list of values:
 ;; => ((:BAR . "bar") (:FOO . "foo"))
 ~~~
 
-Alists are just lists, so you can have the same key multiple times in the same alist:
+alist は単なるリストなので、同じ alist 内で同じキーを複数回持てます。
 
 ~~~lisp
 (setf *alist-with-duplicate-keys*
@@ -1811,11 +1747,11 @@ Alists are just lists, so you can have the same key multiple times in the same a
 ~~~
 
 
-### Access
+### アクセス
 
-To get a key, we have `assoc` (use `:test 'equal` when your keys are
-strings, as usual). It returns the whole cons cell, so you may want to
-use `cdr` or `rest`  to get the value, or even `assoc-value list key` from `Alexandria`.
+キーを取得するには `assoc` があります（キーが文字列の場合は、いつものように `:test 'equal` を使います）。
+これは cons セル全体を返すため、値を取得するには `cdr` や `rest` を使うか、
+`Alexandria` の `assoc-value list key` を使うとよいでしょう。
 
 ~~~lisp
 (assoc :foo *my-alist*)
@@ -1828,20 +1764,20 @@ use `cdr` or `rest`  to get the value, or even `assoc-value list key` from `Alex
 (alexandria:assoc-value *my-alist* :foo)
 ;; "foo"
 ;; (:FOO . "FOO")
-;; It actually returned 2 values.
+;; 実際には 2 つの値を返している。
 ~~~
 
-There is `assoc-if`, and `rassoc` to do a "reverse" search, to get a cons cell by its value:
+`assoc-if` もあります。また、値から cons セルを得る「逆方向」の検索を行う `rassoc` もあります。
 
 ~~~lisp
 (rassoc "foo" *my-alist*)
 ;; NIL
-;; bummer! The value "foo" is a string, so use:
+;; 残念! 値 "foo" は文字列なので、次を使う:
 (rassoc "foo" *my-alist* :test #'equal)
 ;; (:FOO . "foo")
 ~~~
 
-If the alist has repeating (duplicate) keys, you can use `remove-if-not`, for example, to retrieve all of them.
+alist に繰り返し（重複）キーがある場合、たとえば `remove-if-not` を使ってそれらすべてを取得できます。
 
 ~~~lisp
 (remove-if-not
@@ -1851,53 +1787,52 @@ If the alist has repeating (duplicate) keys, you can use `remove-if-not`, for ex
   :key #'car)
 ~~~
 
-### Insert and remove entries
+### エントリの挿入と削除
 
-The function `acons` adds a key with a given value to an existing
-alist and returns a new alist:
+関数 `acons` は既存の alist に指定された値を持つキーを追加し、新しい alist を返します。
 
 ~~~lisp
 (acons :key "key" *my-alist*)
 ;; => ((:KEY . "key") (:FOO . "foo") (:BAR . "bar"))
 ~~~
 
-To add a key, we can `push` another cons cell:
+キーを追加するには、別の cons セルを `push` できます。
 
 ~~~lisp
 (push (cons 'team "team") *my-alist*)
 ;; => ((TEAM . "team") (FOO . "foo") (BAR . "bar"))
 ~~~
 
-We can use `pop` and other functions that operate on lists, like `remove`:
+`pop` や、`remove` のようなリストを操作する他の関数を使えます。
 
 ~~~lisp
 (remove :team *my-alist*)
 ;; ((:TEAM . "team") (FOO . "foo") (BAR . "bar"))
-;; => didn't remove anything
+;; => 何も削除されていない
 (remove :team *my-alist* :key 'car)
 ;; ((FOO . "foo") (BAR . "bar"))
-;; => returns a copy
+;; => コピーを返す
 ~~~
 
-Remove only one element with `:count`:
+`:count` で 1 要素だけ削除します。
 
 ~~~lisp
 (push (cons 'bar "bar2") *my-alist*)
 ;; ((BAR . "bar2") (TEAM . "team") (FOO . "foo") (BAR . "bar"))
-;; => twice the 'bar key
+;; => 'bar キーが 2 回ある
 
 (remove 'bar *my-alist* :key 'car :count 1)
 ;; ((TEAM . "team") (FOO . "foo") (BAR . "bar"))
 
-;; because otherwise:
+;; そうしないと:
 (remove 'bar *my-alist* :key 'car)
 ;; ((TEAM . "team") (FOO . "foo"))
-;; => no more 'bar
+;; => 'bar がなくなる
 ~~~
 
-### Update entries
+### エントリの更新
 
-Replace a value:
+値を置き換えます。
 
 ~~~lisp
 *my-alist*
@@ -1910,7 +1845,7 @@ Replace a value:
 ;; => '((:foo . "new-value") (:BAR . "bar"))
 ~~~
 
-Replace a key:
+キーを置き換えます。
 
 ~~~lisp
 *my-alist*
@@ -1921,38 +1856,35 @@ Replace a key:
 ;; => '((:FOO . "foo") (:NEW-KEY . "bar")))
 ~~~
 
-In the
+次の
 [Alexandria](https://common-lisp.net/project/alexandria/draft/alexandria.html#Conses)
-library, see more functions like `hash-table-alist`, `alist-plist`,…
+ライブラリには、`hash-table-alist`、`alist-plist` など、さらに多くの関数があります。
 
 
 ## Plist
 
-### What's a plist
+### plist とは
 
-A property list is simply a list that alternates a key, a value, and
-so on, where its keys are keywords or symbols.
+プロパティリストは、キー、値、キー、値というように交互に並ぶ単なるリストです。
+キーはキーワードまたはシンボルです。
 
 ~~~lisp
 (defparameter my-plist (list :foo "foo" :bar "bar"))
 ~~~
 
-A plist is a key-value store, like hash-tables. However, unlike hash-tables:
+plist はハッシュテーブルのようなキー値ストアです。ただし、ハッシュテーブルとは異なります。
 
-- a plist can store twice the same key. As such, it can be used as a queue (a "Last In First Out"), read below.
-- a plist is inherently a (linked) list, and has the same performance
-  characteristics. For non-small data sets, use hash-tables.
-  - plists are OK for configuration variables, user settings, manipulating function arguments, small internal data structures…
-- you can't really use strings as keys.
+- plist は同じキーを 2 回格納できます。そのため、キュー（"Last In First Out"）として使えます。下記を読んでください。
+- plist は本質的に（連結）リストであり、同じ性能特性を持ちます。小さくないデータセットにはハッシュテーブルを使ってください。
+  - plist は、設定変数、ユーザー設定、関数引数の操作、小さな内部データ構造には問題ありません。
+- 文字列をキーとして実用的に使うことはできません。
 
-The keys could be any other object, but if they are not comparable by
-`eq` (the lowest-level equality function), like strings (that are
-comparable with `equal` or `string-equal`), you won't be able to get
-them back with `getf`.
+キーは他の任意のオブジェクトでもかまいませんが、文字列のように `eq`
+（最も低レベルの等価性関数）で比較できない場合（文字列は `equal` や
+`string-equal` で比較できます）、`getf` で取り出せません。
 
-To be more precise, a plist first has a cons cell whose `car` is the
-key, whose `cdr` points to the following cons cell whose `car` is the
-value. For example our above plist looks like this:
+より正確には、plist はまず `car` がキーである cons セルを持ち、その `cdr` は
+`car` が値である次の cons セルを指します。たとえば上の plist は次のようになります。
 
 ```
 [o|o]---[o|o]---[o|o]---[o|/]
@@ -1960,21 +1892,18 @@ value. For example our above plist looks like this:
 :FOO     "foo"   :BAR     "bar"
 ```
 
-In the example above, we used keywords for the keys: `:foo`,
-`:bar`. This is just the most common way to define the keys. You can
-use quoted symbols instead: `'foo`, `'bar`, but it's just less
-conventional.
+上の例では、キーに `:foo`、`:bar` というキーワードを使いました。これはキーを定義する
+最も一般的な方法にすぎません。代わりに引用されたシンボル `'foo`、`'bar` も使えますが、
+慣習としては少し一般的ではありません。
 
-Remember that if you use symbols for keys, then when you'll want to
-access those keys from another package, you'll need to use the
-fully-qualified symbol name. However, all keywords live in the same
-package so they always evaluate to themselves. It's a bit simpler to
-use keywords.
+キーにシンボルを使う場合、別のパッケージからそれらのキーにアクセスしたいときは、
+完全修飾されたシンボル名を使う必要があることを覚えておいてください。一方、すべての
+キーワードは同じパッケージに存在し、常に自分自身へ評価されます。キーワードを使う方が少し簡単です。
 
 
-### Accessing data in a plist, using plists as queues
+### plist のデータへアクセスする、plist をキューとして使う
 
-We access an element with `getf`:
+要素には `getf` でアクセスします。
 
 ~~~lisp
 (defparameter my-plist (list :foo "foo" :bar "bar"))
@@ -1983,35 +1912,35 @@ We access an element with `getf`:
 ;; => "foo"
 ~~~
 
-Remember that we can't set a `:test` keyword to `getf`. Keys must be
-*identical* by `eq` for `getf` to get you the key. If you use strings
-for the keys, it won't work:
+`getf` に `:test` キーワードを設定することはできない点を覚えておいてください。
+`getf` でキーを取得するには、キーが `eq` によって *同一* でなければなりません。
+キーに文字列を使うと動作しません。
 
 ~~~lisp
 (defparameter not-ok-plist (list "foo" "this-is-foo" "bar" "this-is-bar"))
 
-;; you get NIL, even if you can see "foo" is a key:
+;; "foo" がキーに見えても NIL が返る:
 (getf not-ok-plist "foo")
 ;; => NIL
 
-;; We didn't create a plist, but a list.
+;; plist ではなくリストを作っていた。
 ~~~
 
-A plist can be used as a queue. If it has twice the same key, `getf`
-takes the value of the first one (from left to right):
+plist はキューとして使えます。同じキーが 2 回ある場合、`getf` は最初のもの
+（左から右へ）の値を取ります。
 
 ~~~lisp
 (defparameter my-plist (list :foo "lifo" :foo "foo" :bar "bar"))
-;;                           ^^           ^^ twice the key :foo
+;;                           ^^           ^^ キー :foo が 2 回
 
 (getf my-plist :foo)
 ;; => "lifo"
 ~~~
 
 
-### Removing elements from a plist
+### plist から要素を削除する
 
-To remove an element from a plist, you'd use `remf`, which destructively changes the plist in place:
+plist から要素を削除するには `remf` を使います。これは plist をその場で破壊的に変更します。
 
 ~~~lisp
 (defparameter my-plist (list :foo "foo" :bar "bar"))
@@ -2022,12 +1951,12 @@ my-plist
 ;; => (:bar "bar")
 ~~~
 
-### Adding elements to a plist
+### plist に要素を追加する
 
-To add elements to a plist, you can use `list*` and `append`, which
-are *not* destructive. They don't modify the original plist in place.
+plist に要素を追加するには `list*` と `append` を使えます。これらは破壊的では
+*ありません*。元の plist をその場で変更しません。
 
-Using `list*`, we add elements in front:
+`list*` を使うと、先頭に要素を追加します。
 
 ~~~lisp
 (defparameter my-plist (list :foo "foo" :bar "bar"))
@@ -2037,10 +1966,10 @@ Using `list*`, we add elements in front:
 
 my-plist
 ;; => (:FOO "foo" :BAR "bar")
-;;    the original plist was not modified.
+;;    元の plist は変更されていない。
 ~~~
 
-Using `append`, we add elements to the end:
+`append` を使うと、末尾に要素を追加します。
 
 ~~~lisp
 (defparameter my-plist (list :foo "foo" :bar "bar"))
@@ -2049,16 +1978,16 @@ Using `append`, we add elements to the end:
 
 my-plist
 ;; => (:FOO "foo" :BAR "bar")
-;;    the original plist was not modified.
+;;    元の plist は変更されていない。
 ~~~
 
-Use `(setf my-plist (append …))` if you want to change the plist.
+plist を変更したい場合は `(setf my-plist (append …))` を使います。
 
 
-### Setting elements of a plist
+### plist の要素を設定する
 
-You can of course `setf` a place you got with `getf`. In that case, unlike
-`list*` or `append`, `setf` will update the plist in place:
+もちろん、`getf` で得た place を `setf` できます。この場合、`list*` や `append` と異なり、
+`setf` は plist をその場で更新します。
 
 ~~~lisp
 (defparameter my-plist (list :foo "foo" :bar "bar"))
@@ -2074,25 +2003,24 @@ my-plist
 ;; => (:FOO "foo!!!" :BAR "bar")
 ~~~
 
-## Structures
+## 構造体
 
-Structures offer a way to store data in named slots. They support
-single inheritance.
+構造体は、名前付きスロットにデータを格納する方法を提供します。単一継承をサポートします。
 
-Classes provided by the Common Lisp Object System (CLOS) are more flexible however structures may offer better performance (see for example the SBCL manual).
+Common Lisp Object System (CLOS) が提供するクラスの方が柔軟ですが、構造体はより良い性能を提供する場合があります（たとえば SBCL マニュアルを参照）。
 
-### Creation
+### 作成
 
-Use `defstruct`:
+`defstruct` を使います。
 
 ~~~lisp
 (defstruct person
    id name age)
 ~~~
 
-At creation slots are optional and default to `nil`.
+作成時、スロットは省略可能で、デフォルトは `nil` です。
 
-To set a default value:
+デフォルト値を設定するには:
 
 ~~~lisp
 (defstruct person
@@ -2101,7 +2029,7 @@ To set a default value:
    age)
 ~~~
 
-Also specify the type after the default value:
+デフォルト値の後に型も指定します。
 
 ~~~lisp
 (defstruct person
@@ -2110,8 +2038,7 @@ Also specify the type after the default value:
   age)
 ~~~
 
-We create an instance with the generated constructor `make-` +
-`<structure-name>`, so `make-person`:
+生成されたコンストラクタ `make-` + `<structure-name>`、つまり `make-person` でインスタンスを作成します。
 
 ~~~lisp
 (defparameter *me* (make-person))
@@ -2119,9 +2046,9 @@ We create an instance with the generated constructor `make-` +
 #S(PERSON :ID NIL :NAME "john doe" :AGE NIL)
 ~~~
 
-note that printed representations can be read back by the reader.
+印字表現はリーダで読み戻せることに注意してください。
 
-With a bad name type:
+不正な name 型を使うと:
 
 ~~~lisp
 (defparameter *bad-name* (make-person :name 123))
@@ -2134,9 +2061,8 @@ in call for class #<STRUCTURE-CLASS PERSON>.
    [Condition of type SB-PCL::INITARG-ERROR]
 ```
 
-We can set the structure's constructor so as to create the structure
-without using keyword arguments, which can be more convenient
-sometimes. We give it a name and the order of the arguments:
+構造体のコンストラクタを設定して、キーワード引数を使わずに構造体を作成できます。
+これは場合によってより便利です。名前と引数の順序を与えます。
 
 ~~~lisp
 (defstruct (person (:constructor create-person (id name age)))
@@ -2145,14 +2071,14 @@ sometimes. We give it a name and the order of the arguments:
      age)
 ~~~
 
-Our new constructor is `create-person`:
+新しいコンストラクタは `create-person` です。
 
 ~~~lisp
 (create-person 1 "me" 7)
 #S(PERSON :ID 1 :NAME "me" :AGE 7)
 ~~~
 
-However, the default `make-person` does *not* work any more:
+しかし、デフォルトの `make-person` はもう動作しません。
 
 ~~~lisp
 (make-person :name "me")
@@ -2163,20 +2089,20 @@ obsolete structure error for a structure of type PERSON
 
 
 
-### Slot access
+### スロットアクセス
 
-We access the slots with accessors created by `<name-of-the-struct>-` + `slot-name`:
+`<name-of-the-struct>-` + `slot-name` によって作成されたアクセサでスロットにアクセスします。
 
 ~~~lisp
 (person-name *me*)
 ;; "john doe"
 ~~~
 
-we then also have `person-age` and `person-id`.
+同様に `person-age` と `person-id` もあります。
 
-### Setting
+### 設定
 
-Slots are `setf`-able:
+スロットは `setf` 可能です。
 
 ~~~lisp
 (setf (person-name *me*) "Cookbook author")
@@ -2184,18 +2110,18 @@ Slots are `setf`-able:
 ;; "Cookbook author"
 ~~~
 
-### Predicate
+### 述語
 
-A predicate function is generated:
+述語関数が生成されます。
 
 ~~~lisp
 (person-p *me*)
 T
 ~~~
 
-### Single inheritance
+### 単一継承
 
-Use single inheritance with the `:include <struct>` argument:
+`:include <struct>` 引数を使って単一継承を行います。
 
 ~~~lisp
 (defstruct (female (:include person))
@@ -2204,13 +2130,12 @@ Use single inheritance with the `:include <struct>` argument:
 ;; #S(FEMALE :ID NIL :NAME "Lilie" :AGE NIL :GENDER "female")
 ~~~
 
-Note that the CLOS object system is more powerful.
+CLOS オブジェクトシステムの方が強力であることに注意してください。
 
-### Shorter slot access with symbol-macrolet
+### symbol-macrolet による短いスロットアクセス
 
-If you are accessing several slots within a single function the
-special form `symbol-macrolet` can improve readibility, by creating
-symbol macros which expand into forms with structure accessors:
+1 つの関数内で複数のスロットにアクセスする場合、特殊フォーム `symbol-macrolet` は、
+構造体アクセサを持つフォームへ展開されるシンボルマクロを作成することで可読性を改善できます。
 
 ~~~lisp
 (defstruct ship x-position y-position x-velocity y-velocity)
@@ -2226,11 +2151,9 @@ symbol macros which expand into forms with structure accessors:
     ship))
 ~~~
 
-Here the math involved in the `move-ship` function is easier to
-read than if accessor functions were used.
+ここでは、アクセサ関数を使う場合よりも `move-ship` 関数内の計算が読みやすくなっています。
 
-Without `symbol-macrolet`
-it looks like this:
+`symbol-macrolet` なしでは次のようになります。
 
 ~~~lisp
 (defun move-ship (ship)
@@ -2241,22 +2164,20 @@ it looks like this:
    ship)
 ~~~
 
-In this function all the accessors are not too hard to read, but
-with more complex operations it would quickly get cluttered.
+この関数ではすべてのアクセサがそれほど読みにくいわけではありませんが、より複雑な操作ではすぐに煩雑になります。
 
-Now, let's try our function:
+では、この関数を試してみましょう。
 
 ~~~lisp
 (move-ship (make-ship :x-position 1 :y-position 1 :x-velocity 2 :y-velocity 2))
 ;; #S(SHIP :X-POSITION 3 :Y-POSITION 3 :X-VELOCITY 2 :Y-VELOCITY 2)
 ~~~
 
-### Structures and `with-slots`
+### 構造体と `with-slots`
 
-Though it is not mentioned in the standard, many modern implementations
-of Common Lisp permit the use of the CLOS macro `with-slots` with
-structures.  In the standard `with-slots` itself is defined using
-`symbol-macrolet`. At least SBCL and ECL will accept this:
+標準には記載されていませんが、Common Lisp の多くの現代的な実装では、CLOS マクロ
+`with-slots` を構造体とともに使うことが許されています。標準では `with-slots` 自体が
+`symbol-macrolet` を使って定義されています。少なくとも SBCL と ECL はこれを受け入れます。
 
 ~~~lisp
 (defstruct point x y)
@@ -2269,18 +2190,16 @@ structures.  In the standard `with-slots` itself is defined using
 ;; => (2.3 -3.2)
 ~~~
 
-But do note that in the standard the behavior of the above use of
-`with-slots` with a structure is called "unspecified."
+ただし、標準では上記のように構造体に `with-slots` を使う動作は
+"unspecified" と呼ばれている点に注意してください。
 
-### Limitations
+### 制限
 
-After a change, instances are not updated.
+変更後、インスタンスは更新されません。
 
-If we try to add a slot (`email` below), we have the choice to lose
-all instances, or to continue using the new definition of
-`person`. But the effects of redefining a structure are undefined by
-the standard, so it is best to re-compile and re-run the changed
-code.
+スロット（以下の `email`）を追加しようとすると、すべてのインスタンスを失うか、
+`person` の新しい定義を使い続けるかを選ぶことになります。しかし、構造体の再定義の
+影響は標準では未定義なので、変更したコードを再コンパイルして再実行するのが最善です。
 
 ~~~lisp
 (defstruct person
@@ -2290,7 +2209,7 @@ code.
        email)
 ~~~
 
-gives an error and we drop in the debugger:
+エラーが発生し、デバッガに入ります。
 
 ~~~
 attempt to redefine the STRUCTURE-OBJECT class PERSON
@@ -2306,7 +2225,7 @@ Restarts:
  5: [ABORT] abort thread (#<THREAD "repl-thread" RUNNING {1002A0FFA3}>)
 ~~~
 
-If we choose restart `0`, to use the new definition, we lose access to `*me*`:
+新しい定義を使うために restart `0` を選ぶと、`*me*` へアクセスできなくなります。
 
 ~~~lisp
 *me*
@@ -2314,22 +2233,22 @@ obsolete structure error for a structure of type PERSON
    [Condition of type SB-PCL::OBSOLETE-STRUCTURE]
 ~~~
 
-There is also very little introspection.
-Portable Common Lisp does not define ways of finding out defined super/sub-structures nor what slots a structure has.
+イントロスペクションもごくわずかです。移植可能な Common Lisp は、定義された
+super/sub-structures や構造体が持つスロットを調べる方法を定義していません。
 
-The Common Lisp Object System (which came after into the language)
-doesn't have such limitations. See the [CLOS section](clos.html).
+後から言語に入った Common Lisp Object System にはそのような制限はありません。
+[CLOS section](clos.html) を参照してください。
 
-* [structures on the hyperspec](http://www.lispworks.com/documentation/HyperSpec/Body/08_.htm)
+* [HyperSpec の structures](http://www.lispworks.com/documentation/HyperSpec/Body/08_.htm)
 * David B. Lamkins, ["Successful Lisp, How to Understand and Use Common Lisp"](http://www.communitypicks.com/r/lisp/s/17592186045679-successful-lisp-how-to-understand-and-use-common).
 
-## Trees
+## ツリー
 
-### Built-ins
+### 組み込み
 
-A tree can be built with lists of lists.
+ツリーはリストのリストで構築できます。
 
-For example, the nested list `'(A (B) (C (D) (E)))` represents the tree:
+たとえば、ネストしたリスト `'(A (B) (C (D) (E)))` は次のツリーを表します。
 
 ```
    A
@@ -2339,58 +2258,55 @@ For example, the nested list `'(A (B) (C (D) (E)))` represents the tree:
       ╰─ E
 ```
 
-where `(B)`, `(D)` and `(E)` are leaf nodes.
+ここで `(B)`、`(D)`、`(E)` は葉ノードです。
 
-The functions `tree-equal` and `copy-tree` descend recursively into the car and
-the cdr of the cons cells they visit.
+関数 `tree-equal` と `copy-tree` は、訪問する cons セルの car と cdr へ再帰的に降りていきます。
 
-See the functions `subst` and `sublis` above to replace elements in a tree.
+ツリー内の要素を置換するには、上記の関数 `subst` と `sublis` を参照してください。
 
-## FSet - immutable functional data structures
+## FSet - 不変な関数型データ構造
 
-You may want to have a look at the **FSet** library (in Quicklisp) and its
-excellent documentation to use immutable data structures.
+不変データ構造を使うには、**FSet** ライブラリ（Quicklisp 内）とその優れたドキュメントを見てみるとよいでしょう。
 
      (ql:quickload "fset")
 
-FSet provides the following collections:
+FSet は次のコレクションを提供します。
 
-- `maps`, aka hash-tables
-- `seqs`, aka sequences
-- `sets`, aka "unordered collection of values without duplicates",
-- `bags` or multisets, aka sets that count how many occurences of a member is in the bag,
-- and more: "replay sets and maps", "binary relations", "tuples", "interval sets" (ranges), "bounded sets", and similar collections with strict (weak) ordering.
+- `maps`、つまりハッシュテーブル
+- `seqs`、つまりシーケンス
+- `sets`、つまり「重複のない値の順序なしコレクション」
+- `bags` または multiset、つまりメンバーが bag 内に何回出現するかを数える集合
+- さらに "replay sets and maps"、"binary relations"、"tuples"、"interval sets"（範囲）、"bounded sets"、厳密な（弱）順序を持つ同様のコレクション。
 
-You can start reading its [excellent documentation](https://gitlab.common-lisp.net/fset/fset/-/wikis/FSet/Intro) that includes a high level conceptual background, a tutorial, an API reference and a comparison with functional data structures from other ecosystems.
+高水準の概念的背景、チュートリアル、API リファレンス、他のエコシステムの関数型データ構造との比較を含む
+[優れたドキュメント](https://gitlab.common-lisp.net/fset/fset/-/wikis/FSet/Intro) から読み始められます。
 
-- FSet's home and issue tracker: https://gitlab.common-lisp.net/fset/fset/
+- FSet のホームと issue tracker: https://gitlab.common-lisp.net/fset/fset/
 
-## Sycamore - purely functional weight-balanced binary trees
+## Sycamore - 純粋関数型の重み平衡二分木
 
-Another fast, purely functional data structure library for Common Lisp
-is [Sycamore](https://github.com/ndantam/sycamore).
+Common Lisp 向けのもう 1 つの高速な純粋関数型データ構造ライブラリは
+[Sycamore](https://github.com/ndantam/sycamore) です。
 
-It features:
+機能:
 
-- fast, purely functional **Hash Array Mapped Tries** ([HAMT](https://en.wikipedia.org/wiki/Hash_array_mapped_trie)).
-* fast, purely functional weight-balanced **binary trees**.
-* interfaces for tree **sets** and **maps** (hash-tables).
+- 高速で純粋関数型の **Hash Array Mapped Tries** ([HAMT](https://en.wikipedia.org/wiki/Hash_array_mapped_trie)).
+* 高速で純粋関数型の重み平衡 **binary trees**。
+* ツリー **sets** と **maps**（ハッシュテーブル）のインターフェイス。
 * [ropes](http://en.wikipedia.org/wiki/Rope_(data_structure))
-* purely functional [pairing **heaps**](http://en.wikipedia.org/wiki/Pairing_heap)
-* purely functional amortized **queues**.
+* 純粋関数型の [pairing **heaps**](http://en.wikipedia.org/wiki/Pairing_heap)
+* 純粋関数型の償却 **queues**。
 
 
-## Controlling how much of data to print (`*print-length*`, `*print-level*`)
+## 印字するデータ量を制御する (`*print-length*`, `*print-level*`)
 
-Use `*print-length*` and `*print-level*`.
+`*print-length*` と `*print-level*` を使います。
 
-They are both `nil` by default.
+どちらもデフォルトでは `nil` です。
 
-If you have a very big list, printing it on the REPL or in a
-stacktrace can take a long time and bring your editor or even your
-server down. Use `*print-length*` to choose the maximum of elements of
-the list to print, and to show there is a rest with a `...`
-placeholder:
+非常に大きなリストがある場合、それを REPL やスタックトレースで印字すると長い時間がかかり、
+エディタやサーバーさえ止めてしまう可能性があります。`*print-length*` を使って印字する
+リスト要素の最大数を選び、残りがあることを `...` プレースホルダで示します。
 
 ~~~lisp
 (setf *print-length* 2)
@@ -2398,26 +2314,24 @@ placeholder:
 ;; (:A :B ...)
 ~~~
 
-And if you have a very nested data structure, set `*print-level*` to
-choose the depth to print:
+非常に深くネストしたデータ構造がある場合は、`*print-level*` を設定して印字する深さを選びます。
 
 ~~~lisp
 (let ((*print-level* 2))
   (print '(:a (:b (:c (:d :e))))))
-;; (:A (:B #))             <= *print-level* in action
+;; (:A (:B #))             <= *print-level* が効いている
 ;; (:A (:B (:C (:D :E))))
-;; => the list is returned,
-;; the let binding is not in effect anymore.
+;; => リストが返される。
+;; let 束縛はもう有効ではない。
 ~~~
 
-`*print-length*` will be applied at each level.
+`*print-length*` は各レベルで適用されます。
 
-Reference: the [HyperSpec](http://clhs.lisp.se/Body/v_pr_lev.htm).
+参考: [HyperSpec](http://clhs.lisp.se/Body/v_pr_lev.htm)。
 
-## Appendix A - which functions are destructive and which are not?
+## 付録 A - どの関数が破壊的で、どの関数がそうでないか
 
-A destructive function alters the argument(s) it was given. For
-example, the function `nreverse` is destructive:
+破壊的関数は与えられた引数を変更します。たとえば、関数 `nreverse` は破壊的です。
 
 ```lisp
 (defparameter *hello* "hello")
@@ -2428,59 +2342,56 @@ example, the function `nreverse` is destructive:
 (greet *hello*)
 ;; => "olleh"
 
-;; What is *hello* now?
+;; *hello* は今どうなっているか?
 (print *hello*)
 ;; => "olleh"
 ;;
-;; Ooops, the top-level variable was altered by a side-effect and that is not a good practice (at all).
+;; おっと、トップレベル変数が副作用で変更された。これは（まったく）良い習慣ではない。
 ```
 
-How do you know which functions are destructive?
+どの関数が破壊的か、どうやって分かるでしょうか。
 
-- all `n`something functions are destructive: `nreverse`,
-  `nsubstitute`… "n" means "non-consing", the function will not
-  allocate any new cons cell (it won't create new objects in memory),
-  so it might reuse the original sequence, and alter it in place.
+- すべての `n`something 関数は破壊的です: `nreverse`、
+  `nsubstitute` など。"n" は "non-consing" を意味し、その関数が新しい cons セルを
+  割り当てない（メモリ内に新しいオブジェクトを作らない）ことを表します。そのため、
+  元のシーケンスを再利用し、その場で変更する可能性があります。
   - `nstring-upcase`, `nstring-downcase`, `nstring-capitalize`
   - `nunion`, `nintersection`, `nset-difference`, `nset-exclusive-or`
   - `nbutlast`
   - `nsubst[-if, -if-not]`, `nsublis`,  `nsubstitue[-if, -if-not]`
-  - each `n`-something function has its non-destructive counterpart, that you should prefer using.
-- `sort` and `stable-sort` are destructive functions, so is `merge`,
-  so it's best practice to use `copy-list` or `copy-seq` before calling one of them.
-- the `delete[-*]` functions are destructive (`remove` isn't destructive)
-- `(setf (nth ... ...) ...)` is obviously destructive.
-- `replace`, `fill` are destructive
-- `vector-push` *can* be destructive
+  - 各 `n`-something 関数には非破壊版があり、そちらを使うことを優先すべきです。
+- `sort` と `stable-sort` は破壊的関数で、`merge` も同様です。そのため、これらを呼ぶ前に `copy-list` または `copy-seq` を使うのがベストプラクティスです。
+- `delete[-*]` 関数は破壊的です（`remove` は破壊的ではありません）
+- `(setf (nth ... ...) ...)` は明らかに破壊的です。
+- `replace`、`fill` は破壊的です
+- `vector-push` は破壊的である *可能性があります*
 - `remprop`, `remf`
 - `map-into`
 
-Also:
+また:
 
-- `pop`, `push`: they are not destructive in the sense that they don't alter conses, but they change the car of the place they pop or push from/to.
+- `pop`, `push`: cons を変更しないという意味では破壊的ではありませんが、pop または push する place の car を変更します。
 
 
-## Appendix B - generic and nested access of alists, plists, hash-tables and CLOS slots
+## 付録 B - alist、plist、ハッシュテーブル、CLOS スロットへの汎用的かつネストしたアクセス
 
-The solutions presented below might help you getting started, but keep
-in mind that they'll have a performance impact and that error messages
-will be less explicit.
+以下に示す解決策は始める助けになるかもしれませんが、性能への影響があり、エラーメッセージが
+あまり明示的でなくなることを覚えておいてください。
 
-* the [access](https://github.com/AccelerationNet/access) library (battle tested, used by the Djula templating system) has a generic `(access my-var :elt)` ([blog post](https://lisp-journey.gitlab.io/blog/generice-consistent-access-of-data-structures-dotted-path/)). It also has `accesses` (plural) to access and set nested values.
-* [rutils](https://github.com/vseloved/rutils) as a generic `generic-elt` or `?`,
+* [access](https://github.com/AccelerationNet/access) ライブラリ（実戦で試されており、Djula テンプレートシステムで使われています）には、汎用的な `(access my-var :elt)` があります（[blog post](https://lisp-journey.gitlab.io/blog/generice-consistent-access-of-data-structures-dotted-path/)）。ネストした値にアクセスして設定するための `accesses`（複数形）もあります。
+* [rutils](https://github.com/vseloved/rutils) には汎用的な `generic-elt` または `?` があります。
 
-## Appendix C - accessing nested data structures
+## 付録 C - ネストしたデータ構造へのアクセス
 
-Sometimes we work with nested data structures, and we might want an
-easier way to access a nested element than intricated "getf" and
-"assoc" and all. Also, we might want to just be returned a `nil` when
-an intermediary key doesn't exist.
+ネストしたデータ構造を扱うことがあります。そのとき、入り組んだ "getf" や "assoc" などよりも
+簡単にネストした要素へアクセスする方法が欲しくなるかもしれません。また、中間のキーが存在しない場合に
+単に `nil` が返ってほしいこともあります。
 
-The `access` library given above provides this, with `(accesses var key1 key2…)`.
+上記の `access` ライブラリは、`(accesses var key1 key2…)` でこれを提供します。
 
-## Appendix D - Collections Type Hierarchy
+## 付録 D - コレクション型階層
 
-*Solid nodes are concrete types, while dashed ones are type aliases. For example, `'string` is an alias for an array of characters of any size, `(array character (*))`.*
+*実線のノードは具象型で、破線のノードは型エイリアスです。たとえば、`'string` は任意サイズの文字配列 `(array character (*))` のエイリアスです。*
 
 <!-- epub-exclude-start -->
 <div style="text-align: center">
@@ -2493,6 +2404,6 @@ The `access` library given above provides this, with `(accesses var key1 key2…
 ![](collections.png)
    pdf-include-end -->
 
-## See also
+## 関連項目
 
-* [the Pretty Printer](https://cl-community-spec.github.io/pages/Examples-of-using-the-Pretty-Printer.html#Examples-of-using-the-Pretty-Printer):`*print-length*`, `*print-right-margin*`, `pprint-tabular` etc.
+* [Pretty Printer](https://cl-community-spec.github.io/pages/Examples-of-using-the-Pretty-Printer.html#Examples-of-using-the-Pretty-Printer): `*print-length*`, `*print-right-margin*`, `pprint-tabular` など。

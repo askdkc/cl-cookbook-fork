@@ -1,12 +1,12 @@
 ---
-title: Functions
+title: 関数
 ---
 
 <a name="return"></a>
 
-## Named functions: `defun`
+## 名前付き関数: `defun`
 
-Creating named functions is done with the `defun` keyword. It follows this model:
+名前付き関数は `defun` keyword で作成します。基本形は次のとおりです。
 
 ~~~lisp
 (defun function-name (zero or some arguments)
@@ -14,34 +14,32 @@ Creating named functions is done with the `defun` keyword. It follows this model
   (code of function body))
 ~~~
 
-The return value is the value returned by the last expression of the body
-(see below for more). There is no "return xx" statement.
+戻り値は body の最後の expression が返す値です (詳しくは下を参照)。"return xx" statement はありません。
 
-So, for example:
+たとえば:
 
 ~~~lisp
 (defun hello-world ()
-  ;;               ^^ no arguments
+  ;;               ^^ argument なし
   (print "hello world!"))
 ~~~
 
-Call it:
+呼び出してみます。
 
 ~~~lisp
 (hello-world)
-;; "hello world!"  <-- output
-;; "hello world!"  <-- a string is returned.
+;; "hello world!"  <-- 出力
+;; "hello world!"  <-- string が返る
 ~~~
 
-The `print` function prints its one argument to standard output *and
-returns it*. "hello world!" is thus the returned value of our function.
+`print` function は 1 つの argument を standard output に print し、*さらにそれを返します*。そのため "hello world!" がこの function の戻り値になります。
 
 
-## Arguments
+## argument
 
-### Base case: required arguments
+### 基本形: required argument
 
-Add in arguments like this:
+argument は次のように追加します。
 
 ~~~lisp
 (defun hello (name)
@@ -50,53 +48,47 @@ Add in arguments like this:
 ;; HELLO
 ~~~
 
-(where `~a` is the most used `format` directive to print a variable
-*aesthetically* and `~&` prints a newline)
+(`~a` は variable を *aesthetically* に print するために最もよく使われる `format` directive で、`~&` は newline を print します)
 
-Call the function:
+function を呼び出します。
 
 ~~~lisp
 (hello "me")
-;; hello me !  <-- this is printed by `format`
-;; NIL         <-- return value: `format t` prints a string
-;;                 to standard output and returns nil.
+;; hello me !  <-- これは `format` により print される
+;; NIL         <-- 戻り値: `format t` は string を
+;;                 standard output に print し nil を返す
 ~~~
 
-If you don't specify the right amount of arguments, you'll be trapped
-into the interactive debugger with an explicit error message:
+正しい数の argument を指定しないと、明示的な error message とともに interactive debugger に入ります。
 
    (hello)
 
 > invalid number of arguments: 0
 
-### Optional arguments: `&optional`
+### optional argument: `&optional`
 
-Optional arguments are declared after the `&optional` keyword in the
-lambda list. They are ordered, they must appear one after another.
+optional argument は lambda list の `&optional` keyword の後に宣言します。これらは順序を持ち、続けて現れなければなりません。
 
-This function:
+この function は:
 
 ~~~lisp
 (defun hello (name &optional age gender) …)
 ~~~
 
-must be called like this:
+次のように呼び出す必要があります。
 
 ~~~lisp
-(hello "me") ;; a value for the required argument,
-             ;; zero optional arguments
-(hello "me" "7")  ;; a value for age
-(hello "me" 7 :h) ;; a value for age and gender
+(hello "me") ;; required argument への値、
+             ;; optional argument は 0 個
+(hello "me" "7")  ;; age への値
+(hello "me" 7 :h) ;; age と gender への値
 ~~~
 
-### Named parameters: `&key`
+### 名前付き parameter: `&key`
 
-It is not always convenient to remember the order of the arguments. It
-is thus possible to supply arguments by name: we declare them using
-`&key argname`, we set them with `:argname "value"` in the function call,
-and we use `argname` as a regular variable in the function body.
+argument の順序を覚えるのがいつも便利とは限りません。そのため、argument を名前で渡せます。`&key argname` で宣言し、function call では `:argname "value"` で設定し、function body では通常の variable として `argname` を使います。
 
-Key arguments are `nil` by default.
+key argument は default で `nil` です。
 
 ~~~lisp
 (defun hello (name &key happy)
@@ -106,23 +98,23 @@ Key arguments are `nil` by default.
     (format t ":)~&")))
 ~~~
 
-The following calls are possible:
+次の call が可能です。
 
     (hello "me")
     (hello "me" :happy t)
-    (hello "me" :happy nil) ;; useless, equivalent to (hello "me")
+    (hello "me" :happy nil) ;; 不要、(hello "me") と同等
 
-and this is not valid: `(hello "me" :happy)`:
+一方、これは valid ではありません: `(hello "me" :happy)`:
 
 > odd number of &KEY arguments
 
-A similar example of a function declaration, with several key parameters:
+複数の key parameter を持つ function declaration の類似例です。
 
 ~~~lisp
 (defun hello (name &key happy lisper cookbook-contributor-p) …)
 ~~~
 
-it can be called with zero or more key parameters, in any order:
+これは 0 個以上の key parameter を任意の順序で指定して呼び出せます。
 
 ~~~lisp
 (hello "me" :lisper t)
@@ -130,7 +122,7 @@ it can be called with zero or more key parameters, in any order:
 (hello "me" :cookbook-contributor-p t :happy t)
 ~~~
 
-Last but not least, you would quickly realize it, but we can choose the keys programmatically (they can be variables):
+最後に、すぐ気づくことですが、key は programmatically に選べます (variable にできます)。
 
 ~~~lisp
 (let ((key :happy)
@@ -140,9 +132,9 @@ Last but not least, you would quickly realize it, but we can choose the keys pro
 ;; NIL
 ~~~
 
-#### Mixing optional and key parameters
+#### optional parameter と key parameter の混在
 
-It is generally a style warning, but it is possible.
+一般には style warning になりますが、可能です。
 
 ~~~lisp
 (defun hello (&optional name &key happy)
@@ -151,7 +143,7 @@ It is generally a style warning, but it is possible.
     (format t ":)~&")))
 ~~~
 
-In SBCL, this yields:
+SBCL では次のようになります。
 
 ~~~
 ; in: DEFUN HELLO
@@ -167,7 +159,7 @@ In SBCL, this yields:
 ;   caught 1 STYLE-WARNING condition
 ~~~
 
-We can call it:
+呼び出すことはできます。
 
 ~~~lisp
 (hello "me" :happy t)
@@ -175,38 +167,33 @@ We can call it:
 ;; NIL
 ~~~
 
-### Default values to key parameters
+### key parameter の default value
 
-In the lambda list, use pairs to give a default value to an optional or a key argument, like `(happy t)` below:
+lambda list では、次の `(happy t)` のような pair を使って optional argument や key argument に default value を与えます。
 
 ~~~lisp
 (defun hello (name &key (happy t))
 ~~~
 
-Now `happy` is true by default.
+これで `happy` は default で true です。
 
-### Was a key parameter specified?
+### key parameter は指定されたか?
 
-You can skip this tip for now if you want, but come back later to it as it can turn handy.
+この tip は必要なら今は飛ばしてかまいませんが、便利になることがあるので後で戻ってきてください。
 
-We saw that a default key parameter is `nil` by default (`(defun hello
-(name &key happy) …)`). But how can be distinguish between "the value
-is NIL by default" and "the user wants it to be NIL"?
+default の key parameter は default で `nil` だと見ました (`(defun hello (name &key happy) …)`)。しかし、「値が default で NIL である」ことと「user が NIL にしたい」ことはどう区別できるでしょうか。
 
-We saw how to use a list of two elements to set its default value:
+default value を設定するには 2 要素の list を使うことを見ました。
 
 `&key (happy t)`
 
-To answer our question, use a triple like this:
+この疑問に答えるには、次のような triple を使います。
 
 `&key (happy t happy-p)`
 
-where `happy-p` serves as a *predicate* variable (using `-p` is only a
-convention, give it the name you want) to know if the key was
-supplied. If it was, then it will be `T`.
+ここで `happy-p` は key が渡されたかどうかを知るための *predicate* variable として働きます (`-p` を使うのは convention にすぎないので、好きな名前を付けられます)。渡されていれば `T` になります。
 
-So now, we will print a sad face if `:happy` was explicitely set to
-NIL. We don't print it by default.
+これで、`:happy` が明示的に NIL に設定された場合は sad face を print します。default では print しません。
 
 ~~~lisp
 (defun hello (name &key (happy nil happy-p))
@@ -218,10 +205,9 @@ NIL. We don't print it by default.
       (format t ":("))))
 ~~~
 
-### Variable number of arguments: `&rest`
+### 可変個数の argument: `&rest`
 
-Sometimes you want a function to accept a variable number of
-arguments. Use `&rest <variable>`, where `<variable>` will be a list.
+function に可変個数の argument を受け取らせたいことがあります。`&rest <variable>` を使います。この `<variable>` は list になります。
 
 ~~~lisp
 (defun mean (x &rest numbers)
@@ -231,13 +217,13 @@ arguments. Use `&rest <variable>`, where `<variable>` will be a list.
 
 ~~~lisp
 (mean 1)
-(mean 1 2)  ;; => 3/2 (yes, it is printed as a ratio)
+(mean 1 2)  ;; => 3/2 (そう、ratio として print される)
 (mean 1 2 3 4 5) ;;  => 3
 ~~~
 
-### Defining key arguments, and allowing more: `&allow-other-keys`
+### key argument を定義し、さらに他も許す: `&allow-other-keys`
 
-Observe:
+見てみましょう。
 
 ~~~lisp
 (defun hello (name &key happy)
@@ -247,7 +233,7 @@ Observe:
 ;; => Error: unknown keyword argument
 ~~~
 
-whereas
+一方で:
 
 ~~~lisp
 (defun hello (name &key happy &allow-other-keys)
@@ -257,74 +243,67 @@ whereas
 ;; hello me
 ~~~
 
-We might need `&allow-other-keys` when passing around arguments or
-with higher level manipulation of functions.
+argument を受け渡ししたり、function をより高い level で操作したりするとき、`&allow-other-keys` が必要になることがあります。
 
-Here's a real example. We define a function to open a file that always
-uses `:if-exists :supersede`, but still passes any other keys to the
-`open` function.
+実例です。常に `:if-exists :supersede` を使って file を open する function を定義しますが、他の key はそのまま `open` function に渡します。
 
 ~~~lisp
 (defun open-supersede (f &rest other-keys &key &allow-other-keys)
   (apply #'open f :if-exists :supersede other-keys))
 ~~~
 
-In the case of a duplicated `:if-exists` argument, our first one takes precedence.
+`:if-exists` argument が重複した場合、最初に渡したものが優先されます。
 
 
-## Return values
+## 戻り値
 
-The return value of the function is the value returned by the last
-executed form of the body.
+function の戻り値は、body で最後に実行された form が返す値です。
 
-There are ways for non-local exits (`return-from <function name> <value>`), but they are usually not needed.
+non-local exit の方法 (`return-from <function name> <value>`) もありますが、通常は必要ありません。
 
-Common Lisp has also the concept of multiple return values.
+Common Lisp には multiple return value という概念もあります。
 
-### Multiple return values
+### multiple return value
 
-Returning multiple values is **not** like returning a list of results.
+multiple value を返すことは、結果の list を返すこととは**違います**。
 
-#### Quick example
+#### 簡単な例
 
-Let's define a function that returns one value:
+1 つの値を返す function を定義します。
 
 ~~~lisp
 (defun foo ()
   :a)
 ~~~
 
-now we set the result of calling this function to a variable:
+次に、この function call の結果を variable に設定します。
 
 ~~~lisp
 (defparameter *var* (foo))
 ~~~
 
-`*var*` is now `:a`. That's a very classical behaviour.
+`*var*` は今 `:a` です。これはごく普通の behaviour です。
 
-Now our function will return *multiple values*, using `values`:
+今度は `values` を使って、この function が *multiple values* を返すようにします。
 
 ~~~lisp
 (foo ()
   (values :a :b :c))
 ~~~
 
-and we set `*var*` to its result again:
+そして再びその結果を `*var*` に設定します。
 
 ~~~lisp
 (setf *var* (foo))
 ~~~
 
-What is the value of `*var*`? *It is still :a*. We didn't ask to
-capture the remaining values, so `:b` and `:c` were discarded.
+`*var*` の値は何でしょうか。*:a のままです*。残りの value を capture するようには要求していないので、`:b` と `:c` は捨てられました。
 
-This is actually very handy: you can change a function to return more
-multiple values than it did, and you don't need to change and refactor
-the call sites.
+これは実際とても便利です。function が以前より多くの multiple value を返すように変更しても、call site を変更したり refactor したりする必要がありません。
 
-#### Returning multiple values: `values`
+#### multiple value を返す: `values`
 
-The function `values` is used to return multiple values:
+function `values` は multiple value を返すために使います。
 
 ~~~lisp
 (values 'a 'b)
@@ -332,27 +311,24 @@ The function `values` is used to return multiple values:
 ;; => B
 ~~~
 
-Calling `values` with no arguments returns no value at all.
+argument なしで `values` を call すると、値をまったく返しません。
 
-It is different than returning `nil`.
+これは `nil` を返すこととは違います。
 
-Unless you use the functions described below to capture multiple
-values, only the first will be seen and used by other functions:
+下で説明する function を使って multiple value を capture しない限り、他の function から見えて使われるのは最初の value だけです。
 
 ~~~lisp
 (+ (values 1 2 3) (values 10 20 30))
 ;; => 11
 ~~~
 
-`values` does **not** create a list.
+`values` は list を作りません。
 
-#### Why multiple values. A look at CL built-ins
+#### multiple value がある理由。CL built-in を見る
 
-While most Common Lisp forms return a single value, it is
-sometimes useful for a function to return several (or none).
+ほとんどの Common Lisp form は 1 つの value を返しますが、function が複数の value (または 0 個) を返せると便利なことがあります。
 
-For example, `round` returns two values, the rounded result
-as well as how much was removed to do the rounding:
+たとえば `round` は、丸めた結果と、丸めのために取り除かれた量という 2 つの value を返します。
 
 ~~~lisp
 (round 10.33333333)
@@ -360,40 +336,28 @@ as well as how much was removed to do the rounding:
 ;; => 0.33333302
 ~~~
 
-Most of the time you only need the rounded value, but if for
-some reason you want to know the remainder, it can be captured.
-If you expect all the values calculated by a function to be
-used most of the time, then it is better to bundle up the results
-in a list, a CLOS instance, *etc.,* and return that.  Only use
-multiple values when the first values are most often needed,
-and the later ones less often used.
+ほとんどの場合は丸めた value だけが必要ですが、何らかの理由で remainder を知りたいなら capture できます。function が計算したすべての value がほとんどの場合に使われると予想するなら、結果を list、CLOS instance、*etc.,* にまとめて返す方がよいでしょう。multiple value は、最初の value が最も頻繁に必要で、後の value はあまり使われない場合にだけ使います。
 
-Similarly, getting the content of a hash-table returns two values: the
-result, and a boolean saying if the key was found or not. See below.
+同様に、hash-table の内容を取得すると 2 つの value が返ります。結果と、その key が見つかったかどうかを示す boolean です。下を参照してください。
 
-#### Capturing multiple values: `multiple-value-bind`, `nth-value`, `multiple-value-list` et all
+#### multiple value の capture: `multiple-value-bind`、`nth-value`、`multiple-value-list` など
 
-The most common way to capture multiple values is with
-`multiple-value-bind`:
+multiple value を capture する最も一般的な方法は `multiple-value-bind` です。
 
 ~~~lisp
 (multiple-value-bind (c d) (values 1 2)
   (list c d))
 ;; => (1 2)
 
-;; Also often indented like this:
+;; 次のように indent されることも多い:
 (multiple-value-bind (c d)
     (values 1 2)
   (list c d))
 ~~~
 
-It acts as a `let` binding: the values `c` and `d` exist in the scope
-of `multiple-value-bind`.
+これは `let` binding のように動作します。value `c` と `d` は `multiple-value-bind` の scope 内に存在します。
 
-The number of values returned does not have to match the
-number of variables to bind.  If there are too many values,
-the extras are discarded, and if there are too many variables
-to bind, the extras are set to `nil`:
+返される value の数と、bind する variable の数は一致していなくてもかまいません。value が多すぎる場合、余分なものは捨てられます。bind する variable が多すぎる場合、余分な variable は `nil` に設定されます。
 
 ~~~lisp
 (multiple-value-bind (a b) (values 1 2 3 4)
@@ -407,8 +371,7 @@ to bind, the extras are set to `nil`:
 ;; => (1 NIL)
 ~~~
 
-The function `values` is `setf`-able, which can also be
-used to capture values:
+function `values` は `setf` 可能で、これを value の capture に使うこともできます。
 
 ~~~lisp
 (let (c d)
@@ -417,7 +380,7 @@ used to capture values:
 ;; => (1 2)
 ~~~
 
-You can also use `multiple-value-setq`, which is equivalent:
+同等の `multiple-value-setq` も使えます。
 
 ~~~lisp
 (let (c d)
@@ -426,24 +389,21 @@ You can also use `multiple-value-setq`, which is equivalent:
 ;; => (3 4)
 ~~~
 
-Or you can shunt multiple values directly into a function call
-with `multiple-value-call`:
+また、`multiple-value-call` で multiple value を直接 function call に送り込めます。
 
 ~~~lisp
 (multiple-value-call #'list (values 1 2 3))
 ;; => (1 2 3)
 ~~~
 
-The function `multiple-value-list` is equivalent to the code
-above:
+function `multiple-value-list` は上の code と同等です。
 
 ~~~lisp
 (multiple-value-list (values 1 2 3))
 ;; => (1 2 3)
 ~~~~
 
-And you can go the other way, turning a list into multiple
-return values with `values-list`:
+逆に、`values-list` で list を multiple return value に変換できます。
 
 ~~~lisp
 (values-list '(1 2 3))
@@ -452,7 +412,7 @@ return values with `values-list`:
 ;; => 3
 ~~~
 
-You can select a particular value with `nth-value`:
+`nth-value` で特定の value を選択できます。
 
 ~~~lisp
 (nth-value 0 (values :a :b :c))  ;; => :A
@@ -460,24 +420,19 @@ You can select a particular value with `nth-value`:
 (nth-value 9 (values :a :b :c))  ;; => NIL
 ~~~
 
-Note here too and let us stress again that `values` is different from a list:
+ここでも、`values` は list とは違うことを改めて強調しておきます。
 
 ~~~lisp
 (nth-value 0 (list :a :b :c)) ;; => (:A :B :C)
-;; => a list is one data structure of its own
+;; => list はそれ自体で 1 つの data structure
 
 (nth-value 1 (list :a :b :c)) ;; => NIL
-;; => no second value to capture
+;; => capture する 2 番目の value はない
 ~~~
 
-#### Using multiple values to report success or failure
+#### 成功または失敗を報告するために multiple value を使う
 
-A typical use for multiple values is to distinguish between finding
-`nil` and a lookup failure.  For example, `gethash` returns two
-values.  The first is the result of the lookup, which might be `nil` if
-nothing is found, but could be an actual `nil` stored in the
-hashtable.  The second value returned is a flag indicating if the
-lookup was a success:
+multiple value の典型的な用途は、`nil` が見つかった場合と lookup failure を区別することです。たとえば `gethash` は 2 つの value を返します。1 つ目は lookup の結果です。何も見つからなければ `nil` かもしれませんが、hashtable に実際に保存されている `nil` かもしれません。2 つ目の戻り値は lookup が成功したかどうかを示す flag です。
 
 ~~~lisp
 (defvar *hash* (make-hash-table))
@@ -487,8 +442,8 @@ lookup was a success:
 
 ~~~lisp
 (gethash 'a *hash*)
-;; => 12           <--- first returned value: our result
-;; => T            <--- second returned value: the key was found
+;; => 12           <--- 1 番目の戻り値: 結果
+;; => T            <--- 2 番目の戻り値: key が見つかった
 
 (gethash 'b *hash*)
 ;; => NIL
@@ -496,72 +451,60 @@ lookup was a success:
 
 (gethash 'c *hash*)
 ;; => NIL
-;; => NIL          <---- this key wasn't found.
+;; => NIL          <---- この key は見つからなかった
 ~~~
 
-## Anonymous functions: `lambda`
+## anonymous function: `lambda`
 
-Anonymous functions are created with `lambda`:
+anonymous function は `lambda` で作成します。
 
 ~~~lisp
 (lambda (x) (print x))
 ~~~
 
-We can call a lambda with `funcall` or `apply` (see below).
+lambda は `funcall` または `apply` で呼び出せます (下を参照)。
 
-If the first element of an unquoted list is a lambda expression, the
-lambda is called:
+quote されていない list の最初の element が lambda expression なら、その lambda が呼び出されます。
 
 ~~~lisp
 ((lambda (x) (print x)) "hello")
 ;; hello
 ~~~
 
-## Calling functions programmatically: `funcall` and `apply`
+## function を programmatically に呼び出す: `funcall` と `apply`
 
-`funcall` is to be used with a known number of arguments, when `apply`
-can be used on a list, for example from `&rest`:
+`funcall` は argument の数がわかっているときに使います。一方 `apply` は、たとえば `&rest` から得た list に対して使えます。
 
 ~~~lisp
 (funcall #'+ 1 2)
 (apply #'+ '(1 2))
 ~~~
 
-There is one thing to keep in mind with `apply`, it is that we can't
-use it with super-large lists: the argument list of functions
-have a length limit.
+`apply` について覚えておくべきことが 1 つあります。非常に大きな list には使えません。function の argument list には長さの制限があります。
 
-We can find this limit in the variable `call-arguments-limit`. It
-depends on the implementation. While it is rather large on SBCL
-(4611686018427387903), we have another option to apply a function with
-arguments of arbitrary length: `reduce`.
+この制限は variable `call-arguments-limit` で確認できます。これは implementation に依存します。SBCL ではかなり大きい (4611686018427387903) ですが、任意の長さの argument に function を適用する別の選択肢があります。それが `reduce` です。
 
 ### `reduce`
 
-`reduce` is used to apply functions on lists and vectors of arbitrary
-length. It repeateadly calls the function with two arguments and walks
-over the argument list.
+`reduce` は任意の長さの list や vector に function を適用するために使います。function を 2 つの argument で繰り返し呼び出し、argument list を走査します。
 
-For example, instead of using `apply` like above:
+たとえば、上のように `apply` を使う代わりに:
 
-    (apply #'min '(22 1 2 3)) ;; imagine a super large list
+    (apply #'min '(22 1 2 3)) ;; 非常に大きな list を想像してください
 
-we can use `reduce`:
+`reduce` を使えます。
 
     (reduce #'min '(22 1 2 3))
 
-If our argument was 1000 elements long, `apply` would call the `min`
-function with 1000 arguments, while `reduce` would call `min` (nearly)
-a 1000 times with 2 arguments each time.
+argument が 1000 elements の長さなら、`apply` は `min` function を 1000 個の argument で呼び出します。一方 `reduce` は `min` を毎回 2 個の argument で (ほぼ) 1000 回呼び出します。
 
-`reduce` walks over the list, which means the following:
+`reduce` は list を走査します。つまり次のようになります。
 
-- `min` is first called with arguments 22 and 1, and it produces an
-  intermediate result: 1.
-- `min` is called again with this intermediate result as first argument, and the following argument of the argument list, 2. An intermediate result is produced, 1 again.
-- `min` is called again with arguments 1 and 3, and returns the final result, 1.
+- まず `min` が argument 22 と 1 で呼ばれ、中間結果 1 を生成します。
+- `min` はこの中間結果を最初の argument とし、argument list の次の argument である 2 とともに再び呼ばれます。中間結果はまた 1 です。
+- `min` は argument 1 と 3 で再び呼ばれ、最終結果 1 を返します。
 
-Look, we can trace it:
+trace できます。
 
 ~~~lisp
 CL-USER> (trace min)
@@ -575,27 +518,24 @@ CL-USER> (reduce #'min '(22 1 2 3))
 1
 ~~~
 
-Its full signature is the following:
+完全な signature は次のとおりです。
 
 ```lisp
 (reduce function sequence &key key from-end start end initial-value)
 ```
 
-where `key`, `from-end`, `start` and `end` are key arguments found in
-other built-in functions (see our data-structures chapter). If given,
-`:initial-value` is placed before the first subsequence.
+ここで `key`、`from-end`、`start`、`end` は他の built-in function にも見られる key argument です (data-structures 章を参照)。`:initial-value` が与えられた場合、最初の subsequence の前に置かれます。
 
-Read more about `reduce` on the Community Spec:
+`reduce` の詳細は Community Spec を読んでください。
 
 - [https://cl-community-spec.github.io/pages/reduce.html](https://cl-community-spec.github.io/pages/reduce.html)
 
 
-### Referencing functions by name: single quote `'` or sharpsign-quote `#'`?
+### 名前で function を参照する: single quote `'` か sharpsign-quote `#'` か?
 
-In the example above, we used `#'`, but a single quote also works, and
-we can encounter it in the wild. Which one to use?
+上の例では `#'` を使いましたが、single quote も動作し、実際の code でも見かけます。どちらを使うべきでしょうか。
 
-It is generally safer to use `#'`, because it respects lexical scope. Observe:
+一般には `#'` を使う方が安全です。lexical scope を尊重するからです。見てみましょう。
 
 ~~~lisp
 (defun foo (x)
@@ -603,16 +543,16 @@ It is generally safer to use `#'`, because it respects lexical scope. Observe:
 
 (flet ((foo (x) (1+ x)))
   (funcall #'foo 1))
-;; => 2, as expected
+;; => 2、期待どおり
 
-;; But:
+;; しかし:
 
 (flet ((foo (x) (1+ x)))
   (funcall 'foo 1))
 ;; => 100
 ~~~
 
-`#'` is actually the shorthand for `(function …)`:
+`#'` は実際には `(function …)` の shorthand です。
 
 ~~~lisp
 (function +)
@@ -625,13 +565,11 @@ It is generally safer to use `#'`, because it respects lexical scope. Observe:
 ;; 2
 ~~~
 
-Using `function` or the `#'` shorthand allows us to refer to local
-functions. If we pass instead a symbol to `funcall`, what is
-called is always the function named by that symbol in the *global environment*.
+`function` または `#'` shorthand を使うと local function を参照できます。代わりに symbol を `funcall` に渡すと、呼び出されるのは常に *global environment* でその symbol によって名付けられた function です。
 
-In addition, `#'` catches the function by value. If the function is redefined, bindings that refered to this function by `#'` will still run its original behaviour.
+さらに、`#'` は function を value として捕まえます。function が再定義されても、`#'` でこの function を参照している binding は元の behaviour を実行し続けます。
 
-Let's assign a function to a parameter:
+function を parameter に代入してみます。
 
 ~~~lisp
 (defparameter *foo-caller* #'foo)
@@ -639,7 +577,7 @@ Let's assign a function to a parameter:
 ;; => 100
 ~~~
 
-Now, if we redefine `foo`, the behaviour of `*foo-caller*` will *not* change:
+ここで `foo` を再定義しても、`*foo-caller*` の behaviour は変わりません。
 
 ~~~lisp
 (defun foo (x) (1+ x))
@@ -647,34 +585,34 @@ Now, if we redefine `foo`, the behaviour of `*foo-caller*` will *not* change:
 ;; FOO
 
 (funcall *foo-caller* 1)
-;; 100  ;; and not 2
+;; 100  ;; 2 ではない
 ~~~
 
-If we bind the caller with `'foo`, a single quote, the function will be resolved at runtime:
+caller を single quote の `'foo` で bind すると、function は runtime に解決されます。
 
 ~~~lisp
-(defun foo (x) (* x 100))  ;; back to original behavior.
+(defun foo (x) (* x 100))  ;; 元の behavior に戻す
 (defparameter *foo-caller-2* 'foo)
 ;; *FOO-CALLER-2*
 (funcall *foo-caller-2* 1)
 ;; 100
 
-;; We change the definition:
+;; 定義を変更する:
 (defun foo (x) (1+ x))
 ;; WARNING: redefining CL-USER::FOO in DEFUN
 ;; FOO
 
-;; We try again:
+;; もう一度試す:
 (funcall *foo-caller-2* 1)
 ;; 2
 ~~~
 
-The behaviour you want depends on your use case. Generally, using sharpsign-quote is less surprising. But if you are running a tight loop and you want live-update mechanisms (think a game or live visualisations), you might want to use a single quote so that your loop picks up the user's new function definition.
+どの behaviour が望ましいかは use case によります。一般には sharpsign-quote を使う方が驚きが少ないです。しかし tight loop を実行していて live-update mechanism (game や live visualisation を考えてください) が欲しい場合は、loop が user の新しい function definition を拾うように single quote を使いたいかもしれません。
 
 
-## Higher order functions: functions that return functions
+## higher order function: function を返す function
 
-Writing functions that return functions is simple enough:
+function を返す function を書くのは十分に簡単です。
 
 ~~~lisp
 (defun adder (n)
@@ -682,9 +620,9 @@ Writing functions that return functions is simple enough:
 ;; ADDER
 ~~~
 
-Here we have defined the function `adder` which returns an _object_ of _type_ [`function`](http://www.lispworks.com/documentation/HyperSpec/Body/t_fn.htm).
+ここでは、[`function`](http://www.lispworks.com/documentation/HyperSpec/Body/t_fn.htm) _type_ の _object_ を返す function `adder` を定義しました。
 
-To call the resulting function, we must use `funcall` or `apply`:
+結果として得られる function を呼び出すには、`funcall` または `apply` を使う必要があります。
 
 ~~~lisp
 (adder 5)
@@ -693,7 +631,7 @@ To call the resulting function, we must use `funcall` or `apply`:
 ;; 8
 ~~~
 
-Trying to call it right away leads to an illegal function call:
+すぐに呼び出そうとすると illegal function call になります。
 
 ~~~lisp
 ((adder 3) 5)
@@ -702,62 +640,62 @@ In: (ADDER 3) 5
 Error: Illegal function call.
 ~~~
 
-Indeed, CL has different _namespaces_ for functions and variables, i.e. the same _name_ can refer to different things depending on its position in a form that's evaluated.
+実際、CL では function と variable に異なる _namespace_ があります。つまり、評価される form の中での位置によって、同じ _name_ が別のものを指すことがあります。
 
 ~~~lisp
-;; The symbol foo is bound to nothing:
+;; symbol foo は何にも bound されていない:
 CL-USER> (boundp 'foo)
 NIL
 CL-USER> (fboundp 'foo)
 NIL
-;; We create a variable:
+;; variable を作る:
 CL-USER> (defparameter foo 42)
 FOO
 CL-USER> foo
 42
-;; Now foo is "bound":
+;; これで foo は "bound" されている:
 CL-USER> (boundp 'foo)
 T
-;; but still not as a function:
+;; しかし function としてはまだ違う:
 CL-USER> (fboundp 'foo)
 NIL
-;; So let's define a function:
+;; では function を定義する:
 CL-USER> (defun foo (x) (* x x))
 FOO
-;; Now the symbol foo is bound as a function too:
+;; これで symbol foo は function としても bound された:
 CL-USER> (fboundp 'foo)
 T
-;; Get the function:
+;; function を取得する:
 CL-USER> (function foo)
 #<FUNCTION FOO>
-;; and the shorthand notation:
+;; 短縮表記:
 CL-USER> #'foo
 #<FUNCTION FOO>
-;; We call it:
+;; 呼び出す:
 (funcall (function adder) 5)
 #<CLOSURE (LAMBDA (X) :IN ADDER) {100991761B}>
-;; and call the lambda:
+;; そして lambda を呼び出す:
 (funcall (funcall (function adder) 5) 3)
 8
 ~~~
 
-To simplify a bit, you can think of each symbol in CL having (at least) two "cells" in which information is stored. One cell - sometimes referred to as its _value cell_ - can hold a value that is _bound_ to this symbol, and you can use [`boundp`](http://www.lispworks.com/documentation/HyperSpec/Body/f_boundp.htm) to test whether the symbol is bound to a value (in the global environment). You can access the value cell of a symbol with [`symbol-value`](http://www.lispworks.com/documentation/HyperSpec/Body/f_symb_5.htm).
+少し単純化すると、CL の各 symbol には情報を保存する「cell」が (少なくとも) 2 つあると考えられます。1 つの cell は _value cell_ と呼ばれることがあり、この symbol に _bound_ された value を保持できます。[`boundp`](http://www.lispworks.com/documentation/HyperSpec/Body/f_boundp.htm) を使うと、symbol が (global environment で) value に bound されているかを test できます。symbol の value cell には [`symbol-value`](http://www.lispworks.com/documentation/HyperSpec/Body/f_symb_5.htm) で access できます。
 
 
-The other cell - sometimes referred to as its _function cell_ - can hold the definition of the symbol's (global) function binding. In this case, the symbol is said to be _fbound_ to this definition. You can use [`fboundp`](http://www.lispworks.com/documentation/HyperSpec/Body/f_fbound.htm) to test whether a symbol is fbound. You can access the function cell of a symbol (in the global environment) with [`symbol-function`](http://www.lispworks.com/documentation/HyperSpec/Body/f_symb_1.htm).
+もう 1 つの cell は _function cell_ と呼ばれることがあり、symbol の (global な) function binding の定義を保持できます。この場合、symbol はその定義に _fbound_ されていると言います。[`fboundp`](http://www.lispworks.com/documentation/HyperSpec/Body/f_fbound.htm) を使うと、symbol が fbound されているかを test できます。symbol の function cell には (global environment で) [`symbol-function`](http://www.lispworks.com/documentation/HyperSpec/Body/f_symb_1.htm) で access できます。
 
 
-Now, if a _symbol_ is evaluated, it is treated as a _variable_ in that its value cell is returned (just `foo`). If a _compound form_, i.e. a _cons_, is evaluated and its _car_ is a symbol, then the function cell of this symbol is used (as in `(foo 3)`).
+さて、_symbol_ が評価されると、_variable_ として扱われ、その value cell が返されます (単に `foo`)。_compound form_、つまり _cons_ が評価され、その _car_ が symbol なら、この symbol の function cell が使われます (`(foo 3)` のように)。
 
 
-In Common Lisp, as opposed to Scheme, it is _not_ possible that the car of the compound form to be evaluated is an arbitrary form. If it is not a symbol, it _must_ be a _lambda expression_, which looks like `(lambda lambda-list form*)`.
+Common Lisp では Scheme と異なり、評価される compound form の car を任意の form にすることはできません。symbol でない場合、それは `(lambda lambda-list form*)` の形をした _lambda expression_ でなければなりません。
 
-This explains the error message we got above - `(adder 3)` is neither a symbol nor a lambda expression.
+これが上で得た error message の理由です。`(adder 3)` は symbol でも lambda expression でもありません。
 
-If we want to be able to use the symbol `*my-fun*` in the car of a compound form, we have to explicitly store something in its _function cell_ (which is normally done for us by the macro [`defun`](http://www.lispworks.com/documentation/HyperSpec/Body/m_defun.htm)):
+compound form の car で symbol `*my-fun*` を使えるようにしたいなら、その _function cell_ に明示的に何かを保存する必要があります (通常これは macro [`defun`](http://www.lispworks.com/documentation/HyperSpec/Body/m_defun.htm) が行ってくれます)。
 
 ~~~lisp
-;;; continued from above
+;;; 上からの続き
 CL-USER> (fboundp '*my-fun*)
 NIL
 CL-USER> (setf (symbol-function '*my-fun*) (adder 3))
@@ -768,13 +706,11 @@ CL-USER> (*my-fun* 5)
 8
 ~~~
 
-Read the CLHS section about [form evaluation](http://www.lispworks.com/documentation/HyperSpec/Body/03_aba.htm) for more.
+詳しくは [form evaluation](http://www.lispworks.com/documentation/HyperSpec/Body/03_aba.htm) についての CLHS section を読んでください。
 
 ## Closures
 
-Closures allow you to capture lexical bindings. This can be useful to store state
-that you don't want to have to keep passing into your function(s), either as a convenience
-or to keep state variables out of a reachable namespace.
+closure を使うと lexical binding を capture できます。これは、毎回 function に渡したくない state を保存するときに便利です。利便性のためでも、state variable を到達可能な namespace から外しておくためでもあります。
 
 ~~~lisp
 (let ((limit 3)
@@ -796,7 +732,7 @@ or to keep state variables out of a reachable namespace.
 0
 ~~~
 
-Or similarly:
+または同様に:
 
 ~~~lisp
 (defun repeater (n)
@@ -820,10 +756,7 @@ Or similarly:
 0
 ~~~
 
-In addition to counter generators, another common use of lexical closures is
-memoization — caching previous results of functions that are expensive to
-calculate. Using the non-memoized Fibonacci function below quickly gets quite
-time-consuting to calculate.
+counter generator に加えて、lexical closure のもう 1 つの一般的な用途は memoization、つまり計算にコストがかかる function の以前の結果を cache することです。下の memoize されていない Fibonacci function は、すぐに計算時間がかなりかかるようになります。
 
 ~~~lisp
 (defun fibonacci (n)
@@ -840,9 +773,7 @@ time-consuting to calculate.
 ;; 102334155
 ~~~
 
-Using a hash table to store previously calculated results can speed things up.
-We could use a `defvar`, but this is a good use case for a closure since that
-avoids adding a variable only used by one function to the namespace.
+以前に計算した結果を hash table に保存すると高速化できます。`defvar` を使うこともできますが、これは closure に適した use case です。1 つの function だけが使う variable を namespace に追加せずに済むからです。
 
 ~~~lisp
 (let ((memo (make-hash-table)))
@@ -862,46 +793,38 @@ avoids adding a variable only used by one function to the namespace.
 ;; 102334155
 ~~~
 
-There are several memoization libraries, some of which wrap this lexical closure and caching
-mechanics up in a macro.
+memoization library はいくつかあり、その一部はこの lexical closure と caching の mechanism を macro で wrap しています。
 
-See more on [Practical Common Lisp](http://www.gigamonkeys.com/book/variables.html).
+詳しくは [Practical Common Lisp](http://www.gigamonkeys.com/book/variables.html) を参照してください。
 
-## `setf` functions
+## `setf` function
 
-A function name can also be a list of two symbols with `setf` as the
-first one, and where the first argument is the new value:
+function name は、最初の symbol が `setf` である 2 つの symbol の list にすることもできます。このとき最初の argument は新しい value です。
 
 ~~~lisp
 (defun (setf function-name) (new-value other optional arguments)
   body)
 ~~~
 
-This mechanism is often used for CLOS methods.
+この mechanism は CLOS method でよく使われます。
 
-Let's work towards an example. Let's say we manipulate a hash-table
-that represents a square. We store the square width in this
-hash-table:
+例に向けて進めましょう。square を表す hash-table を操作するとします。この hash-table に square の width を保存します。
 
 ~~~lisp
 (defparameter *square* (make-hash-table))
 (setf (gethash :width *square*) 21)
 ~~~
 
-During our program life cycle, we can change the square width, with `setf` as we did above.
+program の life cycle 中、上で行ったように `setf` で square の width を変更できます。
 
-We define a function to compute a square area. We don't store it in
-the hash-table as it is redundant with the dimension.
+square area を計算する function を定義します。dimension と重複するため、これは hash-table には保存しません。
 
 ~~~lisp
 (defun area (square)
   (expt (gethash :width square) 2))
 ~~~
 
-Now, our programming needs lead to the situation where it would be
-very handy to change the `*area*` of the square… and have this reflected
-on the square's dimensions. It can be ergonomic for your program's
-application interface to define a setf-function, like this:
+ここで programming 上の必要から、square の `*area*` を変更し、それを square の dimension に反映できると非常に便利な状況になったとします。program の application interface にとって、次のような setf-function を定義すると扱いやすくなります。
 
 ~~~lisp
 (defun (setf area) (new-area square)
@@ -909,20 +832,18 @@ application interface to define a setf-function, like this:
     (setf (gethash :width square) width)))
 ~~~
 
-And now you can do:
+これで次のようにできます。
 
 ~~~lisp
 (setf (area *square*) 100)
 ;; => 10.0
 ~~~
 
-and check your square (`describe`, `inspect`…), the new width was set.
+square を確認すると (`describe`、`inspect` など)、新しい width が設定されています。
 
-### setf-functions: optional arguments
+### setf-function: optional argument
 
-Note that setf-functions only have one mandatory argument, the new
-value. The second and other arguments are optional. For example, from
-the [Lem editor codebase](https://github.com/lem-project/lem/blob/main/src/buffer/internal/buffer.lisp):
+setf-function が持つ mandatory argument は、新しい value 1 つだけである点に注意してください。2 番目以降の argument は optional です。たとえば [Lem editor codebase](https://github.com/lem-project/lem/blob/main/src/buffer/internal/buffer.lisp) から:
 
 
 ~~~lisp
@@ -932,17 +853,16 @@ the [Lem editor codebase](https://github.com/lem-project/lem/blob/main/src/buffe
   (setf *current-buffer* buffer))
 ~~~
 
-This setf-function sets a global parameter (`*current-buffer*`) to the
-new value.
+この setf-function は global parameter (`*current-buffer*`) を新しい value に設定します。
 
-We could define setf-functions with more than two arguments too:
+2 つより多い argument を持つ setf-function も定義できます。
 
 ~~~lisp
 (defun (setf area) (new-area square x y &key log)
   (list new-area square x y log))
 ~~~
 
-Use it:
+使ってみます。
 
 ~~~lisp
 (setf (area 'square 1 2 :log t) 9)
@@ -951,9 +871,9 @@ Use it:
 
 ## Currying
 
-### Concept
+### concept
 
-A related concept is that of _[currying](https://en.wikipedia.org/wiki/Currying)_ which you might be familiar with if you're coming from a functional language. After we've read the last section that's rather easy to implement:
+関連する概念に _[currying](https://en.wikipedia.org/wiki/Currying)_ があります。functional language から来たなら馴染みがあるかもしれません。前の section を読んだ後なら、これはかなり簡単に実装できます。
 
 ~~~lisp
 CL-USER> (defun curry (function &rest args)
@@ -970,12 +890,9 @@ CL-USER> (power-of-ten 3)
 1000
 ~~~
 
-### With the Alexandria library
+### Alexandria library を使う
 
-Now that you know how to do it, you may appreciate using the
-implementation of the
-[Alexandria](https://common-lisp.net/project/alexandria/draft/alexandria.html#Data-and-Control-Flow)
-library (in Quicklisp).
+やり方がわかったので、Quicklisp にある [Alexandria](https://common-lisp.net/project/alexandria/draft/alexandria.html#Data-and-Control-Flow) library の implementation を使うありがたみもわかるでしょう。
 
 ~~~lisp
 (ql:quickload "alexandria")
@@ -992,8 +909,8 @@ library (in Quicklisp).
 (add-one 10)  ;; => 11
 ~~~
 
-## Documentation
+## ドキュメント
 
-- functions: <http://www.lispworks.com/documentation/HyperSpec/Body/t_fn.htm#function>
-- ordinary lambda lists: <http://www.lispworks.com/documentation/HyperSpec/Body/03_da.htm>
+- function: <http://www.lispworks.com/documentation/HyperSpec/Body/t_fn.htm#function>
+- ordinary lambda list: <http://www.lispworks.com/documentation/HyperSpec/Body/03_da.htm>
 - multiple-value-bind: <http://clhs.lisp.se/Body/m_multip.htm>

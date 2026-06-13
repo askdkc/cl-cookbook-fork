@@ -1,19 +1,19 @@
 ---
-title: Loop, iteration, mapping
+title: ループ、反復、マッピング
 ---
 
-<!-- needs some text before the first heading -->
+<!-- 最初の見出しの前に何らかの本文が必要 -->
 
-## Introduction: loop, iterate, for, mapcar, series, transducers
+## はじめに: loop, iterate, for, mapcar, series, transducers
 
-### The `loop` macro (built-in)
+### `loop` マクロ（組み込み）
 
 **[loop](http://www.lispworks.com/documentation/lw51/CLHS/Body/m_loop.htm)**
-is the built-in macro for iteration.
+は反復のための組み込みマクロです。
 
-Its simplest form is `(loop (print "hello"))`: this will print forever.
+最も単純な形は `(loop (print "hello"))` です。これは永久に表示し続けます。
 
-A simple iteration over a list is:
+リストに対する単純な反復は次のようになります。
 
 ~~~lisp
 (loop for x in '(1 2 3)
@@ -25,9 +25,9 @@ A simple iteration over a list is:
 NIL
 ~~~
 
-It prints what's needed but returns `nil`.
+必要なものを表示しますが、戻り値は `nil` です。
 
-If you want to return a list, use `collect`:
+リストを返したい場合は `collect` を使います。
 
 ~~~lisp
 (loop for x in '(1 2 3)
@@ -35,46 +35,37 @@ If you want to return a list, use `collect`:
 ;; => (10 20 30)
 ~~~
 
-The `loop` macro is different than most Lisp expressions in having a complex
-internal domain-specific language that doesn't use s-expressions, so you need
-to read `loop` expressions with half of your brain in Lisp mode and the other
-half in `loop` mode. You love it or you hate it. Usually you hate it for a while and then you love it.
+`loop` マクロは、ほとんどの Lisp 式とは異なり、s-expression を使わない複雑な内部 DSL を持っています。そのため、`loop` 式を読むときは、頭の半分を Lisp モードに、もう半分を `loop` モードにしておく必要があります。好きになるか嫌いになるかのどちらかです。たいていは、しばらく嫌いになってから好きになります。
 
-Think of `loop` expressions as having four parts:
+`loop` 式は 4 つの部分からなると考えられます。
 
-1. expressions that set up variables that will be iterated,
-2. expressions that conditionally terminate the iteration,
-3. expressions that do something on each iteration, and
-4. expressions that do something right before the Loop exits.
+1. 反復される変数を設定する式
+2. 条件付きで反復を終了する式
+3. 各反復で何かを行う式
+4. Loop が終了する直前に何かを行う式
 
-In addition, `loop` expressions can return a value.  It is very rare to use all
-of these parts in a given `loop` expression, but you can combine them in many
-ways.
+さらに、`loop` 式は値を返せます。1 つの `loop` 式でこれらすべてを使うことはめったにありませんが、さまざまな方法で組み合わせられます。
 
-The loop clauses can be written in two styles: either as symbols like
-we did above, either as keywords, like this:
+loop clause は 2 つのスタイルで書けます。上のように symbol として書くか、次のように keyword として書きます。
 
 ~~~lisp
 (loop :for x :in '(1 2 3) :collect (* x 10))
 ~~~
 
-We wrote `:for`, `:in` and `:collect` as keywords.
+ここでは `:for`、`:in`、`:collect` を keyword として書いています。
 
 
-### The `iterate` library
+### `iterate` ライブラリ
 
 **[iterate](https://common-lisp.net/project/iterate/doc/index.html)** is a
-popular iteration macro that aims at being simpler, "lispier" and more
-predictable than `loop`, besides being extensible. However it isn't built-in,
-so you have to import it:
+`loop` より単純で、より「Lisp らしく」、より予測しやすく、さらに拡張可能であることを目指した人気の反復マクロです。ただし組み込みではないので、import する必要があります。
 
     (ql:quickload "iterate")
     (use-package :iterate)
 
-(If you use `loop` and Iterate in the same package, you might run into name
-conflicts.)
+（同じ package で `loop` と Iterate を使うと、名前の衝突に遭遇するかもしれません。）
 
-Iterate looks like this:
+Iterate は次のように書きます。
 
 ~~~lisp
 (iter (for i from 1 to 5)
@@ -82,7 +73,7 @@ Iterate looks like this:
 ;; => (1 4 9 16 25)
 ~~~
 
-Iterate also comes with `display-iterate-clauses` that can be quite handy:
+Iterate には `display-iterate-clauses` も付属しており、かなり便利です。
 
 ~~~
 (display-iterate-clauses '(for))
@@ -91,46 +82,34 @@ Iterate also comes with `display-iterate-clauses` that can be quite handy:
 ;; ...
 ~~~
 
-Many of the examples on this page that are valid for `loop` are also valid for
-Iterate, with minor modifications.
+このページの `loop` 用の例の多くは、少し変更すれば Iterate でも有効です。
 
-### The `for` library
+### `for` ライブラリ
 
 **[for](https://github.com/Shinmera/for/)** is an extensible iteration macro
-that is often shorter than `loop`, that "unlike `loop` is extensible and
-sensible, and unlike Iterate does not require code-walking and is easier to
-extend".
+しばしば `loop` より短く書ける拡張可能な反復マクロです。「`loop` と違って拡張可能で分かりやすく、Iterate と違って code-walking を必要とせず拡張しやすい」とされています。
 
-It has the other advantage of having one construct that works for all
-data structures (lists, vectors, hash-tables…): if in doubt, just use
-`for… over…`:
+もう 1 つの利点として、すべてのデータ構造（list、vector、hash-table など）に対して使える 1 つの構文があります。迷ったら `for… over…` を使えばよいのです。
 
 ~~~lisp
 (for:for ((x over your-data-structure))
    (print …))
 ~~~
 
-You also have to quickload it:
+これも quickload する必要があります。
 
     (ql:quickload "for")
 
-### `map`, `mapcar` et all (built-in)
+### `map`, `mapcar` など（組み込み）
 
-We'll also give examples with **`mapcar`** and `map`, and eventually
-with their friends `mapcon`, `mapcan`, `maplist`, `mapc` and `mapl`
-which E. Weitz categorizes very well in his "Common Lisp Recipes",
-chap. 7. The one you are certainly accustomed to from other languages is
-`mapcar`: it takes a function, one or more lists as arguments,
-applies the function on each *element* of the lists one by one and
-returns a list of result.
+**`mapcar`** と `map` の例も示します。さらに、E. Weitz が "Common Lisp Recipes" 第 7 章でうまく分類している仲間の `mapcon`、`mapcan`、`maplist`、`mapc`、`mapl` も扱います。他の言語から来た人に最もなじみがあるのは、おそらく `mapcar` でしょう。これは関数と 1 つ以上のリストを引数に取り、リストの各 *element* に順番に関数を適用し、結果のリストを返します。
 
 ~~~lisp
 (mapcar (lambda (it) (+ it 10)) '(1 2 3))
 ;; => (11 12 13)
 ~~~
 
-You can also reference a function without using lambda. That function
-must accept the right number of arguments.
+`lambda` を使わずに関数を参照することもできます。その関数は正しい個数の引数を受け取れる必要があります。
 
 ~~~lisp
 (mapcar #'1+ '(1 2 3))
@@ -143,8 +122,7 @@ must accept the right number of arguments.
 ;; => (111 222 333)
 ~~~
 
-`map` is generic, it accepts lists and vectors as arguments, and
-expects the type for its result as first argument:
+`map` は汎用的で、list や vector を引数として受け取り、結果の型を第 1 引数として要求します。
 
 ~~~lisp
 (map 'vector (lambda (it) (+ it 10)) '(1 2 3))
@@ -157,9 +135,7 @@ expects the type for its result as first argument:
 ;; => "abc"
 ~~~
 
-**`map-into`** is a destructive variant that stores results
-directly into an existing sequence instead of allocating a
-new one. The result sequence is also the return value:
+**`map-into`** は破壊的な変種で、新しい sequence を割り当てる代わりに、既存の sequence へ結果を直接格納します。その結果 sequence は戻り値にもなります。
 
 ~~~lisp
 (let ((result (make-list 3)))
@@ -167,8 +143,7 @@ new one. The result sequence is also the return value:
 ;; => (11 22 33)
 ~~~
 
-It works with vectors too, and is useful when you want
-to avoid allocation in a performance-sensitive loop:
+これは vector でも動作し、性能が重要なループで allocation を避けたいときに便利です。
 
 ~~~lisp
 (let ((buf (make-array 4)))
@@ -177,39 +152,29 @@ to avoid allocation in a performance-sensitive loop:
 ;; => #(97 98 99 100)
 ~~~
 
-Note: `map-into` modifies its first argument in place.
-Prefer `map` or `mapcar` when you don't need to reuse
-an existing buffer.
+注: `map-into` は第 1 引数をその場で変更します。既存の buffer を再利用する必要がない場合は、`map` や `mapcar` を優先してください。
 
-The other constructs have their advantages in some situations ;) They
-either process the *tails* of lists, or *concatenate* the return
-values, or don't return anything. We'll see some of them.
+他の構文にも、状況によって利点があります。リストの *tail* を処理したり、戻り値を *concatenate* したり、何も返さなかったりします。その一部を見ていきます。
 
-If you like `mapcar`, use it a lot, and would like a quicker and
-shorter way to write lambdas, we offer a simple macro to you:
+`mapcar` が好きでよく使い、lambda をもっと速く短く書きたいなら、次の単純なマクロを使えます。
 
 ~~~lisp
 (defmacro ^ (&rest forms)
   `(lambda ,@forms))
 ~~~
 
-Example:
+例:
 
 ~~~lisp
 (mapcar (^ (nb) (* nb 10)) '(1 2 3))
 ;; (10 20 30)
 ~~~
 
-and voilà :) We won't use this more in this recipe, but feel free.
+できあがりです。このレシピではこれ以上使いませんが、自由に使ってください。
 
-### The `series` library
+### `series` ライブラリ
 
-You might also like **[series](http://series.sourceforge.net/)**, a library that
-describes itself as combining aspects of sequences, streams, and loops. Series
-expressions look like operations on sequences (= functional programming), but
-can achieve the same high level of efficiency as `loop`. Series first appeared
-in "Common Lisp the Language", in appendix A (it nearly became part of the
-language). Series looks like this:
+**[series](http://series.sourceforge.net/)** も気に入るかもしれません。これは sequence、stream、loop の側面を組み合わせるものだと自称するライブラリです。Series 式は sequence に対する操作（つまり関数型プログラミング）のように見えますが、`loop` と同じ高い効率を達成できます。Series は "Common Lisp the Language" の付録 A で初めて登場しました（言語の一部になりかけたものです）。Series は次のように書きます。
 
 ~~~lisp
 (collect
@@ -218,12 +183,8 @@ language). Series looks like this:
 ;; (1 4 9 16 25)
 ~~~
 
-`series` is good, but its function names are different from what we
-find in functional languages today. You might like the ["Generators
-The Way I Want Them Generated"](https://cicadas.surf/cgit/colin/gtwiwtg.git/about/)
-library. It is a lazy sequences library, similar to `series` although
-younger and not as complete, with a "modern" API with words like `take`, `filter`,
-`for` or `fold`, and that is easy to use.
+`series` は良いものですが、その関数名は今日の関数型言語で見かけるものとは異なります。["Generators
+The Way I Want Them Generated"](https://cicadas.surf/cgit/colin/gtwiwtg.git/about/) ライブラリも気に入るかもしれません。これは `series` に似た lazy sequence ライブラリですが、より新しく、完全性では劣るものの、`take`、`filter`、`for`、`fold` といった語を持つ「現代的な」API を備えていて使いやすいです。
 
 ~~~lisp
 (range :from 20)
@@ -233,25 +194,20 @@ younger and not as complete, with a "modern" API with words like `take`, `filter
 ;; (20 21 22 23)
 ~~~
 
-At the time of writing, GTWIWTG is licensed under the GPLv3.
+執筆時点で、GTWIWTG は GPLv3 の下でライセンスされています。
 
-### The `transducers` library
+### `transducers` ライブラリ
 
-The **[transducers](https://codeberg.org/fosskers/cl-transducers)** pattern was
-ported to Common Lisp in 2023 and offers a full suite of functional programming
-idioms for efficiently iterating over "sources". A "source" could be simple
-collections like Lists or Vectors, but also potentially large files or
-generators of infinite data.
+**[transducers](https://codeberg.org/fosskers/cl-transducers)** パターンは 2023 年に Common Lisp へ移植され、"source" を効率よく反復するための関数型プログラミング idiom 一式を提供します。"source" は List や Vector のような単純な collection でもよく、巨大な file や無限データの generator でもありえます。
 
-Transducers...
+Transducers は...
 
-- allow the chaining of operations like `map` and `filter` without allocating
-  memory between each step,
-- aren't tied to any specific data type; they need only be implemented once,
-- vastly simplify "data transformation code", and
-- have nothing to do with "lazy evaluation".
+- `map` や `filter` のような操作を、各 step の間で memory を割り当てずに連鎖できます。
+- 特定の data type に縛られません。一度だけ実装すれば済みます。
+- 「データ変換コード」を大幅に単純化します。
+- 「lazy evaluation」とは無関係です。
 
-Let's sum the squares of the first 1000 odd integers:
+最初の 1000 個の奇数整数の二乗和を求めてみましょう。
 
 ~~~lisp
 (defpackage foo
@@ -260,36 +216,31 @@ Let's sum the squares of the first 1000 odd integers:
 ;; => #<PACKAGE "FOO">
 
 (t:transduce
-  (t:comp (t:filter #'oddp)  ;; (2) Keep only odd numbers.
-          (t:take 1000)      ;; (3) Keep the first 1000 filtered odds.
-          (t:map (lambda (n) ;; (4) Square those 1000.
+  (t:comp (t:filter #'oddp)  ;; (2) 奇数だけを残す。
+          (t:take 1000)      ;; (3) filter 後の最初の 1000 個の奇数を残す。
+          (t:map (lambda (n) ;; (4) その 1000 個を二乗する。
                    (* n n))))
-  #'+                        ;; (5) Reducer: Add up all the squares.
-  (t:ints 1))                ;; (1) Source: Generate all positive integers.
+  #'+                        ;; (5) Reducer: すべての二乗を足し合わせる。
+  (t:ints 1))                ;; (1) Source: すべての正の整数を生成する。
 ;; => 1333333000
 ~~~
 
-Here, even though `ints` is an infinite generator, only as many values as are
-needed for the final result are actually created.
+ここでは `ints` が無限 generator であるにもかかわらず、最終結果に必要な数だけの値しか実際には作られません。
 
-The user is free to invent their own transducers (i.e. functions like `map`) and
-reducers (i.e. functions like `+`) to traverse data streams in any way they
-wish, all while being very memory efficient.
+ユーザーは独自の transducer（`map` のような関数）や reducer（`+` のような関数）を自由に作り、望む方法で data stream を走査できます。それでいて memory 効率は非常に高く保てます。
 
-See [its README](https://codeberg.org/fosskers/cl-transducers), [its
-API](https://fosskers.github.io/cl-transducers/index.html), or the [original
-Transducers document](https://clojure.org/reference/transducers) for more
-information.
+詳しくは [README](https://codeberg.org/fosskers/cl-transducers)、[API](https://fosskers.github.io/cl-transducers/index.html)、または [original
+Transducers document](https://clojure.org/reference/transducers) を参照してください。
 
-## Recipes
+## レシピ
 
-### Looping forever, return
+### 永久にループする、return
 
 ~~~lisp
 (loop (print "hello"))
 ~~~
 
-`return` can return a result:
+`return` は結果を返せます。
 
 ~~~lisp
 (loop for i in '(1 2 3)
@@ -299,7 +250,7 @@ information.
 ~~~
 
 
-### Looping a fixed number of times
+### 決まった回数だけループする
 
 #### dotimes
 
@@ -313,11 +264,11 @@ information.
 NIL
 ~~~
 
-Here `dotimes` returns `nil`. There are two ways to return a value. First, you can set a result form in the lambda list:
+ここで `dotimes` は `nil` を返します。値を返す方法は 2 つあります。まず、lambda list の中で result form を設定できます。
 
 ~~~lisp
 (dotimes (n 3 :done)
-  ;;          ^^^^^ result form. It can be a s-expression.
+  ;;          ^^^^^ result form。s-expression でもよい。
   (print n))
 ;; =>
 0
@@ -326,7 +277,7 @@ Here `dotimes` returns `nil`. There are two ways to return a value. First, you c
 :DONE
 ~~~
 
-Or you can use `return` with return values:
+または、戻り値とともに `return` を使えます。
 
 ~~~lisp
 (dotimes (i 3)
@@ -343,7 +294,7 @@ Or you can use `return` with return values:
 
 #### loop… repeat
 
-This prints "Hello!" 3 times and returns `nil`.
+これは "Hello!" を 3 回表示し、`nil` を返します。
 
 ~~~lisp
 (loop repeat 3
@@ -355,7 +306,7 @@ Hello!
 NIL
 ~~~
 
-With `collect`, this returns a list.
+`collect` を使うと、これはリストを返します。
 
 ~~~lisp
 (loop repeat 3
@@ -375,12 +326,11 @@ With `collect`, this returns a list.
 NIL
 ~~~
 
-### Looping an infinite number of times, cycling over a circular list
+### 無限にループする、循環リストを巡回する
 
-First, as shown above, we can simply use `(loop ...)` to loop
-infinitely. Here we show how to loop on a list forever.
+まず、上で示したように、単に `(loop ...)` を使えば無限にループできます。ここでは、リスト上で永久にループする方法を示します。
 
-We can build an infinite list by setting its last element to the list itself:
+最後の element をリスト自身に設定することで、無限リストを作れます。
 
 ~~~lisp
 (loop with list-a = (list 1 2 3)
@@ -391,7 +341,7 @@ We can build an infinite list by setting its last element to the list itself:
 ;; => (1 2 3 1 2 3 1 2)
 ~~~
 
-Illustration: `(last (list 1 2 3))` is `(3)`, a list, or rather a cons cell, whose `car` is 3 and `cdr` is NIL. See the [data-structures chapter](data-structures.html) for a reminder. This is the representation of `(list 3)`:
+図解: `(last (list 1 2 3))` は `(3)` です。これはリスト、より正確には `car` が 3 で `cdr` が NIL の cons cell です。復習には [data-structures chapter](data-structures.html) を参照してください。これは `(list 3)` の表現です。
 
 ~~~
 [o|/]
@@ -399,7 +349,7 @@ Illustration: `(last (list 1 2 3))` is `(3)`, a list, or rather a cons cell, who
  3
 ~~~
 
-The representation of `(list 1 2 3)`:
+`(list 1 2 3)` の表現:
 
 ```
 [o|o]---[o|o]---[o|/]
@@ -407,17 +357,17 @@ The representation of `(list 1 2 3)`:
  1       2       3
 ```
 
-By setting the `cdr` of the last element to the list itself, we make it recur on itself.
+最後の element の `cdr` をリスト自身に設定することで、自分自身へ戻るようにします。
 
-A notation shortcut is possible with the `#=` syntax:
+`#=` 構文を使うと、記法上のショートカットが可能です。
 
 ~~~lisp
 (defparameter *list-a* '#1=(1 2 3 . #1#))
-(setf *print-circle* t)  ;; don't print circular lists forever
+(setf *print-circle* t)  ;; circular list を永久に表示しない
 ;; *list-a*
 ~~~
 
-If you need to alternate only between two values, use `for … then`:
+2 つの値の間だけで交互に切り替える必要があるなら、`for … then` を使います。
 
 ~~~lisp
 (loop repeat 4
@@ -426,9 +376,9 @@ If you need to alternate only between two values, use `for … then`:
 ;; (T NIL T NIL)
 ~~~
 
-### Iterate's for loop
+### Iterate の for ループ
 
-For lists and vectors:
+list と vector について:
 
 ~~~lisp
 (iter (for item in '(1 2 3))
@@ -440,10 +390,9 @@ For lists and vectors:
 ;; (2 3 4)
 ~~~
 
-or, for a generalized iteration clause for lists and vectors, use
-`in-sequence` (you'll pay a speed penalty).
+あるいは、list と vector のための一般化された反復 clause として `in-sequence` を使います（速度面のペナルティがあります）。
 
-Looping over a hash-table is also straightforward:
+hash-table をループするのも簡単です。
 
 ~~~lisp
 (let ((h (let ((h (make-hash-table)))
@@ -458,14 +407,13 @@ A
 NIL
 ~~~
 
-In fact, take a look [here](https://common-lisp.net/project/iterate/doc/Sequence-Iteration.html),
-or `(display-iterate-clauses '(for))` to know about iterating over
+実際、次のものを反復する方法を知るには [こちら](https://common-lisp.net/project/iterate/doc/Sequence-Iteration.html) を見るか、`(display-iterate-clauses '(for))` を実行してください。
 
-- symbols: `in-package`
-- a file or a stream: `in-file`, or `in-stream`
-- elements: `in-sequence` (sequences can be vectors or lists).
+- symbol: `in-package`
+- file または stream: `in-file` または `in-stream`
+- element: `in-sequence`（sequence は vector または list です）。
 
-### Looping over a list
+### リストをループする
 
 #### dolist
 
@@ -479,11 +427,11 @@ or `(display-iterate-clauses '(for))` to know about iterating over
 NIL
 ~~~
 
-`dolist` returns `nil`.
+`dolist` は `nil` を返します。
 
 #### loop
 
-with `in`, no surprises:
+`in` を使う場合は驚くことはありません。
 
 ~~~lisp
 (loop for x in '(a b c)
@@ -501,7 +449,7 @@ NIL
 ;; => (A B C)
 ~~~
 
-With `on`, we loop over the `cdr` of the list:
+`on` を使うと、リストの `cdr` をループします。
 
 ~~~lisp
 (loop for i on '(1 2 3) collect i)
@@ -518,7 +466,7 @@ With `on`, we loop over the `cdr` of the list:
 ;; (10 20 30)
 ~~~
 
-`mapcar` returns the results of the lambda function as a list.
+`mapcar` は lambda 関数の結果をリストとして返します。
 
 #### Series
 ~~~lisp
@@ -531,7 +479,7 @@ With `on`, we loop over the `cdr` of the list:
 NIL
 ~~~
 
-`scan-sublists` is the equivalent of `loop for ... on`:
+`scan-sublists` は `loop for ... on` に相当します。
 
 ~~~lisp
 (iterate ((i (scan-sublists '(1 2 3))))
@@ -543,7 +491,7 @@ NIL
 NIL
 ~~~
 
-### Looping over a vector and a string
+### vector と string をループする
 
 #### loop: `across`
 
@@ -552,7 +500,7 @@ NIL
 ;; (2 3 4)
 ~~~
 
-strings are vectors, so:
+string は vector なので:
 
 ~~~lisp
 (loop for i across "foo" do (format t "~a " i))
@@ -562,14 +510,14 @@ strings are vectors, so:
 
 #### iterate: `in-vector`, `index-of-vector`, `in-string`
 
-Iterate uses `in-vector` to iterate through arrays.
+Iterate は array を反復するために `in-vector` を使います。
 
 ```lisp
 (iter (for i in-vector #(100 20 3))
       (sum i))
 ```
 
-You can directly assign the index of the vector to a variable by using `index-of-vector`:
+`index-of-vector` を使うと、vector の index を変数へ直接割り当てられます。
 
 ~~~lisp
 (iter (for i index-of-vector  #(100 20 3))
@@ -589,17 +537,17 @@ You can directly assign the index of the vector to a variable by using `index-of
 NIL
 ~~~
 
-### Looping over a generic sequence
+### 汎用 sequence をループする
 
-#### loop (nothing)
+#### loop（該当なし）
 
-`loop` doesn't have one keyword to loop over any kind of sequence.
+`loop` には、任意の種類の sequence をループする単一の keyword はありません。
 
 #### iterate: `in-sequence`
 
-With iter one can use `in-sequence` to iterate through a string, a vector (and thus a list).
+iter では `in-sequence` を使って string、vector（したがって list も）を反復できます。
 
-This can be slower than a specific iteration construct.
+これは専用の反復構文より遅くなることがあります。
 
 ~~~lisp
 (iter (for i in-sequence "foo" )
@@ -618,15 +566,13 @@ This can be slower than a specific iteration construct.
 ;; NIL
 ~~~
 
-### Looping over a hash-table
+### hash-table をループする
 
-Iterating over a hash-table is possible with `loop` and other
-built-ins, with `iterate` and other libraries.
+hash-table の反復は、`loop` や他の組み込み、`iterate`、その他のライブラリで可能です。
 
-Note that due to the nature of hash tables you
-_can't_ control the order in which the entries are provided.
+hash table の性質上、entry が提供される順序を制御することは _できない_ ことに注意してください。
 
-Let's create a hash-table for our fowlling examples:
+以降の例のために hash-table を作りましょう。
 
 ~~~lisp
 (defparameter *my-hash-table* (make-hash-table))
@@ -634,23 +580,23 @@ Let's create a hash-table for our fowlling examples:
 (setf (gethash 'b *my-hash-table*) 2)
 ~~~
 
-#### `loop`-ing over keys and values
+#### key と value を `loop` する
 
-To loop over keys, use this:
+key をループするには、これを使います。
 
 ~~~lisp
 (loop :for k :being :the :hash-key :of *my-hash-table* :collect k)
 ;; (B A)
 ~~~
 
-Looping over values uses the same concept but with the `:hash-value` keyword instead of `:hash-key`:
+value をループする場合も考え方は同じですが、`:hash-key` の代わりに `:hash-value` keyword を使います。
 
 ~~~lisp
 (loop :for v :being :the :hash-value :of *my-hash-table* :collect v)
 ;; (2 1)
 ~~~
 
-Looping over key-values pairs:
+key-value pair をループします。
 
 ~~~lisp
 (loop :for k :being :the :hash-key
@@ -662,8 +608,7 @@ Looping over key-values pairs:
 
 #### maphash
 
-The lambda function of `maphash` takes two arguments: the key and the
-value:
+`maphash` の lambda 関数は 2 つの引数、key と value を取ります。
 
 ~~~lisp
 (maphash (lambda (key val)
@@ -678,23 +623,22 @@ NIL
 
 #### with-hash-table-iterator
 
-You can also use
+次のものも使えます。
 [`with-hash-table-iterator`](http://www.lispworks.com/documentation/HyperSpec/Body/m_w_hash.htm),
-a macro which turns (via
+これは（
 [`macrolet`](http://www.lispworks.com/documentation/HyperSpec/Body/s_flet_.htm))
-its first argument into an iterator that on each invocation returns
-three values per hash table entry:
+を経由して）第 1 引数を iterator に変換するマクロです。この iterator は呼び出されるたびに、hash table entry ごとに 3 つの値を返します。
 
-- a generalized boolean that's true if an entry is returned,
-- the key of the entry,
-- and the value of the entry.
+- entry が返された場合に true になる generalized boolean
+- entry の key
+- entry の value
 
-If there are no more entries, only one value is returned, `nil`.
+entry がもうない場合は、`nil` という 1 つの値だけが返されます。
 
-For example:
+例:
 
 ~~~lisp
-;;; same hash-table as above
+;;; 上と同じ hash-table
 CL-USER> (with-hash-table-iterator (my-iterator *my-hash-table*)
            (loop
               (multiple-value-bind (entry-p key value)
@@ -708,16 +652,13 @@ The value associated with the key B is 2
 NIL
 ~~~
 
-Note the following caveat from the HyperSpec:
+HyperSpec の次の注意に留意してください。
 
-> It is unspecified what happens if any of the implicit interior state
-> of an iteration is returned outside the dynamic extent of the
-> `with-hash-table-iterator` form such as by returning some closure
-> over the invocation form.
+> 反復の暗黙の内部状態のいずれかが、呼び出しフォームを閉じ込めた closure を返すなどして、`with-hash-table-iterator` フォームの dynamic extent の外へ返された場合に何が起こるかは未規定です。
 
 #### iterate: `in-hashtable`
 
-Use `in-hashtable`:
+`in-hashtable` を使います。
 
 ~~~lisp
 (iter (for (k v) in-hashtable *my-hash-table*)
@@ -727,19 +668,18 @@ Use `in-hashtable`:
 
 #### Alexandria's `maphash-keys` and `maphash-values`
 
-To map over keys or values (and only keys or only values) we can again
-rely on Alexandria with `maphash-keys` and `maphash-values`.
+key または value（key だけ、または value だけ）を map するには、ここでも Alexandria の `maphash-keys` と `maphash-values` に頼れます。
 
 #### Serapeum's `do-hash-table`
 
-The [Serapeum library](https://github.com/ruricolist/serapeum/blob/master/REFERENCE.md#hash-tables) has a do-like macro called `do-hash-table`.
+[Serapeum library](https://github.com/ruricolist/serapeum/blob/master/REFERENCE.md#hash-tables) には `do-hash-table` という do 風のマクロがあります。
 
     (do-hash-table (key value table &optional return) &body body)
 
 
 #### for
 
-With the `for` library, use the `over` keyword:
+`for` ライブラリでは `over` keyword を使います。
 
 ~~~lisp
 (for:for ((it over *my-hash-table*))
@@ -752,7 +692,7 @@ NIL
 
 #### trivial-do:dohash
 
-Only because we like this topic, we introduce another library, [trivial-do](https://github.com/yitzchak/trivial-do/). It has the `dohash` macro, that ressembles `dolist`:
+この話題が好きなので、もう 1 つ [trivial-do](https://github.com/yitzchak/trivial-do/) というライブラリを紹介します。これは `dolist` に似た `dohash` マクロを持っています。
 
 ~~~lisp
 (dohash (key value *my-hash-table*)
@@ -774,7 +714,7 @@ B 2
 NIL
 ~~~
 
-### Looping over two lists in parallel
+### 2 つのリストを並行してループする
 
 #### loop
 
@@ -785,7 +725,7 @@ NIL
 ;; ((A 1) (B 2) (C 3))
 ~~~
 
-To return a flat list, use `nconcing` instead of `collect`:
+平坦なリストを返すには、`collect` の代わりに `nconcing` を使います。
 
 ~~~lisp
 (loop for x in '(a b c)
@@ -794,7 +734,7 @@ To return a flat list, use `nconcing` instead of `collect`:
 ;; (A 1 B 2 C 3)
 ~~~
 
-If a list is smaller than the other one, loop stops at the end of the small one:
+片方のリストがもう片方より短い場合、loop は短い方の末尾で停止します。
 
 ~~~lisp
 (loop for x in '(a b c)
@@ -803,9 +743,7 @@ If a list is smaller than the other one, loop stops at the end of the small one:
 ;; ((A 1) (B 2) (C 3))
 ~~~
 
-We could loop over the biggest list and manually access the elements
-of the smaller one by index, but it would quickly be
-inefficient. Instead, we can tell `loop` to extend the short list.
+最も長いリストをループし、短い方の要素へ index で手動アクセスすることもできますが、すぐに非効率になります。代わりに、短いリストを延長するよう `loop` に指示できます。
 
 ~~~lisp
 (loop for y in '(1 2 3 4 5)
@@ -815,12 +753,7 @@ inefficient. Instead, we can tell `loop` to extend the short list.
 ;; ((A 1) (B 2) (C 3) (Z 4) (Z 5))
 ~~~
 
-The trick is that the notation `for … = … then (cdr …)` (note the `=`
-and the role of `then`) shortens our intermediate list at each
-iteration (thanks to `cdr`). It will first be `'(a b c)`, the initial
-value, then we will get the `cdr`: `(b c)`, then `(c)`, then
-`NIL`. And both `(car NIL)` and `(cdr NIL)` return `NIL`, so we are
-good.
+コツは、`for … = … then (cdr …)` という記法（`=` と `then` の役割に注意）によって、各反復で中間リストが（`cdr` により）短くなることです。最初は初期値の `'(a b c)` で、次に `cdr` の `(b c)`、次に `(c)`、最後に `NIL` になります。そして `(car NIL)` と `(cdr NIL)` はどちらも `NIL` を返すので、うまくいきます。
 
 
 #### mapcar
@@ -832,14 +765,14 @@ good.
 ;; ((A 1) (B 2) (C 3))
 ~~~
 
-or simply:
+または単純に:
 
 ~~~lisp
 (mapcar 'list '(a b c) '(1 2 3))
 ;; ((A 1) (B 2) (C 3))
 ~~~
 
-Return a flat list:
+平坦なリストを返します。
 
 ~~~lisp
 (mapcan 'list '(a b c) '(1 2 3))
@@ -854,7 +787,7 @@ Return a flat list:
 ;; ((A 1) (B 2) (C 3))
 ~~~
 
-A more efficient way, when the lists are known to be of equal length:
+リストの長さが等しいと分かっている場合、より効率的な方法です。
 
 ~~~lisp
 (collect
@@ -865,10 +798,10 @@ A more efficient way, when the lists are known to be of equal length:
 ;; ((A 1) (B 2) (C 3))
 ~~~
 
-Return a flat list:
+平坦なリストを返します。
 
 ~~~lisp
-(collect-append ; or collect-nconc
+(collect-append ; または collect-nconc
   (mapping (((x y) (scan-multiple 'list
                                   '(a b c)
                                   '(1 2 3))))
@@ -877,7 +810,7 @@ Return a flat list:
 ~~~
 
 
-### Nested loops
+### ネストしたループ
 #### loop
 
 ~~~lisp
@@ -886,7 +819,7 @@ Return a flat list:
 ;; ((1) (1 2) (1 2 3))
 ~~~
 
-To return a flat list, use `nconcing` instead of the first `collect`.
+平坦なリストを返すには、最初の `collect` の代わりに `nconcing` を使います。
 
 #### iterate
 
@@ -908,11 +841,11 @@ To return a flat list, use `nconcing` instead of the first `collect`.
 ~~~
 
 
-### Computing an intermediate value
+### 中間値を計算する
 
 #### loop
 
-Use `for var = ...` if you need the value to be computed on each iteration:
+各反復で値を計算する必要があるなら、`for var = ...` を使います。
 
 ~~~lisp
 (loop for x from 1 to 3
@@ -921,7 +854,7 @@ Use `for var = ...` if you need the value to be computed on each iteration:
 ;; (10 20 30)
 ~~~
 
-Use `with var = ...` if you only need the value to be computed once:
+値を 1 回だけ計算すればよいなら、`with var = ...` を使います。
 
 ~~~lisp
 (loop for x from 1 to 3
@@ -931,11 +864,11 @@ Use `with var = ...` if you only need the value to be computed once:
 ;; ((1 10 1) (2 20 1) (3 30 1))
 ~~~
 
-The HyperSpec defines the `with` clause like this:
+HyperSpec は `with` clause を次のように定義しています。
 
     with-clause ::= with var1 [type-spec] [= form1] {and var2 [type-spec] [= form2]}*
 
-so it turns out we can specify the type before the `=` and chain the `with` with `and`:
+そのため、`=` の前に型を指定し、`with` を `and` でつなげられることが分かります。
 
 ~~~lisp
 (loop for x from 1 to 3
@@ -953,7 +886,7 @@ so it turns out we can specify the type before the `=` and chain the `with` with
 ;; ((0 :FOO :BAR) (1 :FOO :BAR) (2 :FOO :BAR) (3 :FOO :BAR))
 ~~~
 
-We can also give `for` a `then` clause that will be called at each iteration:
+`for` に、各反復で呼び出される `then` clause を与えることもできます。
 
 ~~~lisp
 (loop repeat 3
@@ -962,7 +895,7 @@ We can also give `for` a `then` clause that will be called at each iteration:
 ;; (10 11 12)
 ~~~
 
-Here's a trick to alternate a boolean:
+boolean を交互に切り替える小技です。
 
 ~~~lisp
 (loop repeat 4
@@ -971,13 +904,9 @@ Here's a trick to alternate a boolean:
 ;; (T NIL T NIL)
 ~~~
 
-### Loop with a counter
+### カウンタ付きのループ
 #### loop
-Iterate through a list, and have a counter iterate in parallel. The first
-clause to terminate (in this case getting to the end of the list) determines
-when the iteration ends. Two sets of actions are defined, one of which is
-executed conditionally. (If `do` immediately follows a `when`, `unless`, or
-`if` clause, its actions are only executed when the test returns `t`.)
+リストを反復し、カウンタも並行して反復させます。最初に終了した clause（この場合はリストの末尾に到達すること）が、反復の終了時点を決めます。2 組の action が定義され、そのうち 1 つが条件付きで実行されます。（`do` が `when`、`unless`、`if` clause の直後にある場合、その action は test が `t` を返したときだけ実行されます。）
 
 ~~~lisp
 (loop for x in '(a b c d e)
@@ -990,7 +919,7 @@ A, B, C, D, E
 NIL
 ~~~
 
-We could also write the preceding loop using `if` and a counter variable `y`:
+上のループは、`if` とカウンタ変数 `y` を使って書くこともできます。
 
 ~~~lisp
 (loop for x in '(a b c d e)
@@ -1006,8 +935,7 @@ NIL
 
 #### Series
 
-By iterating on multiple series in parallel, and using an infinite
-range, we can make a counter.
+複数の series を並行して反復し、無限 range を使うことで、カウンタを作れます。
 
 ~~~lisp
 (iterate ((x (scan '(a b c d e)))
@@ -1020,7 +948,7 @@ A, B, C, D, E
 NIL
 ~~~
 
-### Ascending and descending order, upper and lower limits: `to` and `below`, `downto` and `above`
+### 昇順と降順、上限と下限: `to` と `below`, `downto` と `above`
 
 #### loop
 
@@ -1031,19 +959,18 @@ NIL
 ;; (0 1 2 3)
 ~~~
 
-`from… below…`: this stops at 2:
+`from… below…`: これは 2 で止まります。
 
 ~~~lisp
 (loop for i from 0 below 3 collect i)
 ;; (0 1 2)
 ~~~
 
-Similarly, use `from 3 downto 0` to get `(3 2 1 0)` and `from 3 above 0` to get
-`(3 2 1)`.
+同様に、`(3 2 1 0)` を得るには `from 3 downto 0` を使い、`(3 2 1)` を得るには `from 3 above 0` を使います。
 
 #### Series
 
-`:from ... :upto`, including the upper limit:
+`:from ... :upto` は上限を含みます。
 
 ~~~lisp
 (iterate ((i (scan-range :from 0 :upto 3)))
@@ -1056,7 +983,7 @@ Similarly, use `from 3 downto 0` to get `(3 2 1 0)` and `from 3 above 0` to get
 NIL
 ~~~
 
-`:from ... :below`, excluding the upper limit:
+`:from ... :below` は上限を含みません。
 
 ~~~lisp
 (iterate ((i (scan-range :from 0 :below 3)))
@@ -1069,18 +996,17 @@ NIL
 ~~~
 
 
-### Steps
+### ステップ
 #### loop
 
-with `by`:
+`by` を使います。
 
 ~~~lisp
 (loop for i from 1 to 10 by 2 collect i)
 ;; (1 3 5 7 9)
 ~~~
 
-The step clause is only evaluated once. If you use `by (1+ (random 3))` it is
-equivalent to this:
+step clause は 1 回だけ評価されます。`by (1+ (random 3))` を使うと、次と同等です。
 
 ~~~lisp
 (let ((step (1+ (random 3))))
@@ -1089,11 +1015,11 @@ equivalent to this:
 ...
 ~~~
 
-The step must always be a positive number. If you want to count down, see above.
+step は常に正の数でなければなりません。カウントダウンしたい場合は上を参照してください。
 
 #### Series
 
-with `:by`:
+`:by` を使います。
 
 ~~~lisp
 (iterate ((i (scan-range :from 1 :upto 10 :by 2)))
@@ -1101,10 +1027,10 @@ with `:by`:
 ~~~
 
 
-### Loop and conditionals
+### ループと条件分岐
 #### loop
 
-with `if`, `else` and `finally`:
+`if`、`else`、`finally` を使います。
 
 ~~~lisp
 *(loop repeat 10
@@ -1124,8 +1050,7 @@ with `if`, `else` and `finally`:
 (55 89 59 13 49)
 ```
 
-Combining multiple clauses in an `if` body requires special syntax (`and do`,
-`and count`):
+`if` 本体で複数の clause を組み合わせるには、特別な構文（`and do`、`and count`）が必要です。
 
 ~~~lisp
 (loop repeat 10
@@ -1150,7 +1075,7 @@ Combining multiple clauses in an `if` body requires special syntax (`and do`,
 
 #### iterate
 
-Translating (or even writing!) the above example using iterate is straight-forward:
+上の例を iterate で翻訳する（あるいは最初から書く）のは分かりやすいです。
 
 ~~~lisp
 (iter (repeat 10)
@@ -1168,8 +1093,7 @@ Translating (or even writing!) the above example using iterate is straight-forwa
 
 #### Series
 
-The preceding loop would be done a bit differently in Series. `split`
-sorts one series into multiple according to provided boolean series.
+前のループは Series では少し違った形になります。`split` は、与えられた boolean series に従って 1 つの series を複数に振り分けます。
 
 ~~~lisp
 (let* ((number (#M(lambda (n)
@@ -1193,11 +1117,9 @@ sorts one series into multiple according to provided boolean series.
 6
 ~~~
 
-Note that although `iterate` and the three `collect` expressions are
-written sequentially, only one iteration is performed, the same as the
-example with `loop`.
+`iterate` と 3 つの `collect` 式は逐次的に書かれていますが、実行される反復は `loop` の例と同じく 1 回だけであることに注意してください。
 
-### Begin the loop with a clause (initially)
+### clause でループを開始する（initially）
 
 ~~~lisp
 (loop initially (format t "~a " 'loop-begin)
@@ -1208,33 +1130,26 @@ LOOP-BEGIN 0 1 2
 NIL
 ~~~
 
-The `initially` forms are evaluated in the loop "prologue", before all
-loop code. Its counterpart for the end of the loop is `finally`.
+`initially` form は loop code 全体の前、ループの「prologue」で評価されます。ループの終わりに対応するものは `finally` です。
 
-If you tried to modify variables declared just after it, in a `:for`,
-`:with` or `:as` clause, it would have no effect *inside the loop
-body*.  For example, trying to mutate a and b with initially below:
+その直後の `:for`、`:with`、`:as` clause で宣言された変数を変更しようとしても、*loop body の中では* 効果がありません。たとえば、下の initially で a と b を変更しようとすると次のようになります。
 
 ~~~lisp
 (loop with a = 20 with b = 10
-     initially (rotatef a b)  ;; warn: too late for a and b. No effect.
+     initially (rotatef a b)  ;; 警告: a と b には遅すぎる。効果なし。
      for i from a to b
   do (print i))
 ;; => NIL
 ~~~
 
-this doesn't swap a and b in time in order to loop from 10 to 20. We loop
-from 20 to 10 and thus we don't loop at all and we return NIL.
+これは 10 から 20 までループするのに間に合うようには a と b を交換しません。20 から 10 へループすることになり、結果としてまったくループせず NIL を返します。
 
-However if you print the values of a and b at the end of the loop (try
-`finally (format t "a is ~a, b is ~a" a b)`) you'll see that their
-values were swapped. You'll need to macro-expand the loop snippet to
-fully get why ;) (there are intermediate variables)
+ただし、ループの最後で a と b の値を表示すると（`finally (format t "a is ~a, b is ~a" a b)` を試してください）、それらの値は交換されていることが分かります。なぜそうなるかを完全に理解するには、この loop snippet を macro-expand する必要があります（中間変数があります）。
 
-`initially` also exists with `iterate`.
+`initially` は `iterate` にも存在します。
 
 
-### Terminate the loop with a test (until, while)
+### test でループを終了する（until, while）
 #### loop
 
 ~~~lisp
@@ -1244,7 +1159,7 @@ fully get why ;) (there are intermediate variables)
 ;; (1 2 3)
 ~~~
 
-the same, with `while`:
+`while` を使っても同じです。
 
 ~~~lisp
 (loop for x in '(1 2 3 4 5)
@@ -1255,7 +1170,7 @@ the same, with `while`:
 
 #### Series
 
-We truncate the series with `until-if`, then collect from its result.
+`until-if` で series を切り詰め、その結果から collect します。
 
 ~~~lisp
 (collect
@@ -1264,10 +1179,10 @@ We truncate the series with `until-if`, then collect from its result.
 ;; (1 2 3)
 ~~~
 
-### Loop, print and return a result
+### ループし、表示し、結果を返す
 #### loop
 
-`do` and `collect` can be combined in one expression
+`do` と `collect` は 1 つの式で組み合わせられます。
 
 ~~~lisp
 (loop for x in '(1 2 3 4 5)
@@ -1282,7 +1197,7 @@ x is 3
 ~~~
 
 #### Series
-By mapping, we can perform a side effect and also collect items.
+mapping によって、副作用を実行しつつ item を collect できます。
 
 ~~~lisp
 (collect
@@ -1298,12 +1213,10 @@ x is 3
 ~~~
 
 
-### Named loops and early exit
+### 名前付きループと早期脱出
 #### loop
 
-The special `loop named` syntax allows you to create a block that can be used
-with `return-from` to exit the loop early.  This can be especially useful in
-nested loops.
+特別な `loop named` 構文を使うと、`return-from` でループから早期脱出するために使える block を作れます。これは特にネストしたループで便利です。
 
 
 ~~~lisp
@@ -1317,15 +1230,14 @@ nested loops.
 2
 ~~~
 
-Sometimes, you want to return early but execute the `finally` clause
-anyway. Use [`loop-finish`](http://www.lispworks.com/documentation/HyperSpec/Body/m_loop_f.htm#loop-finish).
+早期に返したいが、それでも `finally` clause は実行したいことがあります。その場合は [`loop-finish`](http://www.lispworks.com/documentation/HyperSpec/Body/m_loop_f.htm#loop-finish) を使います。
 
 ~~~lisp
 (loop for x from 0 to 100
   do (print x)
   when (>= x 3)
     return x
-  finally (print :done))  ;; <-- not printed
+  finally (print :done))  ;; <-- 表示されない
 ;; =»
 0
 1
@@ -1348,11 +1260,11 @@ anyway. Use [`loop-finish`](http://www.lispworks.com/documentation/HyperSpec/Bod
 3
 ~~~
 
-It is most needed when some computation must take place in the `finally` clause.
+これは、何らかの計算を `finally` clause で行わなければならないときに最も必要になります。
 
-#### Loop shorthands for when/return: thereis, never, always
+#### when/return のための loop 省略形: thereis, never, always
 
-Several actions provide shorthands for combinations of when/return:
+いくつかの action は when/return の組み合わせに対する省略形を提供します。
 
 ~~~lisp
 (loop for x in '(foo 2)
@@ -1372,7 +1284,7 @@ Several actions provide shorthands for combinations of when/return:
 ;; NIL
 ~~~
 
-They correspond to the functions `some`, `notany` and `every`:
+これらは関数 `some`、`notany`、`every` に対応します。
 
 ~~~lisp
 (some #'numberp '(foo 2))   => T
@@ -1383,7 +1295,7 @@ They correspond to the functions `some`, `notany` and `every`:
 
 #### Series
 
-To exit the iteration early explicitly create a block to use with `return-from`.
+反復から早期に脱出するには、`return-from` で使う block を明示的に作ります。
 
 ~~~lisp
 (block loop-1
@@ -1396,7 +1308,7 @@ To exit the iteration early explicitly create a block to use with `return-from`.
 3
 ~~~
 
-### Count
+### 数える
 #### loop
 ~~~lisp
 (loop for i from 1 to 3 count (oddp i))
@@ -1409,7 +1321,7 @@ To exit the iteration early explicitly create a block to use with `return-from`.
 ;; 2
 ~~~
 
-### Summation
+### 合計
 #### loop
 
 ~~~lisp
@@ -1417,7 +1329,7 @@ To exit the iteration early explicitly create a block to use with `return-from`.
 ;; 14
 ~~~
 
-Summing into a variable:
+変数へ合計します。
 
 ~~~lisp
 (loop for i from 1 to 3
@@ -1449,7 +1361,7 @@ Summing into a variable:
 ;; 2
 ~~~
 
-and `minimize`.
+そして `minimize` があります。
 
 #### Series
 
@@ -1458,9 +1370,9 @@ and `minimize`.
                 (scan-range :from 1 :upto 3)))
 ;; 2
 ~~~
-and `collect-min`.
+そして `collect-min` があります。
 
-### Destructuring, aka pattern matching against the list or dotted pairs
+### 分配束縛、つまりリストや dotted pair に対するパターンマッチ
 
 #### loop
 
@@ -1470,18 +1382,18 @@ and `collect-min`.
 ;; ((1 X) (2 Y) (3 Z))
 ~~~
 
-Use `nil` to ignore a term:
+項を無視するには `nil` を使います。
 
 ~~~lisp
 (loop for (nil . y) in '((1 . a) (2 . b) (3 . c)) collect y)
 ;; (A B C)
 ~~~
 
-##### Iterating over a plist or 2 by 2 over a list
+##### plist を反復する、またはリストを 2 要素ずつ反復する
 
-To iterate over a list two items at a time we use a combination of `on`, `by` and destructuring.
+リストを 2 item ずつ反復するには、`on`、`by`、destructuring を組み合わせます。
 
-We use `on` to loop over the rest (the `cdr`) of the list.
+リストの残り（`cdr`）をループするために `on` を使います。
 
 ~~~lisp
 (loop for rest on '(a 2 b 2 c 3)
@@ -1489,7 +1401,7 @@ We use `on` to loop over the rest (the `cdr`) of the list.
 ;; ((A 2 B 2 C 3) (2 B 2 C 3) (B 2 C 3) (2 C 3) (C 3) (3))
 ~~~
 
-We use `by` to skip one element at every iteration (`(cddr list)` is equivalent to `(rest (rest list))`)
+各反復で 1 element を飛ばすために `by` を使います（`(cddr list)` は `(rest (rest list))` と等価です）。
 
 ~~~lisp
 (loop for rest on '(a 2 b 2 c 3) by #'cddr
@@ -1497,7 +1409,7 @@ We use `by` to skip one element at every iteration (`(cddr list)` is equivalent 
 ;; ((A 2 B 2 C 3) (B 2 C 3) (C 3))
 ~~~
 
-Then we add destructuring to bind only the first two items at each iteration:
+次に destructuring を加えて、各反復で最初の 2 item だけを束縛します。
 
 ~~~lisp
 (loop for (key value) on '(a 2 b 2 c 3) by #'cddr
@@ -1507,7 +1419,7 @@ Then we add destructuring to bind only the first two items at each iteration:
 
 
 #### Series
-In general, with `destructuring-bind`:
+一般には `destructuring-bind` を使います。
 
 ~~~lisp
 (collect
@@ -1516,7 +1428,7 @@ In general, with `destructuring-bind`:
       (list b a))))
 ~~~
 
-But for alists, `scan-alist` is provided:
+ただし alist には `scan-alist` が用意されています。
 
 ~~~lisp
 (collect
@@ -1526,16 +1438,15 @@ But for alists, `scan-alist` is provided:
 ;; (A B C)
 ~~~
 
-### Declaring variable types
+### 変数の型を宣言する
 
-Declaring types can help the compiler to optimize out code. SBCL is
-famously good at this.
+型を宣言すると、compiler がコードを最適化する助けになります。SBCL はこれが得意なことで有名です。
 
-You can check if the machine code got optimized with a call to `disassembly`.
+machine code が最適化されたかどうかは、`disassembly` を呼び出して確認できます。
 
 #### Loop
 
-Use `:of-type`:
+`:of-type` を使います。
 
 ~~~lisp
 (loop :for i :of-type fixnum :below 10
@@ -1543,7 +1454,7 @@ Use `:of-type`:
    :sum (* i j))
 ~~~
 
-For simple types like `fixnum, float, t and nil` you can omit `:of-type`:
+`fixnum`、`float`、`t`、`nil` のような単純な型では、`:of-type` を省略できます。
 
 ~~~lisp
 (loop :for i fixnum :below 10
@@ -1551,7 +1462,7 @@ For simple types like `fixnum, float, t and nil` you can omit `:of-type`:
    :sum (* i j))
 ~~~
 
-You can also precise the type after `sum` and other accumulation clauses:
+`sum` や他の accumulation clause の後に型を指定することもできます。
 
 ~~~lisp
 (loop for i fixnum below 10
@@ -1561,7 +1472,7 @@ You can also precise the type after `sum` and other accumulation clauses:
 
 #### Iterate
 
-Use `(declare (fixnum i))`:
+`(declare (fixnum i))` を使います。
 
 ~~~lisp
 (iter (for i below 10)
@@ -1571,20 +1482,16 @@ Use `(declare (fixnum i))`:
 ~~~
 
 
-## Iterate unique features lacking in loop
+## loop にはない Iterate 固有の機能
 
-Iterate has some other things unique to it.
+Iterate には他にも固有の機能があります。
 
-If you are a newcomer to Common Lisp, it's perfectly OK to keep this section for
-later. You could very well spend your career in Lisp without resorting
-to these features… although they might turn out useful one day.
+Common Lisp の初心者であれば、この節は後回しにしてまったく問題ありません。これらの機能に頼らずに Lisp を使い続けることも十分できます。ただし、いつか役に立つかもしれません。
 
 
-### No rigid order for clauses
+### clause の順序が厳密でない
 
-`loop` requires that all `for` clauses appear before the loop body,
-for example before a `while`. It's ok for `iter` to not follow this
-order:
+`loop` では、すべての `for` clause が loop body より前、たとえば `while` より前に現れる必要があります。`iter` ではこの順序に従わなくても問題ありません。
 
 ~~~lisp
 (iter (for x in '(1 2 99))
@@ -1597,27 +1504,27 @@ order:
 ((1 1) (2 2))
 ~~~
 
-### Accumulating clauses can be nested
+### accumulating clause をネストできる
 
-`collect`, `appending` and other accumulating clauses can appear anywhere:
+`collect`、`appending`、その他の accumulating clause はどこにでも現れられます。
 
 ~~~lisp
 (iter (for x in '(1 2 3))
   (case x
     (1 (collect :a))
-    ;;  ^^ iter keyword, nested in a s-expression.
+    ;;  ^^ iter keyword。s-expression の中にネストされている。
     (2 (collect :b))))
 ~~~
 
-### Finders: `finding`
+### finder: `finding`
 
-`iterate` has [finders](https://common-lisp.net/project/iterate/doc/Finders.html#Finders).
+`iterate` には [finder](https://common-lisp.net/project/iterate/doc/Finders.html#Finders) があります。
 
-> A finder is a clause whose value is an expression that meets some condition.
+> finder は、値が何らかの条件を満たす式である clause です。
 
-We can use `finding` followed by `maximizing`, `minimizing` or `such-that`.
+`finding` の後に `maximizing`、`minimizing`、`such-that` を続けて使えます。
 
-Here's how to find the longest list in a list of lists:
+リストのリストから最長のリストを見つける方法です。
 
 ~~~lisp
 (iter (for elt in '((a) (b c d) (e f)))
@@ -1625,7 +1532,7 @@ Here's how to find the longest list in a list of lists:
 ;; (B C D)
 ~~~
 
-The rough equivalent in LOOP would be:
+LOOP でおおよそ同等のものを書くと次のようになります。
 
 ~~~lisp
 (loop with max-elt = nil
@@ -1640,7 +1547,7 @@ The rough equivalent in LOOP would be:
 ;; (B C D)
 ~~~
 
-There could be more than one `such-that` clause:
+`such-that` clause は複数あってもかまいません。
 
 ~~~lisp
 (iter (for i in '(7 -4 2 -3))
@@ -1650,26 +1557,25 @@ There could be more than one `such-that` clause:
 ;; 2
 ~~~
 
-We can also write `such-that #'evenp` and `such-that #'oddp`. **Note that
-`such-that 'oddp` will not work.**
+`such-that #'evenp` や `such-that #'oddp` とも書けます。**`such-that 'oddp` は動作しないことに注意してください。**
 
 
-### Control flow: `next-iteration`
+### 制御フロー: `next-iteration`
 
-It is like "continue" and loop doesn't have it.
+これは "continue" のようなもので、loop にはありません。
 
-> Skips the remainder of the loop body and begins the next iteration of the loop.
+> loop body の残りを飛ばし、ループの次の反復を開始します。
 
-`iterate` also has `first-iteration-p` and `(if-first-time then else)`.
+`iterate` には `first-iteration-p` と `(if-first-time then else)` もあります。
 
-See [control flow](https://common-lisp.net/project/iterate/doc/Control-Flow.html#Control-Flow).
+[control flow](https://common-lisp.net/project/iterate/doc/Control-Flow.html#Control-Flow) を参照してください。
 
 
-### Generators
+### generator
 
-A generator is lazy, it goes to the next value when said explicitly.
+generator は lazy で、明示的に指示されたときに次の値へ進みます。
 
-Use `generate` and `next`:
+`generate` と `next` を使います。
 
 ~~~lisp
 (iter (for i in '(1 2 3 4 5))
@@ -1681,9 +1587,9 @@ b b l l a
 NIL
 ~~~
 
-### Variable backtracking (`previous`) VS parallel binding
+### 変数のバックトラック（`previous`）VS 並行束縛
 
-`iterate` allows us to get the previous value of a variable:
+`iterate` では、変数の前回の値を取得できます。
 
 ~~~lisp
 (iter (for el in '(a b c d e))
@@ -1692,7 +1598,7 @@ NIL
 ;; ((A NIL) (B A) (C B) (D C) (E D))
 ~~~
 
-In this case however we can do it with `loop`'s parallel binding `and`, which is unsupported in `iterate`:
+ただしこの場合は、`iterate` ではサポートされない `loop` の並行束縛 `and` を使っても実現できます。
 
 ~~~lisp
 (loop for el in '(a b c d e)
@@ -1701,9 +1607,9 @@ In this case however we can do it with `loop`'s parallel binding `and`, which is
 ;; ((A NIL) (B A) (C B) (D C) (E D))
 ~~~
 
-### More clauses
+### さらに多くの clause
 
-- `in-string` can be used explicitly to iterate character by character over a string. With loop, use `across`.
+- `in-string` は string を 1 文字ずつ反復するために明示的に使えます。loop では `across` を使います。
 
 ~~~lisp
 (iter (for c in-string "hello")
@@ -1711,7 +1617,7 @@ In this case however we can do it with `loop`'s parallel binding `and`, which is
 ;; (#\h #\e #\l #\l #\o)
 ~~~
 
-- `loop` offers `collecting`, `nconcing`, and `appending`. `iterate` has these and also `adjoining`, `unioning`, `nunioning`, and `accumulating`.
+- `loop` は `collecting`、`nconcing`、`appending` を提供します。`iterate` はこれらに加えて、`adjoining`、`unioning`、`nunioning`、`accumulating` も持ちます。
 
 ~~~lisp
 (iter (for el in '(a b c a d b))
@@ -1719,9 +1625,9 @@ In this case however we can do it with `loop`'s parallel binding `and`, which is
 ;; (A B C D)
 ~~~
 
-(`adjoin` is a set operation.)
+（`adjoin` は集合操作です。）
 
-- `loop` has `summing`, `counting`, `maximizing`, and `minimizing`. `iterate` also includes `multiplying` and `reducing`. Reducing is the generalized reduction builder:
+- `loop` には `summing`、`counting`、`maximizing`、`minimizing` があります。`iterate` にはさらに `multiplying` と `reducing` もあります。Reducing は一般化された reduction builder です。
 
 ~~~lisp
 (iter (with dividend = 100)
@@ -1731,7 +1637,7 @@ In this case however we can do it with `loop`'s parallel binding `and`, which is
 ~~~
 
 
-### Iterate is extensible
+### Iterate は拡張可能
 
 ~~~lisp
 (defmacro dividing-by (num &key (initial-value 0))
@@ -1743,47 +1649,37 @@ In this case however we can do it with `loop`'s parallel binding `and`, which is
 ;; 1
 ~~~
 
-but [there is more to it, see the documentation](https://common-lisp.net/project/iterate/doc/Rolling-Your-Own.html#Rolling-Your-Own).
+ただし [さらに多くの内容があります。documentation を参照してください](https://common-lisp.net/project/iterate/doc/Rolling-Your-Own.html#Rolling-Your-Own)。
 
-We saw libraries extending `loop`, for example [CLSQL](http://clsql.kpe.io/manual/loop-tuples.html), but they are
-full of feature flag checks (`#+(or allegro clisp-aloop cmu openmcl
-sbcl scl)`) and they call internal modules
-(`ansi-loop::add-loop-path`, `sb-loop::add-loop-path` etc).
+[CLSQL](http://clsql.kpe.io/manual/loop-tuples.html) のように `loop` を拡張するライブラリも見ましたが、それらは feature flag check（`#+(or allegro clisp-aloop cmu openmcl
+sbcl scl)`）だらけで、内部 module（`ansi-loop::add-loop-path`、`sb-loop::add-loop-path` など）を呼び出します。
 
-## do and do*, tagbody and go: the general purpose and low-level iteration constructs
+## do と do*, tagbody と go: 汎用で低レベルな反復構文
 
-The built-in `do` macro is the general-purpose primitive.
+組み込みの `do` マクロは汎用の primitive です。
 
-In practice, `loop`, `dotimes` and friends are used more often
-for everyday needs. `do` is useful when you need
-explicit control over multiple stepping variables,
-when you want to use tags and `go` in your iteration body,
-or when you prefer lispy parenthesis over a `loop` DSL (which could reveal easier
-to use inside macros in order to create your own iteration constructs).
+実際には、日常的な用途では `loop`、`dotimes`、その仲間の方がよく使われます。`do` は、複数の stepping variable を明示的に制御したいとき、反復本体で tag と `go` を使いたいとき、あるいは独自の反復構文を作るためにマクロ内で使う際に `loop` DSL より Lisp らしい括弧を好むときに便利です。
 
-As a newcomer, you don't *need* to learn `do` right away, but you
-should come back to it at some point.
+初心者としては、`do` をすぐに学ぶ *必要* はありませんが、いつか戻ってくるべきです。
 
-### The `do` structure
+### `do` の構造
 
-`do` is composed of:
+`do` は次のものから構成されます。
 
-- a list of bindings that define a variable and, optionally, their initial value and how to iterate on them,
-- a list that contains:
-  - the test form: when it evaluates to true, the iteration stops
-  - what to return as a result of the iteration. It can be one simple form, or many. They are wrapped in an implicit progn.
-- a macro body.
+- 変数を定義し、任意で初期値と反復方法を定義する binding のリスト
+- 次を含むリスト
+  - test form: true に評価されると反復が停止します。
+  - 反復の結果として返すもの。単純な form 1 つでも複数でも構いません。暗黙の progn で包まれます。
+- macro body
 
-In the example below, we step over only one variable, bound to `i` in
-the macro body. It starts at 0, and at each iteration, it gets the
-result of `(1+ i)`.
+下の例では、macro body 内で `i` に束縛される 1 つの変数だけを step します。0 から始まり、各反復で `(1+ i)` の結果を得ます。
 
-The iteration terminates when `(>= i 5)` becomes true and we return `i`.
+`(>= i 5)` が true になると反復は終了し、`i` を返します。
 
 ~~~lisp
 (do ((i 0 (1+ i)))  ;; <-- var + init form + step form
-                    ;;     no more bindings
-    ((>= i 5) i)    ;; <-- the test form + the result
+                    ;;     これ以上 binding はない
+    ((>= i 5) i)    ;; <-- test form + result
   (print i))
 ;; =>
 0
@@ -1794,11 +1690,9 @@ The iteration terminates when `(>= i 5)` becomes true and we return `i`.
 ;; => 5
 ~~~
 
-Note that we print 0 to 4 and we return 5. At the beginning of the last iteration, the
-step form was evaluated, `i` was bound to 5, then the test form `(>= i 5)` was true, so
-the number 5 was returned.
+0 から 4 を表示し、5 を返していることに注意してください。最後の反復の冒頭で step form が評価され、`i` が 5 に束縛され、その後 test form `(>= i 5)` が true になったので、数値 5 が返されました。
 
-This snippet is equivalent to:
+この snippet は次と等価です。
 
 ```lisp
 (loop for i from 0 below 5
@@ -1806,11 +1700,9 @@ This snippet is equivalent to:
   finally (return i))
 ```
 
-Multiple variables can be stepped in parallel. Here, "in parallel"
-means they don't see each other when they are created, just like `let`,
-and they don't see *the new value of each other* at each step.
+複数の変数を並行して step できます。ここで「並行」とは、`let` と同じく、作られるときに互いを見ないこと、そして各 step で *互いの新しい値* を見ないことを意味します。
 
-In this example, we step over 2 bindings, `i` and `j`:
+この例では、`i` と `j` という 2 つの binding を step します。
 
 ~~~lisp
 (do ((i 0 (1+ i))
@@ -1819,7 +1711,7 @@ In this example, we step over 2 bindings, `i` and `j`:
   (format t "i=~a j=~a~%" i j))
 ~~~
 
-Note the indentation and the set of parenthesis around them. Indented differently:
+indentation と、それらを囲む括弧の組に注意してください。別の indentation にすると次のようになります。
 
 ~~~lisp
 (do (
@@ -1831,10 +1723,9 @@ Note the indentation and the set of parenthesis around them. Indented differentl
     …
 ~~~
 
-See how `j` doesn't depend on `i` for its initialization form. `j`
-uses `i` only in its step form.
+`j` の initialization form が `i` に依存していないことを見てください。`j` は step form でだけ `i` を使います。
 
-This is the result:
+結果は次のとおりです。
 
 ```
 i=0 j=10
@@ -1845,34 +1736,30 @@ i=4 j=7
 ;; => (5 6)
 ```
 
-Read below to see the difference with the `do*` macro.
+`do*` マクロとの違いは下を読んでください。
 
 
-### Multiple result forms
+### 複数の result form
 
-In the above examples, we simply return `i`, `j` or `(list i j)`, those are one lisp form.
+上の例では、単に `i`、`j`、`(list i j)` を返していました。これらは 1 つの Lisp form です。
 
-We can write multiple result forms. They will be evaluated as if
-wrapped in a `progn`. So, the result of the last expression is
-returned.
+複数の result form を書けます。それらは `progn` で包まれているかのように評価されます。したがって、最後の式の結果が返されます。
 
 ~~~lisp
 (do* ((i 0 (1+ i)))
       ((>= i 5) (print "hey it's time to return") i i i)
-      ;;        ^^   result forms as if in a PROGN    ^^
+      ;;        ^^   PROGN 内にあるかのような result form    ^^
     (print i))
 …
 ;; => 5
 ~~~
 
 
-### `do*`: iterate on statements sequentially, like `let*`
+### `do*`: `let*` のように文を逐次的に反復する
 
-`do*` is similar, but it binds variables sequentially (each variable can
-see the previous ones in its initialization form), like `let*`,
-and each variable sees the other bindings' *new value* at the beginning of each step.
+`do*` は似ていますが、`let*` のように変数を逐次的に束縛します（各変数は initialization form で前の変数を見ることができます）。また、各 step の冒頭で、各変数は他の binding の *新しい値* を見ます。
 
-Taking the same example as above, but with `do*`:
+上と同じ例を `do*` で書くと次のようになります。
 
 ~~~lisp
 (do* ((i 0 (1+ i))
@@ -1888,45 +1775,41 @@ i=4 j=6
 ;; => (5 5)
 ~~~
 
-See how the results are different. At the beginning of the second
-iteration (the first one after the initialization step), `i` is 1, and
-`j` *now* sees `i` as 1 and not 0, the previous value, because of the
-sequential binding, so `j` becomes 9.
+結果が異なることを見てください。2 回目の反復（initialization step の後の最初の反復）の冒頭で `i` は 1 です。逐次束縛のため、`j` は以前の値 0 ではなく、*今は* `i` を 1 として見るので、`j` は 9 になります。
 
-Also observe how this example using `do` will not compile, as `j` refers to `i` in its initialization form. We should have used `do*`:
+また、`do` を使った次の例は、`j` が initialization form で `i` を参照しているため compile できません。`do*` を使うべきでした。
 
 ~~~lisp
-;; DOESN'T COMPILE, USE DO*
+;; COMPILE できない。DO* を使う
 (do ((i 0 (1+ i))
      (j i (* 2 i)))
-     ;; ^^ refers to a previous binding.
+     ;; ^^ 前の binding を参照している。
     ((>= i 5) i)
   (format t "i is ~a, j is ~a~&" i j))
 ~~~
 
-You'll see a compilation warning:
+コンパイル警告が表示されます。
 
 > ; caught WARNING:
 >;   undefined variable: COMMON-LISP-USER::I
 
-and if you run it in the REPL nonetheless, a runtime error saying "The variable I is unbound.".
+それでも REPL で実行すると、"The variable I is unbound." という runtime error になります。
 
-You can use `do*`.
+`do*` を使えます。
 
 
-### Implicit `block`: using `return`.
+### 暗黙の `block`: `return` を使う
 
-`do/do*` are surrounded by an implicit `block` named `nil`.
+`do/do*` は、`nil` という名前の暗黙の `block` で囲まれています。
 
-As a consequence, we can use `(return)` (implicitely, returning from
-the block named nil, otherwise we'd use `return-from block-name`).
+その結果、`(return)` を使えます（暗黙に nil という名前の block から return します。そうでなければ `return-from block-name` を使うことになります）。
 
 ~~~lisp
 (do* ((i 0 (1+ i))
       (j i (* 2 i)))
      ((>= i 5) i)
   (when (> i 2)
-    (return i))   ;; <----- return works
+    (return i))   ;; <----- return が動作する
   (format t "i is ~a, j is ~a~&" i j))
 
 i is 0, j is 0
@@ -1935,11 +1818,11 @@ i is 2, j is 4
 ;; => 3
 ~~~
 
-### Implicit `tagbody`: using `go`
+### 暗黙の `tagbody`: `go` を使う
 
-The `do/do*` body is wrapped by an implicit `tagbody`.
+`do/do*` の body は暗黙の `tagbody` で包まれています。
 
-Let's check this with a macro-expansion:
+macro-expansion で確認しましょう。
 
 ```lisp
 (macroexpand-1 '(do ((i 0 (1+ i)))
@@ -1960,13 +1843,13 @@ Let's check this with a macro-expansion:
       (RETURN-FROM NIL (PROGN I)))))
 ```
 
-That means we can use tags and `go` in our iteration body:
+つまり、反復 body の中で tag と `go` を使えます。
 
 ~~~lisp
 (do ((i 0 (1+ i)))
      ((>= i 5) i)
 
-  ;; start of body.
+  ;; body の開始。
 
   (when (= i 1)
     (go tag1))
@@ -1975,7 +1858,7 @@ That means we can use tags and `go` in our iteration body:
 
   (go end)
 
- tag1      ;; <---------- a tag, inside an implicit tagbody.
+ tag1      ;; <---------- 暗黙の tagbody 内の tag。
   (print "hello tag 1")
   (go end)
 
@@ -1988,7 +1871,7 @@ That means we can use tags and `go` in our iteration body:
   )
 ~~~
 
-This outputs:
+これは次を出力します。
 
 ~~~lisp
 0
@@ -2001,23 +1884,17 @@ This outputs:
 ;; => 5
 ~~~
 
-Making a clever use of tags is left as an exercise to the reader, but not to newcomers.
+tag を賢く使う方法は読者への練習問題として残します。ただし初心者向けではありません。
 
-### `do` for newcomers?
+### 初心者に `do` は必要か
 
-Should you use `do`? Use what you please, but as a beginner, first
-learn `dotimes`, `dolist` and enough of `loop` to be dangerous. You
-can have a long career by using `loop` only ;)
+`do` を使うべきでしょうか。好きなものを使ってください。ただし初心者なら、まず `dotimes`、`dolist`、そして危ないことができる程度の `loop` を学びましょう。`loop` だけでも長くやっていけます。
 
-- read more on the [Community Spec](https://cl-community-spec.github.io/pages/do.html).
+- 詳しくは [Community Spec](https://cl-community-spec.github.io/pages/do.html) を読んでください。
 
-## Custom series scanners
+## 独自の series scanner
 
-If we often scan the same type of object, we can write our own scanner
- for it: the iteration itself can be factored out. Taking the example
- above, of scanning a list of two-element lists, we'll write a scanner
- that returns a series of the first elements and a series of the
- second.
+同じ種類の object をよく scan するなら、そのための独自 scanner を書けます。反復そのものを切り出せるということです。上の 2 要素リストのリストを scan する例を使い、1 番目の element の series と 2 番目の element の series を返す scanner を書きます。
 
 ~~~lisp
 (defun scan-listlist (listlist)
@@ -2033,56 +1910,50 @@ If we often scan the same type of object, we can write our own scanner
     (list b a)))
 ~~~
 
-## Shorter series expressions
+## より短い series 式
 
-Consider this series expression:
+次の series 式を考えます。
 
 ~~~lisp
 (collect-sum (mapping ((i (scan-range :length 5)))
                     (* i 2)))
 ~~~
 
-It's a bit longer than it needs to be, the `mapping` form's only
-purpose is to bind the variable `i`, and `i` is used in only one
-place. Series has a "hidden feature" that allows us to simplify this
-expression to the following:
+これは必要以上に少し長くなっています。`mapping` form の唯一の目的は変数 `i` を束縛することで、`i` は 1 か所でしか使われていません。Series には、この式を次のように単純化できる「隠れ機能」があります。
 
 ~~~lisp
 (collect-sum (* 2 (scan-range :length 5)))
 ~~~
 
-This is called implicit mapping and can be enabled in the call to
-`series::install`:
+これは implicit mapping と呼ばれ、`series::install` の呼び出しで有効化できます。
 
 ~~~lisp
 (series::install :implicit-map t)
 ~~~
 
-When using implicit mapping, the `#M` reader macro demonstrated above
-becomes redundant.
+implicit mapping を使う場合、上で示した `#M` reader macro は不要になります。
 
-## Loop gotchas
+## Loop の落とし穴
 
-- The keyword `it`, often used in functional constructs, can be
-  recognized as a loop keyword. Don't use it inside a loop.
+- 関数型構文でよく使われる keyword `it` は、loop keyword として認識されることがあります。loop の中では使わないでください。
 
 ~~~lisp
 (loop for i from 1 to 5 when (evenp i) collect it)
 ;; (T T)
 ~~~
 
-## Iterate gotchas
+## Iterate の落とし穴
 
-It breaks on the function `count`:
+関数 `count` で壊れます。
 
 ~~~lisp
 (iter (for i from 1 to 10)
       (sum (count i '(1 3 5))))
 ~~~
 
-It doesn't recognize the built-in `count` function and instead signals a condition.
+組み込みの `count` 関数を認識せず、代わりに condition を signal します。
 
-It works in `loop`:
+`loop` では動作します。
 
 ~~~lisp
 (loop for i from 1 to 10
@@ -2091,7 +1962,7 @@ It works in `loop`:
 ~~~
 
 
-## Appendix: list of loop keywords
+## 付録: loop keyword の一覧
 
 **Name Clause**
 
@@ -2116,7 +1987,7 @@ thereis always never if when
 unless repeat while until
 ```
 
-These don’t introduce clauses:
+これらは clause を導入しません。
 
 ```
 = and it else end from upfrom
@@ -2128,38 +1999,38 @@ present-symbols external-symbol
 external-symbols fixnum float t nil of-type
 ```
 
-But note that it’s the parsing that determines what is a keyword. For example in:
+ただし、何が keyword であるかを決めるのは parsing であることに注意してください。たとえば次では:
 
 ~~~lisp
 (loop for key in hash-values)
 ~~~
 
-Only `for` and `in` are keywords.
+`for` と `in` だけが keyword です。
 
 
 ©Dan Robertson on [Stack Overflow](https://stackoverflow.com/questions/52236803/list-of-loop-keywords).
 
-## Credit and references
+## クレジットと参考文献
 
 ### Loop
 
 * [Tutorial for the Common Lisp Loop Macro](http://www.ai.sri.com/pkarp/loop.html) by Peter D. Karp
 * [Common Lisp's Loop Macro Examples for Beginners](http://www.unixuser.org/~euske/doc/cl/loop.html) by Yusuke Shinyama
-* [Section 6.1 The LOOP Facility, of the draft Common Lisp Standard (X3J13/94-101R)](https://gitlab.com/vancan1ty/clstandard_build) - the (draft) standard provides background information on Loop development, specification and examples. [Single PDF file available](https://gitlab.com/vancan1ty/clstandard_build/-/blob/master/cl-ansi-standard-draft-w-sidebar.pdf)
-* [26. Loop by Jon L White, edited and expanded by Guy L. Steele Jr.](https://www.cs.cmu.edu/Groups/AI/html/cltl/clm/node235.html) - from the book "Common Lisp the Language, 2nd Edition". Strong connection to the draft above, with supplementing comments and examples.
+* [Section 6.1 The LOOP Facility, of the draft Common Lisp Standard (X3J13/94-101R)](https://gitlab.com/vancan1ty/clstandard_build) - （draft）standard は Loop の開発、仕様、例についての背景情報を提供しています。[Single PDF file available](https://gitlab.com/vancan1ty/clstandard_build/-/blob/master/cl-ansi-standard-draft-w-sidebar.pdf)
+* [26. Loop by Jon L White, edited and expanded by Guy L. Steele Jr.](https://www.cs.cmu.edu/Groups/AI/html/cltl/clm/node235.html) - "Common Lisp the Language, 2nd Edition" から。上の draft と強く関連し、補足コメントと例を含みます。
 
 ### Iterate
 
-* [The Iterate Manual](https://common-lisp.net/project/iterate/doc/index.html) -by Jonathan Amsterdam and Luís Oliveira
+* [The Iterate Manual](https://common-lisp.net/project/iterate/doc/index.html) - by Jonathan Amsterdam and Luís Oliveira
 * [iterate - Pseudocodic Iteration](https://common-lisp-libraries.readthedocs.io/iterate/) - by Shubhamkar Ayare
 * [Loop v Iterate - SabraOnTheHill](https://sites.google.com/site/sabraonthehill/loop-v-iter)
-* [Comparing loop and iterate](https://web.archive.org/web/20170713081006/https://items.sjbach.com/211/comparing-loop-and-iterate) - by Stephen Bach (web archive)
+* [Comparing loop and iterate](https://web.archive.org/web/20170713081006/https://items.sjbach.com/211/comparing-loop-and-iterate) - by Stephen Bach（web archive）
 
 ### Series
 
 * [Common Lisp the Language (2nd Edition) - Appendix A. Series](https://www.cs.cmu.edu/Groups/AI/html/cltl/clm/node347.html)
 * [SERIES for Common Lisp - Richard C. Waters](http://series.sourceforge.net/)
 
-### Others
+### その他
 
-* See also: [more functional constructs](https://lisp-journey.gitlab.io/blog/snippets-functional-style-more/) (do-repeat, take,…)
+* 関連項目: [more functional constructs](https://lisp-journey.gitlab.io/blog/snippets-functional-style-more/)（do-repeat, take,…）

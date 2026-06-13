@@ -1,25 +1,17 @@
 ---
-title: Type System
+title: 型システム
 ---
 
-Common Lisp has a complete and flexible type system and corresponding
-tools to inspect, check and manipulate types. It allows creating
-custom types, adding type declarations to variables and functions and
-thus to get compile-time warnings and errors.
+Common Lisp には完全で柔軟な type system と、それに対応する type を調査・検査・操作する tools があります。custom types を作成し、variables や functions に type declarations を追加し、それによって compile-time warnings や errors を得られます。
 
 
-## Values Have Types, Not Variables
+## type を持つのは値であり、変数ではない
 
-Being different from some languages such as C/C++, variables in Lisp are just
-*placeholders* for objects[^1]. When you [`setf`][setf] a variable, an object
-is "placed" in it. You can place another value to the same variable later, as
-you wish.
+C/C++ のような一部の言語とは異なり、Lisp の変数は object[^1] のための *placeholders* にすぎません。変数に [`setf`][setf] すると、object がそこに「置かれ」ます。後で同じ変数に別の値を好きなように置けます。
 
-This implies a fact that in Common Lisp **objects have types**, while
-variables do not. This might be surprising at first if you come from a C/C++
-background.
+これは、Common Lisp では **objects have types** であり、variables は type を持たない、という事実を意味します。C/C++ の背景から来た場合、最初は驚くかもしれません。
 
-For example:
+例:
 
 ~~~lisp
 (defvar *var* 1234)
@@ -29,13 +21,9 @@ For example:
 (INTEGER 0 4611686018427387903)
 ~~~
 
-The function [`type-of`][type-of] returns the type of the given object. The
-returned result is a [type-specifier][type-specifiers]. In this case the first
-element is the type and the remaining part is extra information (lower and
-upper bound) of that type. You can safely ignore it for now. Also remember
-that integers in Lisp have no limit!
+関数 [`type-of`][type-of] は、与えられた object の type を返します。返される結果は [type-specifier][type-specifiers] です。この場合、最初の element が type で、残りはその type の追加情報（lower bound と upper bound）です。今のところ安全に無視できます。また、Lisp の integers には制限がないことも覚えておいてください。
 
-Now let's try to [`setf`][setf] the variable:
+では変数に [`setf`][setf] してみましょう。
 
 ~~~lisp
 * (setf *var* "hello")
@@ -45,15 +33,11 @@ Now let's try to [`setf`][setf] the variable:
 (SIMPLE-ARRAY CHARACTER (5))
 ~~~
 
-You see, `type-of` returns a different result: [`simple-array`][simple-array]
-of length 5 with contents of type [`character`][character]. This is because
-`*var*` is evaluated to string `"hello"` and the function `type-of` actually
-returns the type of object `"hello"` instead of variable `*var*`.
+`type-of` が異なる結果を返すことが分かります。長さ 5 で内容の type が [`character`][character] の [`simple-array`][simple-array] です。これは、`*var*` が string `"hello"` に評価され、関数 `type-of` が実際には変数 `*var*` ではなく object `"hello"` の type を返すためです。
 
-## Type Hierarchy
+## 型階層
 
-The inheritance relationship of Lisp types consists a type graph and the root
-of all types is `T`. For example:
+Lisp types の inheritance relationship は type graph から成り、すべての type の root は `T` です。例:
 
 ~~~lisp
 * (describe 'integer)
@@ -70,19 +54,11 @@ INTEGER names a primitive type-specifier:
   Lambda-list: (&OPTIONAL (SB-KERNEL::LOW '*) (SB-KERNEL::HIGH '*))
 ~~~
 
-The function [`describe`][describe] shows that the symbol [`integer`][integer]
-is a primitive type-specifier that has optional information lower bound and
-upper bound. Meanwhile, it is a built-in class. But why?
+関数 [`describe`][describe] は、symbol [`integer`][integer] が optional information として lower bound と upper bound を持つ primitive type-specifier であることを示します。同時に、これは built-in class でもあります。なぜでしょうか。
 
-Most common Lisp types are implemented as CLOS classes. Some types are simply
-"wrappers" of other types. Each CLOS class maps to a corresponding type. In
-Lisp types are referred to indirectly by the use of [`type
-specifiers`][type-specifiers].
+多くの Common Lisp types は CLOS classes として実装されています。一部の types は他の types の単なる "wrappers" です。各 CLOS class は対応する type に map されます。Lisp では、types は [`type specifiers`][type-specifiers] の使用によって間接的に参照されます。
 
-There are some differences between the function [`type-of`][type-of] and
-[`class-of`][class-of]. The function `type-of` returns the type of a given
-object in type specifier format while `class-of` returns the implementation
-details.
+関数 [`type-of`][type-of] と [`class-of`][class-of] にはいくつか違いがあります。`type-of` は与えられた object の type を type specifier format で返す一方、`class-of` は implementation details を返します。
 
 ~~~lisp
 * (type-of 1234)
@@ -92,24 +68,22 @@ details.
 #<BUILT-IN-CLASS COMMON-LISP:FIXNUM>
 ~~~
 
-## Checking Types
+## type の検査
 
-The function [`typep`][typep] can be used to check if the first argument is of
-the given type specified by the second argument.
+関数 [`typep`][typep] は、第 1 引数が第 2 引数で指定された type であるかを検査するために使えます。
 
 ~~~lisp
 * (typep 1234 'integer)
 T
 ~~~
 
-The function [`subtypep`][subtypep] can be used to inspect if a type inherits
-from the another one. It returns 2 values:
+関数 [`subtypep`][subtypep] は、ある type が別の type を inherit しているかを調べるために使えます。2 つの値を返します。
 
-- `T, T` means first argument is sub-type of the second one.
-- `NIL, T` means first argument is *not* sub-type of the second one.
-- `NIL, NIL` means "not determined".
+- `T, T` は、第 1 引数が第 2 引数の sub-type であることを意味します。
+- `NIL, T` は、第 1 引数が第 2 引数の sub-type *ではない* ことを意味します。
+- `NIL, NIL` は「判定できない」ことを意味します。
 
-For example:
+例:
 
 ~~~lisp
 * (subtypep 'integer 'number)
@@ -121,8 +95,7 @@ NIL
 T
 ~~~
 
-Sometimes you may want to perform different actions according to the type of
-an argument. The macro [`typecase`][typecase] is your friend:
+argument の type に応じて異なる action を行いたいことがあります。macro [`typecase`][typecase] が役に立ちます。
 
 ~~~lisp
 * (defun plus1 (arg)
@@ -142,36 +115,27 @@ PLUS1
 ERROR
 ~~~
 
-## Type Specifier
+## 型指定子
 
-A type specifier is a form specifying a type. As mentioned above, returning
-value of the function `type-of` and the second argument of `typep` are both
-type specifiers.
+type specifier は type を指定する form です。上で述べたように、関数 `type-of` の return value と `typep` の第 2 引数はいずれも type specifiers です。
 
-As shown above, `(type-of 1234)` returns `(INTEGER 0
-4611686018427387903)`. This kind of type specifiers are called compound type
-specifier. It is a list whose head is a symbol indicating the type. The rest
-part of it is complementary information.
+上で示したように、`(type-of 1234)` は `(INTEGER 0 4611686018427387903)` を返します。この種の type specifiers は compound type specifier と呼ばれます。これは、head が type を示す symbol である list です。残りの部分は補足情報です。
 
 ~~~lisp
 * (typep #(1 2 3) '(vector number 3))
 T
 ~~~
 
-Here the complementary information of the type `vector` is its elements type
-and size respectively.
+ここで type `vector` の補足情報は、それぞれ elements type と size です。
 
-The rest part of a compound type specifier can be a `*`, which means
-"anything". For example, the type specifier `(vector number *)` denotes a
-vector consisting of any number of numbers.
+compound type specifier の残りの部分は `*` にできます。これは「何でも」を意味します。たとえば、type specifier `(vector number *)` は、任意個数の numbers から成る vector を表します。
 
 ~~~lisp
 * (typep #(1 2 3) '(vector number *))
 T
 ~~~
 
-The trailing parts can be omitted, the omitted elements are treated as
-`*`s:
+末尾の部分は省略でき、省略された elements は `*` として扱われます。
 
 ~~~lisp
 * (typep #(1 2 3) '(vector number))
@@ -181,36 +145,30 @@ T
 T
 ~~~
 
-As you may have guessed, the type specifier above can be shortened as
-following:
+おそらく想像したとおり、上の type specifier は次のように短くできます。
 
 ~~~lisp
 * (typep #(1 2 3) 'vector)
 T
 ~~~
 
-You may refer to the [CLHS page][type-specifiers] for more information.
+詳しくは [CLHS page][type-specifiers] を参照してください。
 
-## Defining New Types
+## 新しい type を定義する
 
-You can use the macro [`deftype`][deftype] to define a new type-specifier.
+macro [`deftype`][deftype] を使って新しい type-specifier を定義できます。
 
-Its argument list can be understood as a direct mapping to elements of rest
-part of a compound type specifier. They are defined as optional to allow
-symbol type specifier.
+その argument list は、compound type specifier の残りの部分の elements への直接の mapping と理解できます。symbol type specifier を許すために、それらは optional として定義されます。
 
-Its body should be a macro checking whether given argument is of this type
-(see [`defmacro`][defmacro]).
+body は、与えられた argument がこの type かどうかを検査する macro であるべきです（[`defmacro`][defmacro] を参照）。
 
-We can use `member` to define enum types, for example:
+たとえば `member` を使って enum types を定義できます。
 
 ~~~lisp
 (deftype fruit () '(member :apple :orange :pear))
 ~~~
 
-Now let us define a new data type. The data type should be a array with at
-most 10 elements. Also each element should be a number smaller than 10. See
-following code for an example:
+ここで新しい data type を定義しましょう。その data type は最大 10 elements の array であるべきです。また、各 element は 10 未満の number であるべきです。例として次の code を見てください。
 
 ~~~lisp
 * (defun small-number-array-p (thing)
@@ -236,12 +194,9 @@ NIL
 NIL
 ~~~
 
-## Run-time type Checking
+## 実行時の型検査
 
-Common Lisp supports run-time type checking via the macro
-[`check-type`][check-type]. It accepts a [`place`][place] and a type specifier
-as arguments and signals an [`type-error`][type-error] if the contents of
-place are not of the given type.
+Common Lisp は macro [`check-type`][check-type] による run-time type checking をサポートしています。これは [`place`][place] と type specifier を arguments として受け取り、place の内容が与えられた type でない場合に [`type-error`][type-error] を signal します。
 
 ~~~lisp
 * (defun plus1 (arg)
@@ -261,22 +216,15 @@ The value of ARG is "Hello", which is not of type NUMBER.
 ~~~
 
 
-## Compile-time type checking
+## コンパイル時の型検査
 
-You may provide type information for variables, function arguments
-etc via [`proclaim`][proclaim], [`declaim`][declaim] (at the toplevel) and [`declare`][declare] (inside functions and macros).
+variables、function arguments などに対して、[`proclaim`][proclaim]、[`declaim`][declaim]（toplevel）、[`declare`][declare]（functions と macros の内部）を通じて type information を与えられます。
 
-However, similar to the `:type` slot
-introduced in [CLOS section][clos], the effects of type declarations are
-undefined in Lisp standard and are implementation specific. So there is no
-guarantee that the Lisp compiler will perform compile-time type checking.
+しかし、[CLOS section][clos] で紹介した `:type` slot と同様に、type declarations の効果は Lisp standard では undefined であり、implementation specific です。そのため、Lisp compiler が compile-time type checking を行う保証はありません。
 
-However, it is possible, and SBCL is an implementation that does
-thorough type checking.
+とはいえ、それは可能です。そして SBCL は thorough type checking を行う処理系です。
 
-Let's recall first that Lisp already warns about simple type
-warnings. The following function wrongly wants to concatenate a string
-and a number. When we compile it, we get a type warning.
+まず、Lisp はすでに単純な type warnings を警告することを思い出しましょう。次の関数は誤って string と number を concatenate しようとしています。compile すると type warning が出ます。
 
 ~~~lisp
 (defconstant +foo+ 3)
@@ -288,27 +236,24 @@ and a number. When we compile it, we get a type warning.
 ;     The SBCL Manual, Node "Handling of Types"
 ~~~
 
-The example is simple, but it already shows a capacity some other
-languages don't have, and it is actually useful during development ;)
-Now, we'll do better.
+例は単純ですが、他の言語にはない能力をすでに示しており、development 中に実際に役立ちます ;)
+では、さらに良くしていきます。
 
 
-### Declaring the type of variables
+### 変数の型を宣言する
 
-Use the macro [`declaim`][declaim] with a `type` declaration identifier (other identifiers are "ftype, inline, notinline, optimize…).
+macro [`declaim`][declaim] を `type` declaration identifier とともに使います（他の identifiers は "ftype, inline, notinline, optimize…" です）。
 
-Let's declare that our global variable `*name*` is a string. You can
-type the following in any order in the REPL:
+global variable `*name*` が string であると宣言しましょう。REPL では次を任意の順序で入力できます。
 
 ~~~lisp
 (declaim (type (string) *name*))
 (defparameter *name* "book")
 ~~~
 
-Now if we try to set it with a bad type, it might just work on some
-implementations, and we might get a type error on others.
+これを不正な type に設定しようとすると、ある処理系ではそのまま動くかもしれませんし、別の処理系では type error が出るかもしれません。
 
-On SBCL, we get a `simple-type-error`:
+SBCL では `simple-type-error` が出ます。
 
 ~~~lisp
 (setf *name* :me)
@@ -316,7 +261,7 @@ Value of :ME in (THE STRING :ME) is :ME, not a STRING.
    [Condition of type SIMPLE-TYPE-ERROR]
 ~~~
 
-On LispWorks and ECL, for example, we can do it with no warning or error:
+たとえば LispWorks と ECL では、warning や error なしで実行できます。
 
 ~~~lisp
 (setf *name* :me)
@@ -326,7 +271,7 @@ On LispWorks and ECL, for example, we can do it with no warning or error:
 ~~~
 
 
-We can do the same with our custom types. Let's quickly declare the type `list-of-strings`:
+custom types でも同じことができます。`list-of-strings` type を手早く宣言しましょう。
 
 ~~~lisp
 (defun list-of-strings-p (list)
@@ -338,29 +283,29 @@ We can do the same with our custom types. Let's quickly declare the type `list-o
   `(satisfies list-of-strings-p))
 ~~~
 
-Now let's declare that our `*all-names*` variables is a list of strings:
+では `*all-names*` variables が string の list であると宣言しましょう。
 
 ~~~lisp
 (declaim (type (list-of-strings) *all-names*))
-;; and with a wrong value:
+;; そして不正な値で:
 (defparameter *all-names* "")
-;; we get an error, still at compile-time:
+;; まだ compile-time の時点で error を得ます:
 Cannot set SYMBOL-VALUE of *ALL-NAMES* to "", not of type
 (SATISFIES LIST-OF-STRINGS-P).
    [Condition of type SIMPLE-TYPE-ERROR]
 ~~~
 
-### Composing types
+### 型を合成する
 
-We can compose types. Following the previous example:
+type は合成できます。前の例に続けると:
 
 ~~~lisp
 (declaim (type (or null list-of-strings) *all-names*))
 ~~~
 
-### Declaring the input and output types of functions
+### 関数の入力型と出力型を宣言する
 
-We use again the `declaim` macro, with `ftype (function …)` instead of just `type`:
+再び `declaim` macro を使います。ただし単なる `type` ではなく `ftype (function …)` を使います。
 
 ~~~lisp
 (declaim (ftype (function (fixnum) fixnum) add))
@@ -369,10 +314,9 @@ We use again the `declaim` macro, with `ftype (function …)` instead of just `t
   (+ n  1))
 ~~~
 
-With this we get nice type warnings at compile time.
+これにより compile time に良い type warnings が得られます。
 
-If we change the function to erroneously return a string instead of a
-fixnum, we get a warning:
+関数を変更して、fixnum ではなく string を誤って返すようにすると、warning が出ます。
 
 ~~~lisp
 (defun add (n)
@@ -384,8 +328,7 @@ fixnum, we get a warning:
 ;     (VALUES FIXNUM &REST T).
 ~~~
 
-If we use `add` inside another function, to a place that expects a
-string, we get a warning:
+`add` を別の関数の中で、string を期待する place に使うと warning が出ます。
 
 ~~~lisp
 (defun bad-concat (n)
@@ -397,9 +340,7 @@ string, we get a warning:
 ;     SEQUENCE.
 ~~~
 
-If we use `add` inside another function, and that function declares
-its argument types which appear to be incompatible with those of
-`add`, we get a warning:
+`add` を別の関数の中で使い、その関数が `add` の type と incompatible に見える argument types を宣言している場合も warning が出ます。
 
 ~~~lisp
 (declaim (ftype (function (string)) bad-arg))
@@ -412,25 +353,22 @@ its argument types which appear to be incompatible with those of
 ;     FIXNUM.
 ~~~
 
-This all happens indeed *at compile time*, either in the REPL,
-either with a simple `C-c C-c` in Slime, or when we `load` a file.
+これはすべて実際に *compile time* に起こります。REPL でも、Slime の単純な `C-c C-c` でも、file を `load` するときでも同じです。
 
-### Declaring &key parameters
+### &key parameters の宣言
 
-Use `&key (:argument type)`.
+`&key (:argument type)` を使います。
 
-For example:
+例:
 
     (declaim (ftype (function (string &key (:n integer))) foo))
     (defun foo (bar &key n) …)
 
-### Declaring &rest parameters
+### &rest parameters の宣言
 
-This is less evident, you might need a well-placed `declare`.
+これはやや分かりにくく、適切な場所に置いた `declare` が必要かもしれません。
 
-In the following, we declare a fruit type and we write a function that
-uses a single fruit argument, so compiling `placing-order` gives us a
-type warning as expected:
+以下では fruit type を宣言し、single fruit argument を使う関数を書きます。そのため `placing-order` を compile すると期待どおり type warning が出ます。
 
 ~~~lisp
 (deftype fruit () '(member :apple :orange :pear))
@@ -443,7 +381,7 @@ type warning as expected:
   (one-order :bacon))
 ~~~
 
-But in this version, we use `&rest` parameters, and we don't have a type warning anymore:
+しかしこの version では `&rest` parameters を使っており、type warning は出なくなります。
 
 ~~~lisp
 (declaim (ftype (function (&rest fruit)) place-order))
@@ -452,10 +390,10 @@ But in this version, we use `&rest` parameters, and we don't have a type warning
     (format t "Ordering ~S~%" s)))
 
 (defun placing-orders ()
-  (place-order :orange :apple :bacon)) ;; => no type warning
+  (place-order :orange :apple :bacon)) ;; => type warning なし
 ~~~
 
-The declaration is correct, but our compiler doesn't check it. A well-placed `declare` gives us the compile-time warning back:
+declaration は正しいのですが、compiler はそれを check しません。適切な場所に置いた `declare` により compile-time warning が戻ります。
 
 ~~~lisp
 (defun place-order (&rest selections)
@@ -476,63 +414,53 @@ is not of type
   (MEMBER :PEAR :ORANGE :APPLE)
 ```
 
-For portable code, we would add run-time checks with an `assert`.
+portable code では、`assert` による run-time checks を追加するでしょう。
 
 
-### Declaring class slots types
+### class slot の型を宣言する
 
-A class slot accepts a `:type` slot option. It is however generally
-*not* used to check the type of the initform. SBCL, starting with
-[version 1.5.9][sbcl159] released on
-november 2019, now gives those warnings, meaning that this:
+class slot は `:type` slot option を受け取ります。しかし一般には、initform の type を check するためには *使われません*。2019 年 11 月に release された [version 1.5.9][sbcl159] 以降の SBCL は、これらの warning を出すようになりました。つまり次の code は:
 
 ~~~lisp
 (defclass foo ()
   ((name :type number :initform "17")))
 ~~~
 
-signals a warning at compile time.
+compile time に warning を signal します。
 
 
-Note: see also [sanity-clause][sanity-clause], a data
-serialization/contract library to check slots' types during
-`make-instance` (which is not compile time).
+Note: `make-instance` 中に slots の types を check する（compile time ではありません）data serialization/contract library である [sanity-clause][sanity-clause] も参照してください。
 
 
-### Alternative type checking syntax: defstar, serapeum
+### 代替の type checking syntax: defstar, serapeum
 
-The [Serapeum](https://github.com/ruricolist/serapeum/blob/master/REFERENCE.md#types) library provides a shortcut that looks like this:
+[Serapeum](https://github.com/ruricolist/serapeum/blob/master/REFERENCE.md#types) library は、次のような shortcut を提供します。
 
 ```lisp
  (-> mod-fixnum+ (fixnum fixnum) fixnum)
  (defun mod-fixnum+ (x y) ...)
 ```
 
-The [Defstar](https://github.com/lisp-mirror/defstar) library provides
-a `defun*` macro that allows to add the type declarations into the
-lambda list. It looks like this:
+[Defstar](https://github.com/lisp-mirror/defstar) library は、lambda list に type declarations を追加できる `defun*` macro を提供します。次のように見えます。
 
 ```lisp
 (defun* sum ((a real) (b real))
    (+ a b))
 ```
 
-It also allows:
+さらに次も可能です。
 
-* to declare the return type, either in the function definition or in its body
-* to quickly declare variables that are ignored, with the `_` placeholder
-* to add assertions for each arguments
-* to do the same with `defmethod`, `defparameter`, `defvar`, `flet`, `labels`, `let*` and `lambda`.
+* return type を関数定義または body 内で宣言する
+* `_` placeholder により ignored variables を素早く宣言する
+* 各 argument に assertions を追加する
+* `defmethod`、`defparameter`、`defvar`、`flet`、`labels`、`let*`、`lambda` でも同じことを行う
 
 
-### Limitations
+### 制限
 
-Complex types involving `satisfies` are not checked inside a function
-body by default, only at its boundaries. Even if it does a lot, SBCL doesn't do
-as much as a statically typed language.
+`satisfies` を含む complex types は、デフォルトでは関数 body の内部では check されず、boundary でだけ check されます。多くのことはしてくれますが、SBCL は statically typed language ほど多くは行いません。
 
-Consider this example, where we badly increment an integer with a
-string:
+integer を string で誤って increment する次の例を考えてください。
 
 ~~~lisp
 (declaim (ftype (function () string) bad-adder))
@@ -543,10 +471,9 @@ string:
     (format nil "finally doing sth with ~a" res)))
 ~~~
 
-Compiling this function doesn't signal a type warning.
+この関数を compile しても type warning は signal されません。
 
-However, if we had the problematic line at the function's boundary
-we'd get the warning:
+しかし、問題のある行が関数の boundary にあれば warning が出ます。
 
 ~~~lisp
 (defun bad-adder ()
@@ -567,31 +494,25 @@ we'd get the warning:
 ;     (VALUES STRING &REST T).
 ~~~
 
-We could also use a `the` declaration in the loop body to get a compile-time warning:
+loop body 内で `the` declaration を使って compile-time warning を得ることもできます。
 
 ```lisp
        do (incf res (the string name)))
 ```
 
-What can we conclude? This is yet another reason to decompose your
-code into small functions.
+何を結論とできるでしょうか。これは code を小さな関数に分解するもう 1 つの理由です。
 
 
-## See also
+## 参考
 
-- the article [Static type checking in SBCL](https://medium.com/@MartinCracauer/static-type-checking-in-the-programmable-programming-language-lisp-79bb79eb068a), by Martin Cracauer
-- the article [Typed List, a Primer](https://alhassy.github.io/TypedLisp) - let's explore Lisp's fine-grained type hierarchy! with a shallow comparison to Haskell.
-- the [Coalton](https://github.com/coalton-lang/coalton/) library: an
-  efficient, statically typed functional programming language that
-  supercharges Common Lisp. It is as an embedded DSL in Lisp that
-  resembles Haskell or Standard ML, but lets you seamlessly
-  interoperate with non-statically-typed Lisp code (and vice versa).
-- [exhaustiveness type checking at compile-time](https://dev.to/vindarel/compile-time-exhaustiveness-checking-in-common-lisp-with-serapeum-5c5i) with [Serapeum](https://github.com/ruricolist/serapeum/blob/master/REFERENCE.md#ecase-of-type-x-body-body) for enum types and union types (ecase-of, etypecase-of).
+- Martin Cracauer による記事 [Static type checking in SBCL](https://medium.com/@MartinCracauer/static-type-checking-in-the-programmable-programming-language-lisp-79bb79eb068a)
+- 記事 [Typed List, a Primer](https://alhassy.github.io/TypedLisp) - Haskell との浅い比較をしながら、Lisp の fine-grained type hierarchy を探索します。
+- [Coalton](https://github.com/coalton-lang/coalton/) library: Common Lisp を強化する、効率的で statically typed な functional programming language。これは Lisp に埋め込まれた DSL で、Haskell や Standard ML に似ていますが、non-statically-typed Lisp code と seamless に相互運用できます（逆も同様）。
+- enum types と union types（ecase-of、etypecase-of）のための [Serapeum](https://github.com/ruricolist/serapeum/blob/master/REFERENCE.md#ecase-of-type-x-body-body) による [compile-time の exhaustiveness type checking](https://dev.to/vindarel/compile-time-exhaustiveness-checking-in-common-lisp-with-serapeum-5c5i)。
 
 ---
 
-[^1]: The term *object* here has nothing to do with Object-Oriented or so. It
-    means "any Lisp datum".
+[^1]: ここでの *object* という用語は Object-Oriented などとは関係ありません。「任意の Lisp datum」を意味します。
 
 [defvar]: http://www.lispworks.com/documentation/lw51/CLHS/Body/m_defpar.htm
 [setf]: http://www.lispworks.com/documentation/lw50/CLHS/Body/m_setf_.htm

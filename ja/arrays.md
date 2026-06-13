@@ -1,98 +1,62 @@
 ---
-title: Multidimensional arrays
+title: 多次元配列
 ---
 
-Common Lisp has native support for multidimensional arrays, with some
-special treatment for 1-D arrays, called `vectors`. Arrays can be
-*generalised* and contain any type (`element-type t`), or they
-can be *specialised* to contain specific types such as `single-float`
-or `integer`. A good place to start is
-[Practical Common Lisp Chapter 11, Collections](http://www.gigamonkeys.com/book/collections.html) by
-Peter Seibel.
+Common Lisp は多次元配列を native に support しており、1-D array には `vectors` と呼ばれる特別な扱いがあります。array は *generalised* で任意の type (`element-type t`) を含めることも、`single-float` や `integer` など specific type を含むよう *specialised* することもできます。出発点としては、Peter Seibel による [Practical Common Lisp Chapter 11, Collections](http://www.gigamonkeys.com/book/collections.html) がよいでしょう。
 
-A quick reference to some common operations on arrays is given in the
-section on [Arrays and vectors](data-structures.html).
+array に対する一般的な operation の quick reference は、[Arrays and vectors](data-structures.html) の section にあります。
 
-Some libraries available on [Quicklisp](https://www.quicklisp.org/beta/) for manipulating arrays:
+array を操作するために [Quicklisp](https://www.quicklisp.org/beta/) で利用できる library には、次のものがあります。
 
-- [array-operations](https://github.com/Lisp-Stat/array-operations), from the lisp-stat project, defines the
-  functions `generate`, `permute`, `displace`, `flatten`, `split`,
-  `combine`, `reshape`. It also defines `each`, for element-wise
-  operations. This is a fork of [bendudson/array-operations](https://github.com/bendudson/array-operations) which is a fork of
-  [tpapp/array-operations](https://github.com/tpapp/array-operations), the original
-  author.
-- [cmu-infix](https://github.com/rigetticomputing/cmu-infix) includes
-  array indexing syntax for multidimensional arrays.
-- [lla](https://github.com/tpapp/lla) is a library for linear algebra, calling BLAS and LAPACK
-  libraries. It differs from most CL linear algebra packages in using
-  intuitive function names, and can operate on native arrays as well as
-  CLOS objects.
+- [array-operations](https://github.com/Lisp-Stat/array-operations) は lisp-stat project 由来で、
+  `generate`, `permute`, `displace`, `flatten`, `split`,
+  `combine`, `reshape` function を定義します。また、element-wise
+  operation 用の `each` も定義します。これは [bendudson/array-operations](https://github.com/bendudson/array-operations) の fork であり、さらにそれは original
+  author による [tpapp/array-operations](https://github.com/tpapp/array-operations) の fork です。
+- [cmu-infix](https://github.com/rigetticomputing/cmu-infix) は、
+  多次元 array 用の array indexing syntax を含みます。
+- [lla](https://github.com/tpapp/lla) は linear algebra 用 library で、BLAS と LAPACK
+  library を呼び出します。多くの CL linear algebra package と違って
+  直感的な function name を使い、native array だけでなく
+  CLOS object に対しても動作できます。
 
-This page covers what can be done with the built-in multidimensional
-arrays, but there are limitations. In particular:
+この page では built-in の多次元 array でできることを扱いますが、制限もあります。特に次の点です。
 
-* Interoperability with foreign language arrays, for example when
-  calling libraries such as BLAS, LAPACK or GSL.
-* Extending arithmetic and other mathematical operators to handle
-  arrays, for example so that `(+ a b)` works
-  when `a` and/or `b` are arrays.
+* foreign language array との interoperability。たとえば BLAS、LAPACK、GSL のような library を呼び出す場合です。
+* arithmetic operator やその他の mathematical operator を、array を扱えるように拡張すること。たとえば `a` や `b` が array のときに `(+ a b)` が動くようにする場合です。
 
-Both of these problems can be solved by using CLOS to define an
-extended array class, with native arrays as a special case.
-Some libraries available through
-[quicklisp](https://www.quicklisp.org/beta/) which take this approach
-are:
+これら 2 つの問題は、native array を special case として持つ extended array class を CLOS で定義することで解決できます。この approach を取る [quicklisp](https://www.quicklisp.org/beta/) 経由で利用可能な library には、次があります。
 
-* [matlisp](https://github.com/bharath1097/matlisp/), some of which is
-  described in sections below.
-* [MGL-MAT](https://github.com/melisgl/mgl-mat), which has a manual
-  and provides bindings to BLAS and CUDA. This is used in a machine
-  learning library [MGL](https://github.com/melisgl/mgl).
-* [cl-ana](https://github.com/ghollisjr/cl-ana/wiki), a data analysis
-  package with a manual, which includes operations on arrays.
-* [Antik](https://www.common-lisp.net/project/antik/), used in
-  [GSLL](https://common-lisp.net/project/gsll/), a binding to the GNU
-  Scientific Library.
+* [matlisp](https://github.com/bharath1097/matlisp/)。その一部は
+  下の section で説明します。
+* [MGL-MAT](https://github.com/melisgl/mgl-mat)。manual があり、
+  BLAS と CUDA への binding を提供します。これは machine
+  learning library [MGL](https://github.com/melisgl/mgl) で使われています。
+* [cl-ana](https://github.com/ghollisjr/cl-ana/wiki)。manual 付きの data analysis
+  package で、array に対する operation を含みます。
+* [Antik](https://www.common-lisp.net/project/antik/)。GNU Scientific Library の
+  への binding である [GSLL](https://common-lisp.net/project/gsll/) で使われています。
 
-A relatively new but actively developed package is
-[MAGICL](https://github.com/rigetticomputing/magicl), which provides
-wrappers around BLAS and LAPACK libraries. At the time of writing this
-package is not on Quicklisp, and only works under SBCL and CCL. It
-seems to be particularly focused on complex arrays, but not
-exclusively.
-To install, clone the repository in your quicklisp `local-projects`
-directory e.g. under Linux/Unix:
+比較的新しく活発に開発されている package として [MAGICL](https://github.com/rigetticomputing/magicl) があります。これは BLAS と LAPACK library の wrapper を提供します。執筆時点ではこの package は Quicklisp に含まれておらず、SBCL と CCL でのみ動きます。特に complex array に焦点を当てているようですが、それだけに限定されているわけではありません。install するには、たとえば Linux/Unix では quicklisp の `local-projects` directory に repository を clone します。
 
 ~~~bash
 $ cd ~/quicklisp/local-projects
 $ git clone https://github.com/rigetticomputing/magicl.git
 ~~~
 
-Instructions for installing dependencies (BLAS, LAPACK and Expokit)
-are given on the [github web pages](https://github.com/rigetticomputing/magicl).
-Low-level routines wrap foreign functions, so have the Fortran names
-e.g `magicl.lapack-cffi::%zgetrf`. Higher-level interfaces to some of
-these functions also exist, see the
-[source directory](https://github.com/rigetti/magicl/blob/master/src/high-level/) and [documentation](https://github.com/quil-lang/magicl/blob/master/doc/high-level.md).
+dependency (BLAS、LAPACK、Expokit) の install 手順は [github web pages](https://github.com/rigetticomputing/magicl) にあります。low-level routine は foreign function を wrap しているため、たとえば `magicl.lapack-cffi::%zgetrf` のような Fortran name を持ちます。これらの function の一部には higher-level interface も存在します。[source directory](https://github.com/rigetti/magicl/blob/master/src/high-level/) と [documentation](https://github.com/quil-lang/magicl/blob/master/doc/high-level.md) を参照してください。
 
-Taking this further, domain specific languages have been built on Common
-Lisp, which can be used for numerical calculations with arrays.
-At the time of writing the most widely used and supported of these are:
+さらに進むと、Common Lisp 上に domain specific language が構築されており、array を使った numerical calculation に利用できます。執筆時点で、これらの中でも最も広く使われ support されているものは次です。
 
 * [Maxima](http://maxima.sourceforge.net/documentation.html)
 * [Axiom](https://github.com/daly/axiom)
 
 
-[CLASP](https://github.com/drmeister/clasp) is a project
-which aims to ease interoperability of Common Lisp with other
-languages (particularly C++), by using [LLVM](http://llvm.org/).
-One of the main applications of this project is to numerical/scientific
-computing.
+[CLASP](https://github.com/drmeister/clasp) は、[LLVM](http://llvm.org/) を使って Common Lisp と他の language (特に C++) との interoperability を容易にすることを目指す project です。この project の主要な application の 1 つは numerical/scientific computing です。
 
-## Creating
+## 作成
 
-The function [CLHS: make-array](http://clhs.lisp.se/Body/f_mk_ar.htm)
-can create arrays filled with a single value
+function [CLHS: make-array](http://clhs.lisp.se/Body/f_mk_ar.htm) は、単一の value で満たされた array を作成できます。
 
 ~~~lisp
 * (defparameter *my-array* (make-array '(3 2) :initial-element 1.0))
@@ -101,13 +65,9 @@ can create arrays filled with a single value
 #2A((1.0 1.0) (1.0 1.0) (1.0 1.0))
 ~~~
 
-More complicated array values can be generated by first making an
-array, and then iterating over the elements to fill in the values (see
-section below on element access).
+より複雑な array value は、まず array を作り、その後 element を反復して value を埋めることで生成できます (element access については下の section を参照してください)。
 
-The [array-operations](https://github.com/tpapp/array-operations)
-library provides `generate`, a convenient
-function for creating arrays which wraps this iteration.
+[array-operations](https://github.com/tpapp/array-operations) library は、この iteration を wrap して array を作成する便利な function `generate` を提供します。
 
 ~~~lisp
 * (ql:quickload :array-operations)
@@ -122,17 +82,11 @@ To load "array-operations":
 #(0 1 2 3 4 5 6)
 ~~~
 
-Note that the nickname for `array-operations` is `aops`. The
-`generate` function can also iterate over the array subscripts by
-passing the key `:subscripts`. See the
-[Array Operations manual on generate](https://lisp-stat.dev/docs/manuals/array-operations/#generate) for
-more examples.
+`array-operations` の nickname は `aops` であることに注意してください。`generate` function は key `:subscripts` を渡すことで array subscript も反復できます。さらに多くの例は [Array Operations manual on generate](https://lisp-stat.dev/docs/manuals/array-operations/#generate) を参照してください。
 
-### Random numbers
+### 乱数
 
-To create an 3x3 array containing random numbers drawn from a uniform
-distribution, `generate` can be used to call the CL
-[random](http://clhs.lisp.se/Body/f_random.htm) function:
+uniform distribution から引いた random number を含む 3x3 array を作るには、`generate` を使って CL の [random](http://clhs.lisp.se/Body/f_random.htm) function を呼び出せます。
 
 ~~~lisp
 * (aops:generate (lambda () (random 1.0)) '(3 3))
@@ -141,9 +95,7 @@ distribution, `generate` can be used to call the CL
     (0.96221936 0.9143338 0.21972346))
 ~~~
 
-An array of Gaussian (normal) random numbers with mean of zero and
-standard deviation of one, using the
-[alexandria](https://common-lisp.net/project/alexandria/) package:
+[alexandria](https://common-lisp.net/project/alexandria/) package を使った、mean が 0、standard deviation が 1 の Gaussian (normal) random number の array です。
 
 ~~~lisp
 * (ql:quickload :alexandria)
@@ -159,22 +111,15 @@ To load "alexandria":
   -0.10372852118266523d0)
 ~~~
 
-Note that this is not particularly efficient: It requires a function
-call for each element, and although `gaussian-random` returns
-two random numbers, only one of them is used.
+これは特に効率的ではないことに注意してください。各 element ごとに function call が必要であり、`gaussian-random` は 2 つの random number を返しますが、そのうち 1 つしか使われません。
 
-For more efficient implementations, and a wider range of probability
-distributions, there are packages available on Quicklisp. See
-[CLiki](https://www.cliki.net/statistics) for a list.
+より効率的な implementation や、より広い範囲の probability distribution には、Quicklisp で利用できる package があります。一覧は [CLiki](https://www.cliki.net/statistics) を参照してください。
 
-## Accessing elements
+## element への access
 
-To access the individual elements of an array there are the [aref](http://clhs.lisp.se/Body/f_aref.htm)
-and [row-major-aref](http://clhs.lisp.se/Body/f_row_ma.htm#row-major-aref) functions.
+array の個々の element に access するには、[aref](http://clhs.lisp.se/Body/f_aref.htm) と [row-major-aref](http://clhs.lisp.se/Body/f_row_ma.htm#row-major-aref) function があります。
 
-The [aref](http://clhs.lisp.se/Body/f_aref.htm) function takes the same number of index arguments as the
-array has dimensions. Indexing is from 0 and row-major as in C, but
-not Fortran.
+[aref](http://clhs.lisp.se/Body/f_aref.htm) function は、array の dimension 数と同じ数の index argument を取ります。indexing は 0 から始まり、C と同じ row-major ですが、Fortran とは異なります。
 
 ~~~lisp
 * (defparameter *a* #(1 2 3 4))
@@ -191,8 +136,7 @@ not Fortran.
 3
 ~~~
 
-The range of these indices can be found using
-[array-dimensions](http://clhs.lisp.se/Body/f_ar_d_1.htm):
+これらの index の範囲は [array-dimensions](http://clhs.lisp.se/Body/f_ar_d_1.htm) で調べられます。
 
 ~~~
 * (array-dimensions *a*)
@@ -201,8 +145,7 @@ The range of these indices can be found using
 (2 3)
 ~~~
 
-or the rank of the array can be found, and then the size of each
-dimension queried:
+また、array の rank を調べ、その後で各 dimension の size を query できます。
 
 ~~~lisp
 * (array-rank *a*)
@@ -217,7 +160,7 @@ dimension queried:
 3
 ~~~
 
-To loop over an array nested loops can be used, such as:
+array を loop するには、次のような nested loop を使えます。
 
 ~~~lisp
 * (defparameter a #2A((1 2 3) (4 5 6)))
@@ -236,7 +179,7 @@ a[1 2] = 6
 NIL
 ~~~
 
-A utility macro which does this for multiple dimensions is `nested-loop`:
+これを multiple dimension に対して行う utility macro が `nested-loop` です。
 
 ~~~lisp
 (defmacro nested-loop (syms dimensions &body body)
@@ -285,7 +228,7 @@ A utility macro which does this for multiple dimensions is `nested-loop`:
            ,result)))))
 ~~~
 
-so that the contents of a 2D array can be printed using:
+これにより、2D array の contents は次のように print できます。
 
 ~~~lisp
 * (defparameter a #2A((1 2 3) (4 5 6)))
@@ -302,18 +245,11 @@ a[1 2] = 6
 NIL
 ~~~
 
-[Note: This macro is available in [this fork](https://github.com/bendudson/array-operations) of array-operations, but
-not Quicklisp]
+[Note: この macro は array-operations の [this fork](https://github.com/bendudson/array-operations) で利用できますが、Quicklisp にはありません]
 
 ### Row major indexing
 
-In some cases, particularly element-wise operations, the number of
-dimensions does not matter. To write code which is independent of the
-number of dimensions, array element access can be done using a
-single flattened index via
-[row-major-aref](http://clhs.lisp.se/Body/f_row_ma.htm#row-major-aref).
-The array size is given by [array-total-size](http://clhs.lisp.se/Body/f_ar_tot.htm), with the flattened
-index starting at 0.
+場合によっては、特に element-wise operation では、dimension の数は重要ではありません。dimension 数に依存しない code を書くには、[row-major-aref](http://clhs.lisp.se/Body/f_row_ma.htm#row-major-aref) によって単一の flattened index を使い、array element に access できます。array size は [array-total-size](http://clhs.lisp.se/Body/f_ar_tot.htm) で与えられ、flattened index は 0 から始まります。
 
 ~~~lisp
 * (defparameter a #2A((1 2 3) (4 5 6)))
@@ -329,9 +265,7 @@ NIL
 
 ### Infix syntax
 
-The [cmu-infix](https://github.com/rigetticomputing/cmu-infix) library
-provides some different syntax which can make mathematical expressions
-easier to read:
+[cmu-infix](https://github.com/rigetticomputing/cmu-infix) library は、mathematical expression を読みやすくできる少し異なる syntax を提供します。
 
 ~~~lisp
 * (ql:quickload :cmu-infix)
@@ -356,7 +290,7 @@ ARR
 #2A((1.0 2.0) (1.0 1.0) (1.0 1.0))
 ~~~
 
-A matrix-matrix multiply operation can be implemented as:
+matrix-matrix multiply operation は次のように実装できます。
 
 ~~~lisp
 (let ((A #2A((1 2) (3 4)))
@@ -370,23 +304,20 @@ A matrix-matrix multiply operation can be implemented as:
       result)
 ~~~
 
-See the section below on linear algebra, for alternative
-matrix-multiply implementations.
+別の matrix-multiply implementation については、下の linear algebra section を参照してください。
 
 ## Element-wise operations
 
-To multiply two arrays of numbers of the same size, pass a function
-to `each` in the [array-operations](https://github.com/Lisp-Stat/array-operations) library:
+同じ size の 2 つの number array を掛け合わせるには、[array-operations](https://github.com/Lisp-Stat/array-operations) library の `each` に function を渡します。
 
 ~~~lisp
 * (aops:each #'* #(1 2 3) #(2 3 4))
 #(2 6 12)
 ~~~
 
-For improved efficiency there is the `aops:each*` function, which
-takes a type as first argument to specialise the result array.
+効率を高めるために `aops:each*` function があります。これは result array を specialize するため、最初の argument に type を取ります。
 
-To add a constant to all elements of an array:
+array のすべての element に constant を加えるには、次のようにします。
 
 ~~~lisp
 * (defparameter *a* #(1 2 3 4))
@@ -397,14 +328,11 @@ To add a constant to all elements of an array:
 #(1 2 3 4)
 ~~~
 
-Note that `each` is not destructive, but makes a new array.
-All arguments to `each` must be arrays of the same size,
-so `(aops:each #'+ 42 *a*)` is not valid.
+`each` は destructive ではなく、新しい array を作ることに注意してください。`each` へのすべての argument は同じ size の array でなければならないため、`(aops:each #'+ 42 *a*)` は valid ではありません。
 
-### Vectorising expressions
+### expression の vectorize
 
-An alternative approach to the `each` function above, is to use a
-macro to iterate over all elements of an array:
+上の `each` function に対する代替 approach は、array のすべての element を反復する macro を使うことです。
 
 ~~~lisp
 (defmacro vectorize (variables &body body)
@@ -432,11 +360,10 @@ macro to iterate over all elements of an array:
        result))
 ~~~
 
-[Note: Expanded versions of this macro are available in [this
-fork](https://github.com/bendudson/array-operations) of array-operations, but
-not Quicklisp]
+[Note: この macro の expanded version は array-operations の [this
+fork](https://github.com/bendudson/array-operations) で利用できますが、Quicklisp にはありません]
 
-This can be used as:
+これは次のように使えます。
 
 ~~~lisp
 * (defparameter *a* #(1 2 3 4))
@@ -445,9 +372,7 @@ This can be used as:
 #(2 4 6 8)
 ~~~
 
-Inside the body of the expression (second form in `vectorize`
-expression) the symbol `*a*` is bound to a single element.
-This means that the built-in mathematical functions can be used:
+expression の body (`vectorize` expression の 2 番目の form) の中では、symbol `*a*` は single element に bind されます。つまり built-in mathematical function を使えるということです。
 
 ~~~lisp
 * (defparameter a #(1 2 3 4))
@@ -458,23 +383,22 @@ B
 #(0.9092974 0.28224 -2.2704074 -3.8356972)
 ~~~
 
-and combined with `cmu-infix`:
+さらに `cmu-infix` と組み合わせられます。
 
 ~~~lisp
 * (vectorize (a b) #i(a * sin(b)) )
 #(0.9092974 0.28224 -2.2704074 -3.8356972)
 ~~~
 
-### Calling BLAS
+### BLAS を呼び出す
 
-Several packages provide wrappers around BLAS, for fast matrix manipulation.
+fast matrix manipulation のために、いくつかの package が BLAS の wrapper を提供しています。
 
-The [lla](https://github.com/tpapp/lla) package in quicklisp includes
-calls to some functions:
+quicklisp の [lla](https://github.com/tpapp/lla) package は、いくつかの function への call を含みます。
 
-#### Scale an array
+#### array を scale する
 
-scaling by a constant factor:
+constant factor による scaling です。
 
 ~~~lisp
 * (defparameter a #(1 2 3))
@@ -485,8 +409,7 @@ scaling by a constant factor:
 
 #### AXPY
 
-This calculates `a * x + y` where `a` is a constant, `x` and `y` are arrays.
-The `lla:axpy!` function is destructive, modifying the last argument (`y`).
+これは `a * x + y` を計算します。ここで `a` は constant、`x` と `y` は array です。`lla:axpy!` function は destructive で、最後の argument (`y`) を変更します。
 
 ~~~lisp
 * (defparameter x #(1 2 3))
@@ -501,8 +424,7 @@ B
 #(2.5d0 4.0d0 5.5d0)
 ~~~
 
-If the `y` array is complex, then this operation calls the complex
-number versions of these operators:
+`y` array が complex の場合、この operation はこれらの operator の complex number version を呼び出します。
 
 ~~~lisp
 * (defparameter x #(1 2 3))
@@ -517,7 +439,7 @@ number versions of these operators:
 
 #### Dot product
 
-The dot product of two vectors:
+2 つの vector の dot product です。
 
 ~~~lisp
 * (defparameter x #(1 2 3))
@@ -528,13 +450,7 @@ The dot product of two vectors:
 
 ### Reductions
 
-The [reduce](http://clhs.lisp.se/Body/f_reduce.htm) function operates
-on sequences, including vectors (1D arrays), but not on
-multidimensional arrays.
-To get around this, multidimensional arrays can be displaced to create
-a 1D vector.
-Displaced arrays share storage with the original array, so this is a
-fast operation which does not require copying data:
+[reduce](http://clhs.lisp.se/Body/f_reduce.htm) function は vector (1D array) を含む sequence に対して動作しますが、多次元 array には動作しません。これを回避するには、多次元 array を displaced して 1D vector を作成できます。displaced array は original array と storage を共有するため、data copy を必要としない fast operation です。
 
 ~~~lisp
 * (defparameter a #2A((1 2) (3 4)))
@@ -543,25 +459,20 @@ A
 4
 ~~~
 
-The `array-operations` package contains `flatten`, which returns a
-displaced array i.e doesn't copy data:
+`array-operations` package には `flatten` があり、displaced array、つまり data を copy しない array を返します。
 
 ~~~lisp
 * (reduce #'max (aops:flatten a))
 ~~~
 
-An SBCL extension,
-[array-storage-vector](http://www.sbcl.org/manual/#index-array_002dstorage_002dvector)
-provides an efficient but not portable way to achieve the same thing:
+SBCL extension の [array-storage-vector](http://www.sbcl.org/manual/#index-array_002dstorage_002dvector) は、同じことを達成する efficient だが portable ではない方法を提供します。
 
 ~~~lisp
 * (reduce #'max (array-storage-vector a))
 4
 ~~~
 
-More complex reductions are sometimes needed, for example finding the
-maximum absolute difference between two arrays. Using the above
-methods we could do:
+ときには、より複雑な reduction が必要です。たとえば 2 つの array の maximum absolute difference を求める場合です。上の method を使うと次のようにできます。
 
 ~~~lisp
 * (defparameter a #2A((1 2) (3 4)))
@@ -574,9 +485,7 @@ B
 2
 ~~~
 
-This involves allocating an array to hold the intermediate result,
-which for large arrays could be inefficient. Similarly to `vectorize`
-defined above, a macro which does not allocate can be defined as:
+これは intermediate result を保持する array の allocation を伴い、大きな array では非効率になり得ます。上で定義した `vectorize` と同様に、allocate しない macro を次のように定義できます。
 
 ~~~lisp
 (defmacro vectorize-reduce (fn variables &body body)
@@ -619,17 +528,15 @@ defined above, a macro which does not allocate can be defined as:
 
 ~~~
 
-[Note: This macro is available in [this fork](https://github.com/bendudson/array-operations)
-of array-operations, but not Quicklisp]
+[Note: この macro は array-operations の [this fork](https://github.com/bendudson/array-operations) で利用できますが、Quicklisp にはありません]
 
-Using this macro, the maximum value in an array A (of any shape) is:
+この macro を使うと、任意の shape の array A における maximum value は次のように求められます。
 
 ~~~lisp
 * (vectorize-reduce #'max (a) a)
 ~~~
 
-The maximum absolute difference between two arrays A and B, of any
-shape as long as they have the same shape, is:
+同じ shape でありさえすれば、任意の shape の 2 つの array A と B の maximum absolute difference は次です。
 
 ~~~lisp
 * (vectorize-reduce #'max (a b) (abs (- a b)))
@@ -637,15 +544,14 @@ shape as long as they have the same shape, is:
 
 ## Linear algebra
 
-Several packages provide bindings to BLAS and LAPACK libraries,
-including:
+いくつかの package が BLAS と LAPACK library への binding を提供しています。たとえば次です。
 
 - [lla](https://github.com/tpapp/lla)
 - [MAGICL](https://github.com/rigetticomputing/magicl)
 
-A longer list of available packages is on [CLiki's linear algebra page](https://www.cliki.net/linear%20algebra).
+利用可能な package のより長い list は [CLiki's linear algebra page](https://www.cliki.net/linear%20algebra) にあります。
 
-In the examples below the lla package is loaded:
+下の例では lla package が load されています。
 
 ~~~lisp
 * (ql:quickload :lla)
@@ -660,14 +566,11 @@ To load "lla":
 
 ### Matrix multiplication
 
-The [lla](https://github.com/tpapp/lla) function `mm` performs
-vector-vector, matrix-vector and matrix-matrix
-multiplication.
+[lla](https://github.com/tpapp/lla) function `mm` は vector-vector、matrix-vector、matrix-matrix multiplication を行います。
 
 #### Vector dot product
 
-Note that one vector is treated as a row vector, and the other as
-column:
+一方の vector は row vector として、もう一方は column として扱われることに注意してください。
 
 ~~~lisp
 * (lla:mm #(1 2 3) #(2 3 4))
@@ -681,7 +584,7 @@ column:
 #(9.0d0 18.0d0 27.0d0)
 ~~~
 
-which has performed the sum over `j` of `A[i j] * x[j]`
+これは `A[i j] * x[j]` について `j` の sum を実行しています。
 
 #### Matrix-matrix multiply
 
@@ -690,10 +593,9 @@ which has performed the sum over `j` of `A[i j] * x[j]`
 #2A((12.0d0 18.0d0 24.0d0) (12.0d0 18.0d0 24.0d0) (12.0d0 18.0d0 24.0d0))
 ~~~
 
-which summed over `j` in `A[i j] * B[j k]`
+これは `A[i j] * B[j k]` において `j` について sum しています。
 
-Note that the type of the returned arrays are simple arrays,
-specialised to element type `double-float`
+返される array の type は simple array で、element type `double-float` に specialised されていることに注意してください。
 
 ~~~lisp
 * (type-of (lla:mm #2A((1 0 0) (0 1 0) (0 0 1)) #(1 2 3)))
@@ -702,9 +604,7 @@ specialised to element type `double-float`
 
 #### Outer product
 
-The [array-operations](https://github.com/Lisp-Stat/array-operations)
-package contains a generalised [outer product](https://en.wikipedia.org/wiki/Outer_product)
-function:
+[array-operations](https://github.com/Lisp-Stat/array-operations) package には generalised [outer product](https://en.wikipedia.org/wiki/Outer_product) function が含まれます。
 
 ~~~lisp
 * (ql:quickload :array-operations)
@@ -718,13 +618,11 @@ To load "array-operations":
 #2A((2 3 4) (4 6 8) (6 9 12))
 ~~~
 
-which has created a new 2D array `A[i j] = B[i] * C[j]`. This `outer`
-function can take an arbitrary number of inputs, and inputs with
-multiple dimensions.
+これは新しい 2D array `A[i j] = B[i] * C[j]` を作成しています。この `outer` function は任意個の input と、multiple dimension を持つ input を取れます。
 
 ### Matrix inverse
 
-The direct inverse of a dense matrix can be calculated with `invert`
+dense matrix の direct inverse は `invert` で計算できます。
 
 ~~~lisp
 * (lla:invert #2A((1 0 0) (0 1 0) (0 0 1)))
@@ -744,10 +642,7 @@ B
     (0.0d0 1.1102230246251565d-16 0.9999999999999998d0))
 ~~~
 
-Calculating the direct inverse is generally not advisable,
-particularly for large matrices. Instead the
-[LU decomposition](https://en.wikipedia.org/wiki/LU_decomposition) can be
-calculated and used for multiple inversions.
+direct inverse を計算することは、特に大きな matrix では一般におすすめできません。代わりに [LU decomposition](https://en.wikipedia.org/wiki/LU_decomposition) を計算し、複数の inversion に使えます。
 
 ~~~lisp
 * (defparameter a #2A((1 2 3) (0 2 1) (1 3 2)))
@@ -760,9 +655,7 @@ B
 
 ### Singular value decomposition
 
-The `svd` function calculates the [singular value decomposition](https://en.wikipedia.org/wiki/Singular-value_decomposition)
-of a given matrix, returning an object with slots for the three returned
-matrices:
+`svd` function は、与えられた matrix の [singular value decomposition](https://en.wikipedia.org/wiki/Singular-value_decomposition) を計算し、返される 3 つの matrix 用の slot を持つ object を返します。
 
 ~~~lisp
 * (defparameter a #2A((1 2 3) (0 2 1) (1 3 2)))
@@ -782,8 +675,7 @@ A-SVD
            (-0.9318994611765425d0 -0.02422116311440764d0 0.3619070730398283d0)))
 ~~~
 
-The diagonal matrix (singular values) and vectors can be accessed with
-functions:
+diagonal matrix (singular value) と vector は function で access できます。
 
 ~~~lisp
 (lla:svd-u a-svd)
@@ -804,19 +696,13 @@ functions:
 
 ## Matlisp
 
-The [Matlisp](https://github.com/bharath1097/matlisp/) scientific
-computation library provides high performance operations on arrays,
-including wrappers around BLAS and LAPACK functions.
-It can be loaded using quicklisp:
+[Matlisp](https://github.com/bharath1097/matlisp/) scientific computation library は、BLAS と LAPACK function の wrapper を含む、array に対する high performance operation を提供します。quicklisp で load できます。
 
 ~~~lisp
 * (ql:quickload :matlisp)
 ~~~
 
-The nickname for `matlisp` is `m`. To avoid typing `matlisp:` or
-`m:` in front of each symbol, you can define your own package which
-uses matlisp
-(See the [PCL section on packages](http://www.gigamonkeys.com/book/programming-in-the-large-packages-and-symbols.html)):
+`matlisp` の nickname は `m` です。各 symbol の前に `matlisp:` や `m:` と入力するのを避けるには、matlisp を use する自分用の package を定義できます ([PCL section on packages](http://www.gigamonkeys.com/book/programming-in-the-large-packages-and-symbols.html) を参照)。
 
 ~~~lisp
 * (defpackage :my-new-code
@@ -826,14 +712,13 @@ uses matlisp
 * (in-package :my-new-code)
 ~~~
 
-and to use the `#i` infix reader (note the same name as for
-`cmu-infix`), run:
+また、`#i` infix reader (`cmu-infix` と同じ name であることに注意) を使うには、次を実行します。
 
 ~~~lisp
 * (named-readtables:in-readtable :infix-dispatch-table)
 ~~~
 
-### Creating tensors
+### 作成 tensors
 
 ~~~lisp
 * (matlisp:zeros '(2 2))
@@ -843,8 +728,7 @@ and to use the `#i` infix reader (note the same name as for
 >
 ~~~
 
-Note that by default matrix storage types are `double-float`.
-To create a complex array using `zeros`, `ones` and `eye`, specify the type:
+default では matrix storage type は `double-float` であることに注意してください。`zeros`、`ones`、`eye` を使って complex array を作るには、type を指定します。
 
 ~~~lisp
 * (matlisp:zeros '(2 2) '((complex double-float)))
@@ -854,8 +738,7 @@ To create a complex array using `zeros`, `ones` and `eye`, specify the type:
 >
 ~~~
 
-As well as `zeros` and `ones` there is `eye` which creates an identity
-matrix:
+`zeros` と `ones` に加えて、identity matrix を作る `eye` があります。
 
 ~~~lisp
 * (matlisp:eye '(3 3) '((complex double-float)))
@@ -866,9 +749,9 @@ matrix:
 >
 ~~~
 
-#### Ranges
+#### Range
 
-To generate 1D arrays there are the `range` and `linspace` functions:
+1D array を生成するには `range` と `linspace` function があります。
 
 ~~~lisp
 * (matlisp:range 1 10)
@@ -877,7 +760,7 @@ To generate 1D arrays there are the `range` and `linspace` functions:
 >
 ~~~
 
-The `range` function rounds down it's final argument to an integer:
+`range` function は final argument を integer に切り下げます。
 
 ~~~lisp
 * (matlisp:range 1 -3.5)
@@ -890,8 +773,7 @@ The `range` function rounds down it's final argument to an integer:
 >
 ~~~
 
-Linspace is a bit more general, and the values returned include the
-end point.
+Linspace は少しより一般的で、返される value は end point を含みます。
 
 ~~~lisp
 * (matlisp:linspace 1 10)
@@ -907,9 +789,9 @@ end point.
 >
 ~~~
 
-Currently `linspace` requires real inputs, and doesn't work with complex numbers.
+現在 `linspace` は real input を必要とし、complex number では動きません。
 
-#### Random numbers
+#### 乱数
 
 ~~~lisp
 * (matlisp:random-uniform '(2 2))
@@ -927,14 +809,11 @@ Currently `linspace` requires real inputs, and doesn't work with complex numbers
 >
 ~~~
 
-There are functions for other distributions, including
-`random-exponential`, `random-beta`, `random-gamma` and
-`random-pareto`.
+他の distribution 用の function もあり、`random-exponential`、`random-beta`、`random-gamma`、`random-pareto` などが含まれます。
 
-#### Reader macros
+#### Reader macro
 
-The `#d` and `#e` reader macros provide a way to create `double-float`
-and `single-float` tensors:
+`#d` と `#e` reader macro は、`double-float` と `single-float` tensor を作る方法を提供します。
 
 ~~~lisp
 * #d[1,2,3]
@@ -949,11 +828,11 @@ and `single-float` tensors:
 >
 ~~~
 
-Note that the comma separators are needed.
+comma separator が必要であることに注意してください。
 
-#### Tensors from arrays
+#### array から tensor へ
 
-Common lisp arrays can be converted to Matlisp tensors by copying:
+Common Lisp array は copy によって Matlisp tensor に変換できます。
 
 ~~~lisp
 * (copy #2A((1 2 3)
@@ -965,11 +844,9 @@ Common lisp arrays can be converted to Matlisp tensors by copying:
 >
 ~~~
 
-Instances of the `tensor` class can also be created, specifying the
-dimensions. The internal storage of `tensor` objects is a 1D array
-(`simple-vector`) in a slot `store`.
+dimension を指定して `tensor` class の instance を作成することもできます。`tensor` object の internal storage は、slot `store` 内の 1D array (`simple-vector`) です。
 
-For example, to create a `double-float` type tensor:
+たとえば、`double-float` type の tensor を作るには次のようにします。
 
 ~~~lisp
 (make-instance (tensor 'double-float)
@@ -977,9 +854,9 @@ For example, to create a `double-float` type tensor:
     :store (make-array 2 :element-type 'double-float))
 ~~~
 
-#### Arrays from tensors
+#### tensor から array へ
 
-The array store can be accessed using slots:
+array store は slot を使って access できます。
 
 ~~~lisp
 * (defparameter vec (m:range 0 5))
@@ -991,12 +868,9 @@ The array store can be accessed using slots:
 #(0 1 2 3 4)
 ~~~
 
-Multidimensional tensors are also stored in 1D arrays, and are stored
-in column-major order rather than the row-major ordering used for
-common lisp arrays. A displaced array will therefore be
-transposed.
+multidimensional tensor も 1D array に格納され、Common Lisp array で使われる row-major ordering ではなく column-major order で格納されます。したがって displaced array は transpose されます。
 
-The contents of a tensor can be copied into an array
+tensor の contents は array へ copy できます。
 
 ~~~lisp
 * (let ((tens (m:ones '(2 3))))
@@ -1004,7 +878,7 @@ The contents of a tensor can be copied into an array
 #2A((1.0d0 1.0d0 1.0d0) (1.0d0 1.0d0 1.0d0))
 ~~~
 
-or a list:
+または list へ copy できます。
 
 ~~~lisp
 * (m:copy (m:ones '(2 3)) 'cons)
@@ -1013,8 +887,7 @@ or a list:
 
 ### Element access
 
-The `ref` function is the equivalent of `aref` for standard CL
-arrays, and is also setf-able:
+`ref` function は standard CL array に対する `aref` に相当し、setf-able でもあります。
 
 ~~~lisp
 * (defparameter a (matlisp:ones '(2 3)))
@@ -1030,8 +903,7 @@ arrays, and is also setf-able:
 
 ### Element-wise operations
 
-The `matlisp-user` package, loaded when `matlisp` is loaded, contains
-functions for operating element-wise on tensors.
+`matlisp` が load されたときに load される `matlisp-user` package には、tensor に対して element-wise に操作する function が含まれます。
 
 ~~~lisp
 * (matlisp-user:* 2 (ones '(2 3)))
@@ -1041,10 +913,7 @@ functions for operating element-wise on tensors.
 >
 ~~~
 
-This includes arithmetic operators '+', '-', '*', '/' and 'expt', but
-also `sqrt`,`sin`,`cos`,`tan`, hyperbolic functions, and their inverses.
-The `#i` reader macro recognises many of these, and uses the
-`matlisp-user` functions:
+これには arithmetic operator '+', '-', '*', '/' と 'expt' だけでなく、`sqrt`,`sin`,`cos`,`tan`、hyperbolic function、およびそれらの inverse も含まれます。`#i` reader macro はこれらの多くを認識し、`matlisp-user` function を使います。
 
 ~~~lisp
 * (let ((a (ones '(2 2)))

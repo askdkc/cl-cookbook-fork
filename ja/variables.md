@@ -1,20 +1,18 @@
 ---
-title: Variables
+title: 変数
 ---
 
-You are writing your first Common Lisp program (welcome!) and
-you want to declare variables. What are your options?
+あなたは初めての Common Lisp program を書いていて（ようこそ！）、variables を宣言したいとします。どんな選択肢があるでしょうか。
 
-When in doubt, use `defparameter` for top-level parameters, as shown below.
+迷ったら、下に示すように top-level parameters には `defparameter` を使ってください。
 
-<!-- No TLDR; given here at the top, contrary to most of the
-Cookbook's sections, to keep students and other
-newcomers focused. -->
+<!-- Cookbook のほとんどの節とは異なり、学生やその他の
+初心者が集中しやすいように、ここでは TLDR; を先頭に置いていません。 -->
 
 
-## `defparameter`: top-level variables
+## `defparameter`: top-level 変数
 
-Use `defparameter` to declare top-level variables, like this:
+top-level variables を宣言するには、次のように `defparameter` を使います。
 
 ```lisp
 (defparameter *name* "me")
@@ -24,73 +22,55 @@ Use `defparameter` to declare top-level variables, like this:
   (format t "Hello ~a!" (or name *name*)))
 ```
 
-`defparameter` accepts an optional third argument: the variable's docstring:
+`defparameter` は省略可能な第 3 引数として、variable の docstring を受け取ります。
 
 ```lisp
 (defparameter *name* "me"
    "Default name to say hello to.")
 ```
 
-The inline docstrings are an important part of the Common Lisp
-interactive experience. You will encounter them during your coding
-sessions (and we lispers usually keep our Lisp running for a long
-time). In Emacs and Slime, you can ask for a symbol's docstring with
-`C-c C-d d` (`Alt-x slime-describe-symbol`). You can also ask for a
-docstring programmatically:
+inline docstrings は Common Lisp の interactive experience の重要な部分です。coding sessions 中に何度も出会うでしょう（そして私たち lispers は普通、Lisp を長時間動かしたままにします）。Emacs と Slime では、`C-c C-d d`（`Alt-x slime-describe-symbol`）で symbol の docstring を尋ねられます。programmatically に docstring を尋ねることもできます。
 
 ~~~lisp
 (documentation '*name* 'variable)
 ~~~
 
-We ask the documentation of the `*name*` *symbol*, not what it holds,
-hence the quote in `'*name*` (which is short for `(quote
-*name*)`. Another "doc-type" is `'function`. See: in Common Lisp,
-variables and functions live in different "namespaces", and it shows
-here.
+私たちは `*name*` *symbol* の documentation を尋ねています。それが保持しているものではありません。そのため `'*name*` に quote が付いています（これは `(quote *name*)` の短縮形です）。別の "doc-type" は `'function` です。Common Lisp では variables と functions は異なる "namespaces" に住んでおり、それがここに現れています。
 
-We'll mention the `defparameter` form with no value below.
+値のない `defparameter` form については後で触れます。
 
-### Redefining a defparameter
+### defparameter の再定義
 
-A Common Lisp coding session is usually long-lasting and very
-interactive. We leave a Lisp running and we interact with it while we
-work. This is done with Emacs and Slime, Vim, Atom and SLIMA, VSCode
-and Alive, Lem… and more editors, or from the terminal.
+Common Lisp の coding session は通常長く続き、非常に interactive です。Lisp を動かしたままにして、作業しながら interaction します。これは Emacs と Slime、Vim、Atom と SLIMA、VSCode と Alive、Lem…その他の editor、または terminal から行えます。
 
-That means that you can do this:
+つまり、次のことができます。
 
-1- write a first defparameter
+1- 最初の defparameter を書く
 
 ```lisp
 (defparameter *name* "me")
 ```
 
-either write this in the REPL, either write this in a .lisp file and
-compile+load it with a shortcut (`C-c C-c` (Alt-x `slime-compile-defun`) in
-Slime on this expression, or `C-c C-k` (Alt-x `slime-compile-and-load-file`)
-to compile and load everything you have in the current buffer). If you
-work from a simple terminal REPL, you can `(load …)` a .lisp file.
+これを REPL に書くか、.lisp file に書いて shortcut で compile+load します（Slime ではこの expression 上で `C-c C-c`（Alt-x `slime-compile-defun`）、または current buffer 全体を compile and load する `C-c C-k`（Alt-x `slime-compile-and-load-file`））。単純な terminal REPL で作業している場合は、.lisp file を `(load …)` できます。
 
-Now the `*name*` variable exists in the running image.
+これで running image に `*name*` variable が存在します。
 
-2- edit the defparameter line:
+2- defparameter 行を編集する:
 
 ```lisp
 (defparameter *name* "you")
 ```
 
-and load the changes the same way: either with the REPL, or with a
-`C-c C-c`. Now, the `*name*` variable has a new value, "you".
+そして同じ方法で changes を load します。REPL でも `C-c C-c` でも構いません。これで `*name*` variable は新しい値 "you" を持ちます。
 
-A `defvar` wouldn't be redefined.
+`defvar` なら再定義されません。
 
 
-## `defvar`: no redefinition
+## `defvar`: 再定義しない
 
-`defvar` defines top-level *variables* and protects them from redefinition.
+`defvar` は top-level *variables* を定義し、それらを再定義から守ります。
 
-When you re-load a `defvar`, it doesn't erase the current value, you
-must use `setf` for this.
+`defvar` を re-load しても current value は消されません。これには `setf` を使う必要があります。
 
 
 ```lisp
@@ -102,7 +82,7 @@ must use `setf` for this.
    (format t "hello ~a!" name))
 ```
 
-Let's see it in use:
+使ってみましょう。
 
 ```lisp
 CL-USER> (hello)
@@ -117,25 +97,15 @@ CL-USER> *names-cache*
 ("lisper" "you")
 ```
 
-What happens to `*names-cache*` if you redefine the `defvar` line
-(with `C-c C-c`, or `C-c C-k`, or on the REPL…)?
+（`C-c C-c`、`C-c C-k`、または REPL で）`defvar` 行を再定義すると、`*names-cache*` はどうなるでしょうか。
 
-It doesn't change and *that is a good thing*.
+変わりません。そして *それは良いことです*。
 
-Indeed, this variable isn't a user-visible parameter, it doesn't have
-an immediate use, but it is important for the program correctness, or
-strength, etc. Imagine it holds the cache of your webserver: you don't
-want to erase it when you load new code. During development, we hit a
-lot `C-c C-k` to reload the current file, we can as well reload our
-running app in production, but there are certain things we want
-untouched. If it is a database connection, you don't want to set it
-back to nil, and connect again, everytime you compile your code.
+実際、この variable は user-visible parameter ではなく、すぐ直接使うものではありませんが、program correctness や strength などにとって重要です。これが webserver の cache を保持していると想像してください。新しい code を load するときにそれを消したくはありません。development 中、current file を reload するために `C-c C-k` をたくさん押しますし、production で running app を reload することもあります。しかし、触れずにおきたいものがあります。database connection なら、code を compile するたびに nil に戻して接続し直したくはありません。
 
-You must use `setf` to change a defvar's variable value.
+defvar の variable value を変更するには `setf` を使う必要があります。
 
-But Slime has a shortcut for this, of course. Instead of `setf`, you
-can use `C-M-x` (Control+ Alt + x), aka the interactive function `slime-eval-defun` (which calls
-`slime-re-evaluate-defvar`):
+もちろん Slime にはこのための shortcut があります。`setf` の代わりに、`C-M-x`（Control+ Alt + x）、別名 interactive function `slime-eval-defun`（これは `slime-re-evaluate-defvar` を呼びます）を使えます。
 
 ```
 Evaluate the current toplevel form.
@@ -144,22 +114,20 @@ Use "slime-re-evaluate-defvar" if the from starts with "(defvar".
 ```
 
 
-## The "\*earmuff\*" convention
+## "\*earmuff\*" convention
 
-See how we wrote `*name*` in-between "\*earmuffs\*". That is an
-important convention, that helps you not override top-level variables
-in lexical scopes.
+`*name*` を "\*earmuffs\*" の間に書いたことに注目してください。これは重要な convention で、lexical scopes 内で top-level variables を override しないように助けてくれます。
 
 ```lisp
 (defparameter name "lisper")
 
 ;; later…
 (let ((name "something else"))
-   ;;  ^^^ overrides the top-level name. This may cause hard to spot bugs.
+   ;;  ^^^ top-level name を override します。見つけにくい bug の原因になります。
    …)
 ```
 
-This becomes a feature only when using earmuffs:
+earmuffs を使うと、これは feature になります。
 
 ```lisp
 (defparameter *db-name* "db.db")
@@ -169,50 +137,41 @@ This becomes a feature only when using earmuffs:
 
 (let ((*db-name* "another.db"))
   (connect))
-  ;;^^^^  its db-name optional parameter, which defaults to *db-name*, now sees "another.db".
+  ;;^^^^  *db-name* を default にする db-name optional parameter は、今 "another.db" を見ます。
 ```
 
-By the way, for such a use-case, you will often find `with-…` macros
-that abstract the `let` binding.
+ちなみに、このような use-case では、`let` binding を abstract する `with-…` macros をよく見かけます。
 
 ```lisp
 (with-db "another.db"
   (connect))
 ```
 
-By the way again, an
-[earmuff](https://www.wordreference.com/definition/earmuff) is a thing
-that covers the ears (but only the ears) in winter. You might have
-seen it in movies more than in reality. The lasting word is: take care
-of yourself, stay warm and use earmuffs.
+さらにちなみに、[earmuff](https://www.wordreference.com/definition/earmuff) は冬に耳（ただし耳だけ）を覆うものです。現実より映画で見たことが多いかもしれません。最後に残る言葉は、自分を大事にし、暖かくして、earmuffs を使いましょう、です。
 
-## Global variables are created in the "dynamic scope"
+## グローバル変数は "dynamic scope" に作られる
 
-Our top-level parameters and variables are created in the so-called
-*dynamic scope*. They can be accessed from anywhere else: from
-function definitions (as we did), in `let` bindings, etc.
+top-level parameters と variables は、いわゆる *dynamic scope* に作られます。それらはどこからでもアクセスできます。function definitions から（私たちがやったように）、`let` bindings の中から、などです。
 
-In Lisp, we also say these are [*dynamic variables* or *special*](https://cl-community-spec.github.io/pages/Dynamic-Variables.html).
+Lisp では、これらを [*dynamic variables* または *special*](https://cl-community-spec.github.io/pages/Dynamic-Variables.html) とも呼びます。
 
-It could also be possible to create one from anywhere by *proclaiming*
-it "special". It really isn't the thing you do everydays but, you
-know, in Lisp everything is possible ;)
+どこからでも "special" と *proclaiming* することで作成することも可能です。これは日常的に行うことでは本当にありませんが、Lisp では何でも可能です ;)
 
-> A dynamic variable can be referenced outside the dynamic extent of a form that binds it. Such a variable is sometimes called a "global variable" but is still in all respects just a dynamic variable whose binding happens to exist in the global environment rather than in some dynamic environment. [Hyper Spec]
+> dynamic variable は、それを bind する form の dynamic extent の外側から参照できます。そのような variable は "global variable" と呼ばれることがありますが、あらゆる点で、global environment に binding がたまたま存在している dynamic variable にすぎません。dynamic environment に存在する場合と本質的に同じです。[Hyper Spec]
 
 
-## `setf`: change values
+## `setf`: 値を変更する
 
-Any variable can be changed with `setf`:
+任意の variable は `setf` で変更できます。
 
 ```lisp
 (setf *name* "Alice")
 ;; => "Alice"
 ```
 
-It returns the new value.
+これは新しい値を返します。
 
-Actually, `setf` accepts *pairs* of value, variable:
+実際、`setf` は value と variable の *pairs* を受け取ります。
 
 ~~~lisp
 (setf *name* "Bob"
@@ -220,10 +179,9 @@ Actually, `setf` accepts *pairs* of value, variable:
 ;; => "app.db"
 ~~~
 
-It returned the last value.
+最後の値を返しました。
 
-What happens if you `setf` a variable that wasn't declared yet? It
-generally works but you have a warning:
+まだ宣言されていない variable に `setf` すると何が起きるでしょうか。一般には動きますが warning が出ます。
 
 ```lisp
 ;; in SBCL 2.5.8
@@ -241,10 +199,9 @@ CL-USER> (setf *foo* "foo")
 "foo"
 ```
 
-We see the returned "foo", so it worked. Please declare variables with
-`defparameter` or `defvar` first.
+返された "foo" が見えるので、動作はしました。variables は先に `defparameter` または `defvar` で宣言してください。
 
-Let's read the full `setf` docstring because it's interesting:
+興味深いので、`setf` の docstring 全体を読んでみましょう。
 
 ```txt
 Takes pairs of arguments like SETQ. The first is a place and the second
@@ -253,39 +210,34 @@ value. The place argument may be any of the access forms for which SETF
 knows a corresponding setting form.
 ```
 
-Note that `setq` is another macro, but now seldom used, because `setf`
-works on more "places". You can setf functions and many things.
+`setq` は別の macro ですが、今ではあまり使われません。`setf` はより多くの "places" に対して動くからです。functions や多くのものを setf できます。
 
 
-## `let`, `let*`: create lexical scopes
+## `let`, `let*`: lexical scopes を作る
 
-`let` lets you define variables in a limited scope, or override top-level variables temporarily.
+`let` により、限られた scope で variables を定義したり、top-level variables を一時的に override したりできます。
 
-Below, our two variables only exist in-between the parenthesis of the `let`:
+下では、2 つの variables は `let` の parenthesis の間にだけ存在します。
 
 ```lisp
 (let* ((a 2)
        (square (* a a)))
    (format t "the square of ~a is ~a" a square))
-   ;; so far so good
+   ;; ここまでは問題ありません
 
 (format t "the value of a is: ~a" a)
 ;; => ERROR: the variable A is unbound
 ```
 
-"unbound" means the variable is bound to nothing, not even to NIL. Its
-symbol may exist, but it isn't associated to anything.
+"unbound" とは、variable が何にも bind されていないことを意味します。NIL にすら bind されていません。その symbol は存在するかもしれませんが、何にも associated されていません。
 
-Just after the scope formed by the `let`, the variables `a` and `square` don't exist anymore.
+`let` が作る scope の直後では、variables `a` と `square` はもう存在しません。
 
-When the Lisp reader reads the `format` expression, it reads a `a`
-symbol, which now exists in the global environment, but it isn't bound.
+Lisp reader が `format` expression を読むと、`a` symbol を読みます。この symbol は global environment に存在しますが、bound されていません。
 
-> Food for thought: the fact to write a variable name and have the Lisp reader read it creates the symbol, but doesn't bind it to anything.
+> 考える材料: variable name を書いて Lisp reader に読ませるという事実は symbol を作りますが、それを何にも bind しません。
 
-Our two variables can be accessed by any form inside the `let` binding. If we
-create a second `let`, its *environment* inherits the previous one (we
-see variables declared above, fortunately!).
+2 つの variables は、`let` binding の内側の任意の form からアクセスできます。2 つ目の `let` を作ると、その *environment* は前のものを inherit します（上で宣言した variables が見えます。ありがたいことです！）。
 
 ```lisp
 (defparameter *name* "test")
@@ -295,44 +247,38 @@ see variables declared above, fortunately!).
 
 (let* ((a 2)
        (square (* a a)))
-  ;; inside first environment
+  ;; 最初の environment の内側
   (let ((*name* "inside let"))
-    ;; inside second environment,
-    ;; we access the dynamic scope.
+    ;; 2 番目の environment の内側、
+    ;; dynamic scope にアクセスします。
     (log square)))
 ;;  => name is "inside let" and square is 4
 ;;  => NIL
 
 (print *name*)
 ;; => "test"
-;;    ^^^^ outside the let, back to the dynamic scope's value.
+;;    ^^^^ let の外側では dynamic scope の値に戻ります。
 ```
 
-We could also define a function inside a let, so that this function
-definition "sees" a binding from a surrounding let at compile
-time. This is a closure and it's for the chapter on functions.
+let の中で関数を定義することもできます。その場合、この function definition は compile time に周囲の let からの binding を「見ます」。これは closure であり、functions の章で扱います。
 
-A "lexical scope" is simply
+"lexical scope" は単に次のものです。
 
-> a scope that is limited to a spatial or textual region within the establishing form. The names of parameters to a function normally are lexically scoped. [Hyper Spec]
+> establishing form の内部の空間的または textual region に制限された scope。関数への parameters の names は通常 lexically scoped です。[Hyper Spec]
 
-In other words, the scope of a variable is determined by its position
-in the source code. It's today's best practice. It's the least
-surprising way of doing: you can *see* the scope by looking at the
-source code.
+言い換えると、variable の scope は source code 内での位置によって決まります。これは今日の best practice です。最も驚きが少ない方法です。source code を見れば scope を *見る* ことができます。
 
 ### `let` vs `let*`
 
-By the way, what is the syntax of `let` and what is the difference with `let*`?
+ところで、`let` の syntax は何で、`let*` との違いは何でしょうか。
 
-`let*` lets you declare variables that depend on each other.
+`let*` は互いに依存する variables を宣言できます。
 
-`let`'s basic use is to declare a list of variables with no initial
-values. They are initialized to `nil`:
+`let` の基本的な使い方は、初期値のない variables の list を宣言することです。それらは `nil` に初期化されます。
 
 ```lisp
-(let (variable1 variable2 variable3) ;; variables are initialized to nil by default.
-  ;; use them here
+(let (variable1 variable2 variable3) ;; variables はデフォルトで nil に初期化されます。
+  ;; ここで使う
   …)
 
 ;; Example:
@@ -342,32 +288,27 @@ values. They are initialized to `nil`:
   (list a b square))
 ;; => (2 NIL 4)
 
-;; exactly the same:
+;; まったく同じ:
 (let (a
       b
       square)
   …)
 ```
 
-You can give default values by using "pairs" of elements, as in `(a 2)`:
+`(a 2)` のような elements の "pairs" を使うことで default values を与えられます。
 
 ```lisp
 (let ((a 2)     ;; <-- initial value
-       square)  ;; <-- no "pair" but still one element: defaults to NIL.
+       square)  ;; <-- "pair" ではありませんが still one element: defaults to NIL.
   (setf square (* a a))
   (list a square))
 ```
 
-Yes, there are two `((` in a row! This is the syntax of Common
-Lisp. You don't need to count them. What appears after a `let` is
-variable definitions. Usually, one per line.
+はい、`((` が 2 つ続きます！これが Common Lisp の syntax です。数える必要はありません。`let` の後に現れるものは variable definitions です。通常は 1 行に 1 つです。
 
-The let's logic is in the body, with a meaningful indentation. You can
-read Lisp code based on indentation. If the project you are looking at
-doesn't respect that, it is a low quality project.
+let の logic は body にあり、意味のある indentation を持ちます。Lisp code は indentation に基づいて読めます。見ている project がそれを尊重していないなら、それは低品質な project です。
 
-Observe that we kept `square` to nil. We want it to be the square of
-`a`, so can we do this?
+`square` を nil のままにしたことに注目してください。これを `a` の square にしたいのですが、次のようにできるでしょうか。
 
 ```lisp
 (let ((a 2)
@@ -375,9 +316,9 @@ Observe that we kept `square` to nil. We want it to be the square of
   …)
 ```
 
-You can't do that here, this is the limitation of `let`. You need `let*`.
+ここではできません。これが `let` の limitation です。`let*` が必要です。
 
-You could write two `let`s:
+2 つの `let` を書くこともできます。
 
 ```lisp
 (let ((a 2))
@@ -386,7 +327,7 @@ You could write two `let`s:
 ;; => (2 4)
 ```
 
-This is equivalent to `let*`:
+これは `let*` と等価です。
 
 ```lisp
 (let* ((a 2)
@@ -394,11 +335,9 @@ This is equivalent to `let*`:
   …)
 ```
 
-`let` is to declare variables that don't depend on each other, `let*`
-is to declare variables which are read one after the other and where
-one can depend on a *previous* one.
+`let` は互いに依存しない variables を宣言するためのもので、`let*` は 1 つずつ読まれ、ある variable が *previous* なものに依存できる variables を宣言するためのものです。
 
-This is *not* valid:
+これは *valid ではありません*。
 
 ```lisp
 (let* ((square (* a a))  ;; WARN!
@@ -408,15 +347,13 @@ This is *not* valid:
 ;; The variable A is unbound.
 ```
 
-The error message is clear. At the time of reading `(square (* a a))`, `a` is unknown.
+error message は明快です。`(square (* a a))` を読む時点で、`a` は unknown です。
 
-### setf inside let
+### let の中の setf
 
-Let's make it even clearer: you can `setf` any value that is
-*shadowed* in a `let` binding, once outside the let, the variables are
-back to the value of the current *environment*.
+さらに明確にしましょう。`let` binding で *shadowed* された任意の値に `setf` できます。let の外に出ると、variables は current *environment* の値に戻ります。
 
-We know this:
+これは分かっています。
 
 ```lisp
 (defparameter *name* "test")
@@ -429,17 +366,17 @@ We know this:
 ;; => *name* outside let: "test"
 ```
 
-we setf a dynamic parameter that was shadowed by a let binding:
+let binding によって shadowed された dynamic parameter を setf します。
 
 ```lisp
 (defparameter *name* "test")
 
 (defun change-name ()
-   ;; bad style though,
-   ;; try to not mutate variables inside your functions,
-   ;; but take arguments and return fresh data structures.
+   ;; ただし bad style です。
+   ;; functions の中で variables を mutate しないようにし、
+   ;; arguments を受け取り fresh data structures を返すようにしてください。
    (setf *name* "set!"))
-   ;;    ^^^^^ from the dynamic environment, or from a let lexical scope.
+   ;;    ^^^^^ dynamic environment から、または let lexical scope から。
 
 (let ((*name* "inside let"))
   (change-name)
@@ -451,14 +388,11 @@ we setf a dynamic parameter that was shadowed by a let binding:
 ```
 
 
-### When you don't use defined variables
+### 定義した variables を使わないとき
 
-Read your compiler's warnings :)
+compiler の warnings を読みましょう :)
 
-Below, it tells us that `b` is defined but never used. SBCL is pretty
-good at giving us useful warnings at *compile time* (every time you
-hit `C-c C-c` (compile and load the expression at point), `C-c C-k`
-(the whole file) or use `load`).
+下では、`b` が定義されているが使われていないと教えてくれます。SBCL は *compile time* に有用な warnings を出すのがかなり得意です（`C-c C-c`（point の expression を compile and load）、`C-c C-k`（file 全体）、または `load` を使うたびに）。
 
 ~~~lisp
 (let (a b square)
@@ -468,11 +402,11 @@ hit `C-c C-c` (compile and load the expression at point), `C-c C-k`
 ;   The variable B is defined but never used.
 ~~~
 
-This example works in the REPL because SBCL's REPL always compiles expressions.
+この例は REPL で動きます。SBCL の REPL は常に expressions を compile するからです。
 
-This may vary with your implementation.
+これは処理系によって変わる可能性があります。
 
-It's great to catch typos!
+typo を捕まえるのに素晴らしいです。
 
 ```lisp
 (let* ((a 2)
@@ -481,79 +415,61 @@ It's great to catch typos!
   ;;         ^^^ typo
 ```
 
-If you compile this in a .lisp file (or in a `Alt-x slime-scratch` lisp buffer), you
-will have two warnings, and your editor will underline each in two
-different colors:
+これを .lisp file（または `Alt-x slime-scratch` lisp buffer）で compile すると、2 つの warnings が出て、editor はそれぞれを別の色で underline します。
 
-![](assets/let-example-squale.png "A decent editor highlights compilation warnings.")
+![](assets/let-example-squale.png "まともな editor は compilation warnings を highlight します。")
 
-- first, "square" is defined but never used
-- second, "squale" is an undefined variable.
+- まず、"square" は定義されているが使われていない
+- 次に、"squale" は undefined variable である
 
-If you run the snippet in the REPL, you will get the two warnings but,
-because the snippet is run, you will see the interactive debugger
-with the error "The variable SQUALE is unbound".
+REPL で snippet を実行すると 2 つの warnings が出ますが、snippet が実行されるため、interactive debugger が表示され、"The variable SQUALE is unbound" という error が出ます。
 
 
-## Unbound variables
+## unbound 変数
 
-"unbound" variables were not bound to anything, not even nil. Their
-symbol might exist, but they have no associated value.
+"unbound" variables は何にも bind されていません。nil にすら bind されていません。その symbol は存在するかもしれませんが、associated value はありません。
 
-You can create such variables like this:
+このような variables は次のように作れます。
 
 ```lisp
 (defvar *connection*)
 ```
 
-This `defvar` form is correct. You didn't give any default
-value: the variable is unbound.
+この `defvar` form は正しいものです。default value を与えていないため、variable は unbound です。
 
-You can check if a variable (or a function) is bound with `boundp` (or
-`fboundp`). The `p` is for "predicate".
+variable（または function）が bound されているかは `boundp`（または `fboundp`）で確認できます。`p` は "predicate" を表します。
 
-You can make a variable (or function) unbound with `makunbound` (or `fmakunbound`).
+variable（または function）を unbound にするには `makunbound`（または `fmakunbound`）を使えます。
 
-Note that a `defparameter` form requires an initial argument.
+`defparameter` form は initial argument を必要とすることに注意してください。
 
 
-## Global variables are thread safe
+## グローバル変数は thread safe
 
-Don't be afraid of accessing and set-ing global bindings in
-threads. Each thread will have its own copy of the
-variable. Consequently, you can bind them to other values with `let`
-bindings, etc. That's good.
+threads で global bindings に access したり set したりすることを恐れないでください。各 thread は variable の独自 copy を持ちます。したがって、`let` bindings などで別の値に bind できます。これは良いことです。
 
-It's only if you want one single source of truth that you'll have to
-share the variable between threads and where the danger lies. You can
-use a lock (very easy), but that's all another topic.
+危険があるのは、単一の source of truth が必要で、variable を threads 間で share しなければならない場合だけです。lock を使えます（とても簡単です）が、それは別の話題です。
 
-## Addendum: `defconstant`
+## 補遺: `defconstant`
 
-`defconstant` is here to say something is a constant and is not
-supposed to change, but in practice `defconstant` is annoying. Use
-`defparameter`, and add a convention with a new style of earmuffs:
+`defconstant` は、何かが constant であり変更されるべきでないことを言うためのものですが、実際には `defconstant` は面倒です。`defparameter` を使い、新しい style の earmuffs による convention を追加してください。
 
 ```lisp
 (defparameter +pi+ pi
   "Just to show that pi exists but has no earmuffs. Now it does. You shouldn't change a variable with +-style earmuffs, it's a constant.")
 ```
 
-`defconstant` is annoying because, at least on SBCL, it can't be
-redefined without asking for validation through the interactive
-debugger, which we may often do during development, and its default
-test is `eql`, so give it a string and it will always think that the
-constant was redefined. Look (evaluate each line one by one in order):
+`defconstant` が面倒なのは、少なくとも SBCL では interactive debugger を通じた validation を求めずに再定義できないためです。development 中にはこれをしばしば行うかもしれません。さらに default test は `eql` なので、string を与えると常に constant が再定義されたと考えます。見てください（各行を順番に 1 行ずつ evaluate してください）。
 
 ```lisp
 (defconstant +best-lisper+ :me)
-;; so far so good.
+;; ここまでは問題ありません。
 
 (defconstant +best-lisper+ :me)
-;; so far so good: we didn't redefine anything.
+;; ここまでは問題ありません。何も再定義していません。
 
 (defconstant +best-lisper+ :you)
-;; => the constant is being redefined, we get the interactive debugger (SBCL):
+;; => constant が再定義されており、interactive debugger が出ます（SBCL）:
 
 The constant +BEST-LISPER+ is being redefined (from :ME to :YOU)
    [Condition of type SB-EXT:DEFCONSTANT-UNEQL]
@@ -568,14 +484,14 @@ Restarts:
  3: [*ABORT] Return to SLIME's top level.
  4: [ABORT] abort thread (#<THREAD tid=573581 "repl-thread" RUNNING {120633D123}>)
 
-;; => presse 0 (zero) or click on the "Continue" restart to accept changing the value.
+;; => 0 (zero) を押すか、"Continue" restart をクリックして value の変更を受け入れます。
 ```
 
-With constants as strings:
+strings を constants にした場合:
 
 ```lisp
 (defconstant +best-name+ "me")
-;; so far so good, we create a new constant.
+;; ここまでは問題ありません。新しい constant を作ります。
 
 (defconstant +best-name+ "me")
 ;; => interactive debugger!!
@@ -584,46 +500,42 @@ The constant +BEST-NAME+ is being redefined (from "me" to "me")
 …
 ```
 
-As you will see in the equality chapter, two strings are not equal by
-`eql` that is a low-level equality operator (think pointers), they are
-`equal` (or `string-equal`).
+equality 章で見るように、2 つの strings は低レベルの equality operator である `eql` では equal ではありません（pointer を考えてください）。それらは `equal`（または `string-equal`）です。
 
-This is `defconstant` documentation:
+これは `defconstant` documentation です。
 
-> Define a global constant, saying that the value is constant and may be compiled into code. If the variable already has a value, and this is not EQL to the new value, the code is not portable (undefined behavior). The third argument is an optional documentation string for the variable.
+> global constant を定義し、value が constant であり code に compile され得ることを述べます。variable がすでに value を持ち、これが new value と EQL でない場合、その code は portable ではありません（undefined behavior）。第 3 引数は variable の optional documentation string です。
 
-The `eql` thing is in the spec, what an implementation should do when
-redefining a constant is not defined, so it may vary with your
-implementation.
+`eql` の件は spec にあります。constant を再定義するときに implementation が何をすべきかは定義されていないため、処理系によって変わる可能性があります。
 
-We invite you to look at:
+次を見ることを勧めます。
 
-- [Alexandria's define-constant](https://alexandria.common-lisp.dev/draft/alexandria.html#Data-and-Control-Flow), which has a `:test` keyword (but still errors out on redefinition).
-- [Serapeum's `defconst`](https://github.com/ruricolist/serapeum/blob/master/REFERENCE.md#defconst-symbol-init-optional-docstring)
+- [Alexandria's define-constant](https://alexandria.common-lisp.dev/draft/alexandria.html#Data-and-Control-Flow)。`:test` keyword があります（ただし再定義ではやはり error になります）。
+- [Serapeum の `defconst`](https://github.com/ruricolist/serapeum/blob/master/REFERENCE.md#defconst-symbol-init-optional-docstring)
 - `cl:defparameter` ;)
 
 
-## Guidelines and best practices
+## ガイドラインとベストプラクティス
 
-A few style guidelines:
+いくつかの style guidelines:
 
-- create all your top-level parameters at the top of a file
-- define first parameters then variables
-- use docstrings
-- read your compiler's warnings
-- it's better for your functions to accept arguments, rather than to rely on top-level parameters
-- your functions shouldn't mutate (modify) a top-level binding. You should create a new data structure instead, and use your function's return value as the parameter to another function, and have data flow from one function to another.
-- parameters are best for: a webserver port, a default value… and other user-facing parameters.
-- variables are best for long-living and internal variables: caches, DB connections…
-- you can forget about defconstant
-- when in doubt, use a `defparameter`
-- the pattern where a function parameter is by default a global variable is typical and idiomatic:
+- top-level parameters は file の先頭にすべて作る
+- まず parameters を定義し、その後 variables を定義する
+- docstrings を使う
+- compiler の warnings を読む
+- functions は top-level parameters に頼るより、arguments を受け取る方が良い
+- functions は top-level binding を mutate（modify）すべきではありません。代わりに新しい data structure を作り、関数の return value を別の関数への parameter として使い、data が 1 つの関数から別の関数へ流れるようにしてください。
+- parameters に最適なもの: webserver port、default value…その他 user-facing parameters
+- variables に最適なもの: long-living で internal な variables、cache、DB connections…
+- defconstant のことは忘れてよい
+- 迷ったら `defparameter` を使う
+- function parameter の default が global variable である pattern は typical で idiomatic です。
 
 ```lisp
-;; from the STR library.
+;; STR library から。
 (defvar *whitespaces* (list #\Backspace #\Tab #\Linefeed #\Newline #\Vt #\Page
                             #\Return #\Space #\Rubout
-                            ;; edited for brevity
+                            ;; 簡潔にするため編集
                             ))
 
 (defun trim-left (s &key (char-bag *whitespaces*))
@@ -632,23 +544,22 @@ A few style guidelines:
    (string-left-trim char-bag s)))
 ```
 
-the default value can also be a function call:
+default value は function call でも構いません。
 
 ```lisp
-;; from the Lem editor
+;; Lem editor から
 (defun buffer-modified-p (&optional (buffer (current-buffer)))
   "Return T if 'buffer' has been modified, NIL otherwise."
   (/= 0 (buffer-%modified-p buffer)))
 ```
 
-- these let bindings over global variables are idiomatic too: `(let ((*name* "other")) …)`.
+- global variables に対するこれらの let bindings も idiomatic です: `(let ((*name* "other")) …)`。
 
 ## TLDR;
 
-For top-level variables, use `defparameter`.
+top-level variables には `defparameter` を使います。
 
-Use `let` or `let*` for lexical scope. You should know the difference
-between the two, but when in doubt, start with `let*`:
+lexical scope には `let` または `let*` を使います。両者の違いは知っておくべきですが、迷ったら `let*` から始めてください。
 
 ```lisp
 (let* ((a 2)
@@ -656,4 +567,4 @@ between the two, but when in doubt, start with `let*`:
    (format t "the square of ~a is ~a" a square))
 ```
 
-Use `setf` to change variables.
+variables を変更するには `setf` を使います。

@@ -1,51 +1,26 @@
 ---
-title: Error and exception handling
+title: エラーと例外処理
 ---
 
-Common Lisp has mechanisms for error and condition handling as found
-in other languages, and can do more.
+Common Lisp には、ほかの言語に見られるようなエラー処理と condition 処理の仕組みがあり、さらにそれ以上のことができます。
 
-What is a condition ?
+condition とは何でしょうか？
 
-> Just like in languages that support exception handling (Java, C++,
-> Python, etc.), a condition represents, for the most part, an
-> “exceptional” situation. However, even more so than those languages,
-> *a condition in Common Lisp can represent a general situation where
-> some branching in program logic needs to take place*, not
-> necessarily due to some error condition. Due to the highly
-> interactive nature of Lisp development (the Lisp image in
-> conjunction with the REPL), this makes perfect sense in a language
-> like Lisp rather than say, a language like Java or even Python,
-> which has a very primitive REPL. In most cases, however, we may not
-> need (or even allow) the interactivity that this system offers
-> us. Thankfully, the same system works just as well even in
-> non-interactive mode.
+> 例外処理をサポートする言語（Java、C++、Python など）と同じく、condition は多くの場合「例外的」な状況を表します。しかし、それらの言語以上に、*Common Lisp の condition は、必ずしもエラー状態に起因しない、プログラムロジック上の分岐が必要になる一般的な状況を表すことができます*。Lisp 開発の非常に対話的な性質（REPL と組み合わせた Lisp イメージ）を考えると、これは Java や、非常に原始的な REPL しか持たない Python のような言語よりも、Lisp のような言語では完全に理にかなっています。ただし多くの場合、このシステムが提供する対話性を必要としない（あるいは許可すらしない）かもしれません。ありがたいことに、同じシステムは非対話モードでも同じようにうまく機能します。
 >
 > [z0ltan](https://z0ltan.wordpress.com/2016/08/06/conditions-and-restarts-in-common-lisp/)
 
+順を追って見ていきましょう。追加の資料は後半にあります。
 
-Let's dive into it step by step. More resources are given afterwards.
+## Throwing/catching と signaling/handling
 
-## Throwing/catching versus signaling/handling
+Common Lisp には throw と catch の概念がありますが、これは C++ や Java の throwing/catching とは異なる概念を指します。Common Lisp の [`throw`](https://www.lispworks.com/documentation/HyperSpec/Body/s_throw.htm) と [`catch`](https://www.lispworks.com/documentation/HyperSpec/Body/s_catch.htm)（[Ruby](https://ruby-doc.com/docs/ProgrammingRuby/html/tut_exceptions.html#S4) と同じく！）は制御の移動のための仕組みであり、condition を扱うものではありません。
 
-Common Lisp has a notion of throwing and catching, but it refers to a different concept
-than throwing and catching in C++ or Java.
-In Common Lisp,
-[`throw`](https://www.lispworks.com/documentation/HyperSpec/Body/s_throw.htm)
-and [`catch`](https://www.lispworks.com/documentation/HyperSpec/Body/s_catch.htm)
-(like in [Ruby](https://ruby-doc.com/docs/ProgrammingRuby/html/tut_exceptions.html#S4)!)
-are a mechanism for transfers of control; they do not refer to working with conditions.
+Common Lisp では condition は *signaled* され、signaled された condition に応じてコードを実行する過程を *handling* と呼びます。Java や C++ と違い、condition を handle することは、ただちにスタックが巻き戻されることを意味しません。スタックを巻き戻すかどうか、どの状況でそうするかは、個々の handler 関数が決めます。
 
-In Common Lisp, conditions are *signaled* and the process of executing code in response
-to a signaled condition is called *handling*. Unlike in Java or C++, handling
-a condition does not mean that the stack is immediately unwound - it is up to
-the individual handler functions to decide if and in what situations
-the stack should be unwound.
+## すべてのエラーを無視し、nil を返す
 
-## Ignoring all errors, returning nil
-
-Sometimes you know that a function can fail and you just want to
-ignore it: use [ignore-errors][ignore-errors]:
+関数が失敗し得ることを知っていて、それをただ無視したい場合があります。そのときは [ignore-errors][ignore-errors] を使います。
 
 ~~~lisp
 (ignore-errors
@@ -64,20 +39,16 @@ NIL
 #<DIVISION-BY-ZERO {1008FF5F13}>
 ~~~
 
-We get a welcome `division-by-zero` warning but the code runs well and
-it returns two things: `nil` and the condition that was signaled. We
-could not choose what to return.
+ありがたいことに `division-by-zero` の警告は得られますが、コードは実行され、2 つの値を返します。`nil` と、signal された condition です。何を返すかは選べませんでした。
 
-Remember that we can `inspect` the condition with a right click in Slime.
+Slime では右クリックで condition を `inspect` できることを思い出してください。
 
 
-## Handling all error conditions with `handler-case`
+## `handler-case` ですべての error condition を扱う
 
 <!-- we will say "handling" for handler-bind -->
 
-`ignore-errors` is built from [handler-case][handler-case]. We can write the previous
-example by handling the general `error` but now we can return whatever
-we want:
+`ignore-errors` は [handler-case][handler-case] から作られています。前の例を、一般的な `error` を handle する形で書けますが、今度は好きなものを返せます。
 
 ~~~lisp
 (handler-case (/ 3 0)
@@ -98,9 +69,9 @@ We handled an error.
 #<DIVISION-BY-ZERO {1004846AE3}>
 ~~~
 
-We also returned two values, 0 and the signaled condition.
+ここでも 2 つの値、0 と signal された condition を返しました。
 
-The general form of `handler-case` is
+`handler-case` の一般形は次のとおりです。
 
 ~~~lisp
 (handler-case (code that can error out)
@@ -110,13 +81,12 @@ The general form of `handler-case` is
        ...))
 ~~~
 
-The `(code that can error out)` following `handler-case` must be one
-form. If you want to write multiple expressions, wrap them in a `progn`.
+`handler-case` に続く `(code that can error out)` は 1 つのフォームでなければなりません。複数の式を書きたい場合は `progn` で包みます。
 
 
-## Handling a specific condition
+## 特定の condition を扱う
 
-We can specify what condition to handle:
+どの condition を扱うか指定できます。
 
 ~~~lisp
 (handler-case (/ 3 0)
@@ -128,21 +98,13 @@ We can specify what condition to handle:
 ;; NIL
 ~~~
 
+これは、ほかの言語で知られる「通常の」例外処理に最も近い仕組みです。C++ と Java の `throw`/`try`/`catch`、Python の `raise`/`try`/`except`、Ruby の `raise`/`begin`/`rescue` などです。しかし、Common Lisp ではもっと多くのことができます。
 
-This is the mechanism that is the most similar to the "usual" exception handling
-as known from other languages: `throw`/`try`/`catch` from C++ and Java,
-`raise`/`try`/`except` from Python, `raise`/`begin`/`rescue` in Ruby,
-and so on. But we can do more.
+## condition と restart を完全に制御する: `handler-bind`
 
-## Absolute control over conditions and restarts: `handler-bind`
+[handler-bind][handler-bind] は、condition が signal されたときに何が起きるかを完全に制御したい場合に使います。スタックを巻き戻しません。この点は次の節で示します。デバッガと restarts を、対話的にもプログラム的にも使えるようにします。
 
-[handler-bind][handler-bind] is what to use when we need absolute
-control over what happens when a condition is signaled. It doesn't
-unwind the stack, which we illustrate in the next section. It allows
-us to use the debugger and restarts, either interactively or
-programmatically.
-
-Its general form is:
+一般形は次のとおりです。
 
 ~~~lisp
 (handler-bind ((a-condition #'function-to-handle-it)
@@ -152,62 +114,40 @@ Its general form is:
     (... with an implicit PROGN))
 ~~~
 
-For example:
+例:
 
 ~~~lisp
 (defun handler-bind-example ()
   (handler-bind
         ((error (lambda (c)
                   (format t "we handle this condition: ~a" c)
-                  ;; Try without this return-from: the error bubbles up
-                  ;; up to the interactive debugger.
+                  ;; この return-from を外して試すと、エラーは対話的デバッガまで伝播する。
                   (return-from handler-bind-example))))
       (format t "starting example…~&")
       (error "oh no")))
 ~~~
 
-You'll notice that its syntax is "in reverse" compared to
-`handler-case`: we have the bindings first, the forms (in an implicit
-progn) next.
+`handler-case` と比べると構文が「逆」になっていることに気づくでしょう。先に bindings があり、次に（暗黙の progn 内の）フォームがあります。
 
-If the handler returns normally (it declines to handle the condition),
-the condition continues to bubble up, searching for another handler,
-and it will find the interactive debugger.
+handler が通常どおり戻った場合（condition の処理を辞退した場合）、condition は別の handler を探して伝播し続け、最終的に対話的デバッガに到達します。
 
-This is another difference from `handler-case`: if our handler
-function didn't explicitely return from its calling function with
-`return-from handler-bind-example`, the error would continue to bubble
-up, and we would get the interactive debugger.
+これも `handler-case` との違いです。handler 関数が `return-from handler-bind-example` で呼び出し元関数から明示的に戻らなければ、エラーは伝播し続け、対話的デバッガが表示されます。
 
-This behaviour is particularly useful when your program signaled a
-simple condition. A simple condition isn't an error (see our
-"conditions hierarchy" below) so it won't trigger the debugger. You
-can do something to handle the condition (it's a signal for something
-occuring in your application), and let the program continue.
+この挙動は、プログラムが simple condition を signal したときに特に便利です。simple condition はエラーではないため（下の「condition 階層」を参照）、デバッガを起動しません。condition（アプリケーション内で何かが起きたという signal）に対して何か処理を行い、プログラムを続行できます。
 
-If some library doesn't handle all conditions and lets some bubble out
-to us, we can see the restarts (established by `restart-case`)
-anywhere deep in the stack, including restarts established by other
-libraries that this library called.
+あるライブラリがすべての condition を処理せず、いくつかをこちらへ伝播させる場合、スタックの深い場所にある restarts（`restart-case` により確立されたもの）を見ることができます。そのライブラリが呼び出した別ライブラリが確立した restarts も含まれます。
 
-### handler-bind doesn't unwind the stack
+### handler-bind はスタックを巻き戻さない
 
-With `handler-bind`, *we can see the full stack trace*, with every
-frame that was called. Once we use `handler-case`, we "forget" many
-steps of our program's execution until the condition is handled: the
-call stack is unwound. `handler-bind` does *not* rewind the
-stack. Let's illustrate this.
+`handler-bind` では、*すべての呼び出しフレームを含む完全なスタックトレースを見られます*。`handler-case` を使うと、condition が処理されるまでのプログラム実行の多くの段階を「忘れ」ます。コールスタックが巻き戻されるためです。`handler-bind` はスタックを巻き戻しません。これを示します。
 
-For the sake of our demonstration, we will use the library
-`trivial-backtrace`, which you can install with Quicklisp:
+デモのため、Quicklisp でインストールできる `trivial-backtrace` ライブラリを使います。
 
     (ql:quickload "trivial-backtrace")
 
-It is a wrapper around the implementations' primitives such as `sb-debug:print-backtrace`.
+これは `sb-debug:print-backtrace` など、処理系のプリミティブを包むラッパーです。
 
-Consider the following code: our `main` function calls a chain of
-functions which ultimately fail by signaling an `error`. We handle the
-error in the main function and print the backtrace.
+次のコードを考えます。`main` 関数は、最終的に `error` を signal して失敗する関数の連鎖を呼び出します。main 関数でエラーを処理し、バックトレースを出力します。
 
 ~~~lisp
 (defun f0 ()
@@ -226,7 +166,7 @@ error in the main function and print the backtrace.
       (trivial-backtrace:print-backtrace c))))
 ~~~
 
-This is the backtrace (only the first frames):
+これがバックトレースです（最初のフレームだけ）。
 
 ```
 CL-REPL> (main)
@@ -241,9 +181,9 @@ Backtrace for: #<SB-THREAD:THREAD "repl-thread" RUNNING {1008695453}>
 […]
 ```
 
-So far so good. It is `trivial-backtrace` that prints the "Date/time" and the message "An unhandled error condition…".
+ここまでは問題ありません。"Date/time" と "An unhandled error condition…" というメッセージを出しているのは `trivial-backtrace` です。
 
-Now compare the stacktrace when we use `handler-bind`:
+次に、`handler-bind` を使った場合の stacktrace と比較します。
 
 ```lisp
 (defun main-no-stack-unwinding ()
@@ -273,46 +213,37 @@ Backtrace for: #<SB-THREAD:THREAD "repl-thread" RUNNING {1008695453}>
 7: (MAIN-NO-STACK-UNWINDING)
 ```
 
-That's right: you can see all the call stack: from the main function
-to the error through `f1` and `f0`. These two intermediate functions
-were not present in the backtrace when we used `handler-case` because,
-as the error was signaled and bubbled up in the call stack, the stack
-was *unwound* (or "untangled", "shortened"), and we lost information.
+その通りです。main 関数から `f1` と `f0` を通ってエラーに至る、すべてのコールスタックが見えます。`handler-case` を使ったときのバックトレースに、この 2 つの中間関数はありませんでした。エラーが signal され、コールスタックを伝播するにつれて、スタックが *unwound*（「ほどかれた」「短くされた」）され、情報を失ったからです。
 
 
-### When to use which?
+### どちらをいつ使うか
 
-`handler-case` is enough when you expect a situation to fail. For
-example, in the context of an HTTP request, it is a common to anticipate a 400-ish error:
+失敗する状況を予期しているなら、`handler-case` で十分です。たとえば HTTP リクエストの文脈では、400 番台のエラーを想定するのは普通です。
 
 ~~~lisp
-;; using the dexador library.
+;; dexador ライブラリを使う。
 (handler-case (dex:get "http://bad-url.lisp")
   (dex:http-request-failed (e)
-    ;; For 4xx or 5xx HTTP errors: it's OK, this can happen.
+    ;; 4xx または 5xx HTTP エラー: 起こり得るので問題ない。
     (format *error-output* "The server returned ~D" (dex:response-status e))))
 ~~~
 
-In other exceptional situations, we'll surely want `handler-bind`. For
-example, when we want to handle what went wrong and we want to print a
-backtrace, or if we want to invoke the debugger manually (see below)
-and see exactly what happened.
+その他の例外的な状況では、おそらく `handler-bind` が欲しくなります。たとえば、何が問題だったかを処理し、バックトレースを出力したい場合、または手動でデバッガを起動し（下記参照）、正確に何が起きたかを見たい場合です。
 
-## Running some code, condition or not ("finally") (unwind-protect)
+## condition の有無にかかわらずコードを実行する（"finally"）（unwind-protect）
 
-The "finally" part of others `try`/`catch`/`finally` forms is done with [unwind-protect][unwind-protect].
+ほかの `try`/`catch`/`finally` フォームにおける "finally" 部分は [unwind-protect][unwind-protect] で行います。
 
-It is the construct used in "with-" macros, like `with-open-file`,
-which always closes the file after it.
+これは `with-open-file` のような "with-" マクロで使われる構文で、処理後に必ずファイルを閉じます。
 
-With this example:
+この例では:
 
 ~~~lisp
 (unwind-protect (/ 3 0)
   (format t "This place is safe.~&"))
 ~~~
 
-SBCL source:
+SBCL ソース:
 
 ```lisp
 (sb-xc:defmacro with-open-file ((stream filespec &rest options)
@@ -330,7 +261,7 @@ SBCL source:
              (close ,stream :abort ,abortp)))))))
 ```
 
-simplified:
+単純化すると:
 
 ```lisp
 (defmacro with-open-file ((stream filespec) &body body)
@@ -341,7 +272,7 @@ simplified:
        (close ,stream)))))
 ```
 
-because we want:
+なぜなら、次を:
 
 ```lisp
 (let ((stream (open "filename.txt" :direction :input :if-does-not-exist :create :if-exists :overwrite)))
@@ -351,20 +282,18 @@ because we want:
        (close stream))))
 ```
 
-as simply as:
+次のように単純に書きたいからです。
 
 ```lisp
 (with-open-file (f "filename.txt" …)
   (format stream "hello"))
 ```
 
+対話的デバッガは*表示されます*（`handler-bind` などは使っていません）が、それでもその後にメッセージは出力されます。
 
-We *do* get the interactive debugger (we didn't use handler-bind or
-anything), but our message is printed afterwards anyway.
+## condition を定義し作る
 
-## Defining and making conditions
-
-We define conditions with [define-condition][define-condition] and we make (initialize) them with [make-condition][make-condition].
+[define-condition][define-condition] で condition を定義し、[make-condition][make-condition] でそれを作成（初期化）します。
 
 ~~~lisp
 (define-condition my-division-by-zero (error)
@@ -374,19 +303,17 @@ We define conditions with [define-condition][define-condition] and we make (init
 ;; #<MY-DIVISION-BY-ZERO {1005A5FE43}>
 ~~~
 
-
-It's better if we give more information to it when we create a condition, so let's use slots:
+condition を作るときにより多くの情報を与えた方がよいので、slots を使いましょう。
 
 ~~~lisp
 (define-condition my-division-by-zero (error)
   ((dividend :initarg :dividend
              :initform nil
-             :reader dividend)) ;; <-- we'll get the dividend with (dividend condition). See the CLOS tutorial if needed.
-  (:documentation "Custom error when we encounter a division by zero.")) ;; good practice ;)
+             :reader dividend)) ;; <-- (dividend condition) で dividend を得られる。必要なら CLOS チュートリアルを参照。
+  (:documentation "Custom error when we encounter a division by zero.")) ;; よい習慣 ;)
 ~~~
 
-Now, when we signal the condition in our code, we'll be
-able to populate it with information to be consumed later:
+これで、コード内で condition を signal するときに、後で利用される情報を埋め込めます。
 
 ~~~lisp
 (make-condition 'my-division-by-zero :dividend 3)
@@ -395,18 +322,16 @@ able to populate it with information to be consumed later:
 
 <div class="info-box info">
 <p>
-<strong>Note:</strong> here's a quick reminder on classes, if you are not fully operational
-on the <a href="clos.html">Common Lisp Object System</a>.
+<strong>Note:</strong> <a href="clos.html">Common Lisp Object System</a> についてまだ十分でない場合の、クラスに関する簡単なおさらいです。
 </p>
 </div>
 
 ~~~lisp
 (make-condition 'my-division-by-zero :dividend 3)
-;;                                   ^^ this is the ":initarg"
+;;                                   ^^ これが ":initarg"
 ~~~
 
-and `:reader dividend` created a *generic function* that is a "getter"
-for the dividend of a `my-division-by-zero` object:
+そして `:reader dividend` は、`my-division-by-zero` オブジェクトの dividend に対する "getter" である*総称関数*を作りました。
 
 ~~~lisp
 (make-condition 'my-division-by-zero :dividend 3)
@@ -415,81 +340,69 @@ for the dividend of a `my-division-by-zero` object:
 ;; 3
 ~~~
 
-an ":accessor" would be both a getter and a setter.
+`:accessor` なら getter と setter の両方になります。
+
+つまり、`define-condition` の一般形は通常のクラス定義のように見え、感じられます。ただし似ていても、condition は standard object ではありません。
+
+違いの 1 つは、slots に対して `slot-value` を使えないことです。
 
 
-So, the general form of `define-condition` looks and feels like a
-regular class definition, but despite the similarities, conditions are
-not standard objects.
+## condition を signal する: error, cerror, warn, signal
 
-A difference is that we can't use `slot-value` on slots.
+[error][error] は 2 通りに使えます。
 
+- `(error "some text")`: [simple-error][simple-error] 型の condition を signal します。
+- `(error 'my-error :message "We did this and that and it didn't work.")`: `message` slot に値を与えたカスタム condition を作成し signal します。
 
-## Signaling conditions: error, cerror, warn, signal
+どちらの場合も、condition が handle されなければ、`error` は対話的デバッガを開き、ユーザーは実行を続けるための restart を選べます。
 
-We can use [error][error] in two ways:
-
-- `(error "some text")`: signals a condition of type [simple-error][simple-error],.
-- `(error 'my-error :message "We did this and that and it didn't work.")`: creates and signals a custom condition with a value provided for the `message` slot.
-
-In both cases, if the condition is not handled, `error` opens up the interactive debugger, where
-the user may select a restart to continue execution.
-
-With our own condition type from above, we can do:
+上で定義した独自 condition 型では、次のようにできます。
 
 ~~~lisp
 (error 'my-division-by-zero :dividend 3)
-;; which is a shortcut for
+;; これは次のショートカット
 (error (make-condition 'my-division-by-zero :dividend 3))
 ~~~
 
-`cerror` is like `error`, but automatically establishes a `continue` restart that the user can use to continue execution. It accepts a string as its first argument - this string will be used as the user-visible report for that restart.
+`cerror` は `error` に似ていますが、ユーザーが実行を続けるために使える `continue` restart を自動的に確立します。最初の引数として文字列を受け取り、この文字列はその restart のユーザーに見える report として使われます。
 
-`warn` will not enter the debugger (create warning conditions by subclassing [warning][warning]) - if its condition is unhandled, it will log the warning to error output instead.
+`warn` はデバッガには入りません（warning condition は [warning][warning] を subclass して作ります）。condition が handle されなければ、代わりに警告を error output へ記録します。
 
-Use [signal][signal] if you do not want to do any printing or enter the debugger, but you still want to signal to the upper levels that some sort of noticeable situation has occurred.
+何も出力したくなく、デバッガにも入りたくないが、何らかの注目すべき状況が起きたことを上位レベルへ signal したい場合は、[signal][signal] を使います。
 
-That situation can be anything, from passing information during normal
-operation of your code to grave situations like errors.
-For example, it can be used to track progress during an operation.
-You can create a condition with a
-`percent` slot, signal one whenever progress is made, and the
-higher level code would handle it and display it to the user. See the
-resources below for more.
+その状況は、コードの通常動作中に情報を渡すことから、エラーのような重大な状況まで何でも構いません。たとえば、操作中の進捗を追跡するために使えます。`percent` slot を持つ condition を作り、進捗があるたびに signal し、上位コードがそれを handle してユーザーに表示できます。詳しくは下の資料を参照してください。
 
-### Conditions hierarchy
+### condition 階層
 
-The class precedence list of `simple-error` is `simple-error, simple-condition, error, serious-condition, condition, t`.
+`simple-error` の class precedence list は `simple-error, simple-condition, error, serious-condition, condition, t` です。
 
-The class precedence list of `simple-warning` is  `simple-warning, simple-condition, warning, condition, t`.
+`simple-warning` の class precedence list は `simple-warning, simple-condition, warning, condition, t` です。
 
 
-### Custom error messages (:report)
+### カスタムエラーメッセージ（:report）
 
-
-So far, when signaling our error, we saw this default text in the
-debugger:
+ここまで、エラーを signal したとき、デバッガには次のデフォルトテキストが表示されていました。
 
 ```
 Condition COMMON-LISP-USER::MY-DIVISION-BY-ZERO was signalled.
    [Condition of type MY-DIVISION-BY-ZERO]
 ```
 
-We can do better by giving a `:report` function in our condition declaration:
+condition 宣言に `:report` 関数を与えることで、もっとよくできます。
 
 ~~~lisp
 (define-condition my-division-by-zero (error)
   ((dividend :initarg :dividend
              :initform nil
              :accessor dividend))
-  ;; the :report is the message into the debugger:
+  ;; :report はデバッガ内のメッセージ:
   (:report (lambda (condition stream)
      (format stream
              "You were going to divide ~a by zero.~&"
              (dividend condition)))))
 ~~~
 
-Now:
+すると:
 
 ~~~lisp
 (error 'my-division-by-zero :dividend 3)
@@ -500,41 +413,34 @@ Now:
 ~~~
 
 
-## Inspecting the stacktrace
+## stacktrace を調べる
 
-That's another quick reminder, not a Slime tutorial. In the debugger,
-you can inspect the stacktrace, the arguments to the function calls,
-go to the erroneous source line (with `v` in Slime), execute code in
-the context (`e`), etc.
+これはもう 1 つの簡単なおさらいであり、Slime チュートリアルではありません。デバッガでは、stacktrace、関数呼び出しへの引数、エラーのあるソース行への移動（Slime では `v`）、そのコンテキストでのコード実行（`e`）などができます。
 
-Often, you can edit a buggy function, compile it (with the `C-c C-c`
-shortcut in Slime), choose the "RETRY" restart and see your code pass.
+多くの場合、バグのある関数を編集し、（Slime の `C-c C-c` ショートカットで）コンパイルし、"RETRY" restart を選んで、コードが通ることを確認できます。
 
-All this depends on compiler options, wether it is optimized for
-debugging, speed or security.
+これはすべてコンパイラオプション、つまりデバッグ、速度、安全性のどれ向けに最適化されているかに依存します。
 
-See our [debugging section](debugging.html).
+[デバッグセクション](debugging.html)を参照してください。
 
 
-## Restarts, interactive choices in the debugger
+## Restarts、デバッガ内の対話的な選択肢
 
-Restarts are the choices we get in the debugger, which always has the
-`RETRY` and `ABORT` ones.
+Restarts はデバッガ内で得られる選択肢です。デバッガには常に `RETRY` と `ABORT` があります。
 
-By *handling* restarts we can start over the operation as if the error
-didn't occur (as seen in the stack).
+restart を *handling* することで、エラーが起きなかったかのように（スタック上で見たように）操作をやり直せます。
 
 
-### Using assert's optional restart
+### assert の任意 restart を使う
 
-In its simple form `assert` does what we know:
+単純な形では、`assert` は私たちが知っているとおりに動きます。
 
 ~~~lisp
 (assert (realp 3))
 ;; NIL = passed
 ~~~
 
-When the assertion fails, we are prompted into the debugger:
+アサーションが失敗すると、デバッガに入るよう促されます。
 
 ~~~lisp
 (defun divide (x y)
@@ -551,17 +457,17 @@ When the assertion fails, we are prompted into the debugger:
 ;;  …
 ~~~
 
-It also accepts an optional parameter to offer to change values:
+値を変更する選択肢を提供する任意パラメータも受け取ります。
 
 ~~~lisp
 (defun divide (x y)
   (assert (not (zerop y))
-          (y)   ;; list of values that we can change.
-          "Y can not be zero. Please change it") ;; custom error message.
+          (y)   ;; 変更できる値のリスト。
+          "Y can not be zero. Please change it") ;; カスタムエラーメッセージ。
   (/ x y))
 ~~~
 
-Now we get a new restart that offers to change the value of Y:
+これで、Y の値を変更する新しい restart が得られます。
 
 ~~~lisp
 (divide 3 0)
@@ -574,7 +480,7 @@ Now we get a new restart that offers to change the value of Y:
 ;;  …
 ~~~
 
-and when we choose it, we are prompted for a new value in the REPL:
+それを選ぶと、REPL で新しい値の入力を求められます。
 
 ```
 The old value of Y is 0.
@@ -586,34 +492,31 @@ Type a form to be evaluated:
 ```
 
 
-### Defining restarts (restart-case)
+### restarts を定義する（restart-case）
 
-All this is good but we might want more custom choices.  We can add
-restarts on the top of the list by wrapping our function call inside
-[restart-case][restart-case].
+これは便利ですが、もっと独自の選択肢が欲しいこともあります。[restart-case][restart-case] で関数呼び出しを包むことで、一覧の先頭に restarts を追加できます。
 
 ~~~lisp
 (defun divide-with-restarts (x y)
   (restart-case (/ x y)
-    (return-zero ()  ;; <-- creates a new restart called "RETURN-ZERO"
+    (return-zero ()  ;; <-- "RETURN-ZERO" という新しい restart を作る
       0)
     (divide-by-one ()
       (/ x 1))))
 (divide-with-restarts 3 0)
 ~~~
 
-In case of *any error* (we'll improve on that with `handler-bind`),
-we'll get those two new choices at the top of the debugger:
+*任意のエラー*の場合（これは `handler-bind` で改善します）、デバッガの先頭にこの 2 つの新しい選択肢が表示されます。
 
 ![](simple-restarts.png)
 
-That's allright but let's just write more human-friendy "reports":
+これで問題ありませんが、より人間に分かりやすい "reports" を書きましょう。
 
 ~~~lisp
 (defun divide-with-restarts (x y)
   (restart-case (/ x y)
     (return-zero ()
-      :report "Return 0"  ;; <-- added
+      :report "Return 0"  ;; <-- 追加
       0)
     (divide-by-one ()
       :report "Divide by 1"
@@ -624,16 +527,12 @@ That's allright but let's just write more human-friendy "reports":
 ;;  1: [DIVIDE-BY-ONE] Divide by 1
 ~~~
 
-That's better, but we lack the ability to change an operand, as we did
-with the `assert` example above.
+こちらの方がよいですが、上の `assert` の例で行ったように operand を変更する機能がありません。
 
 
-### Changing a variable with restarts
+### restart で変数を変更する
 
-The two restarts we defined didn't ask for a new value. To do this, we
-add an `:interactive` lambda function to the restart, that asks for
-the user a new value with the input method of its choice. Here, we'll
-use the regular `read`.
+定義した 2 つの restarts は、新しい値を求めませんでした。これを行うには、restart に `:interactive` lambda 関数を追加し、ユーザーに新しい値を入力方法で尋ねます。ここでは通常の `read` を使います。
 
 ~~~lisp
 (defun divide-with-restarts (x y)
@@ -647,23 +546,22 @@ use the regular `read`.
     (set-new-divisor (value)
       :report "Enter a new divisor"
       ;;
-      ;; Ask the user for a new value:
+      ;; ユーザーに新しい値を尋ねる:
       :interactive (lambda () (prompt-new-value "Please enter a new divisor: "))
       ;;
-      ;; and call the divide function with the new value…
-      ;; … possibly handling bad input again!
+      ;; 新しい値で divide 関数を呼ぶ…
+      ;; …おそらく不正入力を再び handle しながら！
       (divide-with-restarts x value))))
 
 (defun prompt-new-value (prompt)
-  (format *query-io* prompt) ;; *query-io*: the special stream to make user queries.
-  (force-output *query-io*)  ;; Ensure the user sees what he types.
-  (list (read *query-io*)))  ;; We must return a list.
+  (format *query-io* prompt) ;; *query-io*: ユーザー問い合わせ用の特別なストリーム。
+  (force-output *query-io*)  ;; ユーザーが入力内容を見られるようにする。
+  (list (read *query-io*)))  ;; リストを返さなければならない。
 
 (divide-with-restarts 3 0)
 ~~~
 
-When calling it, we are offered a new restart, we enter a new value,
-and we get our result:
+呼び出すと新しい restart が提示され、新しい値を入力し、結果を得ます。
 
 ~~~
 (divide-with-restarts 3 0)
@@ -676,49 +574,42 @@ and we get our result:
 ;; 3/10
 ~~~
 
-Oh, you prefer a graphical user interface? We can use the `zenity`
-command line interface on GNU/Linux.
+グラフィカルユーザーインターフェイスの方がよいですか？ GNU/Linux では `zenity` コマンドラインインターフェイスを使えます。
 
 ~~~lisp
 (defun prompt-new-value (prompt)
   (list
    (let ((input
-          ;; We capture the program's output to a string.
+          ;; プログラムの出力を文字列へ捕捉する。
           (with-output-to-string (s)
             (let* ((*standard-output* s))
               (uiop:run-program `("zenity"
                                   "--forms"
                                   ,(format nil "--add-entry=~a" prompt))
                                 :output s)))))
-     ;; We get a string and we want a number.
-     ;; We could also use parse-integer, the parse-number library, etc.
+     ;; 文字列を得たので、数値が欲しい。
+     ;; parse-integer や parse-number ライブラリなども使える。
      (read-from-string input))))
 ~~~
 
-Now try again and you should get a little window asking for a new number:
+もう一度試すと、新しい数値を尋ねる小さなウィンドウが出るはずです。
 
 ![](assets/zenity-prompt.png)
 
-
-That's fun, but that's not all. Choosing restarts manually is not always (or
-often?) satisfactory. And by *handling* restarts we can start over the operation
-as if the error didn't occur, as seen in the stack.
+これは楽しいですが、それだけではありません。restarts を手動で選ぶことは、常に（あるいは頻繁に）満足できるものではありません。そして restart を *handling* することで、エラーが起きなかったかのように、スタック上で見た操作をやり直せます。
 
 
-### Calling restarts programmatically (handler-bind, invoke-restart)
+### restarts をプログラムから呼び出す（handler-bind, invoke-restart）
 
-We have a piece of code that we know can signal conditions. Here,
-`divide-with-restarts` can signal an error about a division by
-zero. What we want to do, is our higher-level code to automatically
-handle it and call the appropriate restart.
+condition を signal し得るコードがあるとします。ここでは `divide-with-restarts` がゼロ除算に関するエラーを signal する可能性があります。やりたいのは、上位レベルのコードがそれを自動的に handle し、適切な restart を呼ぶことです。
 
-We can do this with `handler-bind` and [invoke-restart][invoke-restart]:
+これは `handler-bind` と [invoke-restart][invoke-restart] でできます。
 
 ~~~lisp
 (defun divide-and-handle-error (x y)
   (handler-bind
       ((division-by-zero (lambda (c)
-                           (format t "Got error: ~a~%" c) ;; error-message
+                           (format t "Got error: ~a~%" c) ;; エラーメッセージ
                            (format t "and will divide by 1~&")
                            (invoke-restart 'divide-by-one))))
     (divide-with-restarts x y)))
@@ -731,18 +622,16 @@ We can do this with `handler-bind` and [invoke-restart][invoke-restart]:
 ~~~
 
 
-### Using other restarts (find-restart)
+### ほかの restarts を使う（find-restart）
 
-Use [find-restart][find-restart].
+[find-restart][find-restart] を使います。
 
-`find-restart 'name-of-restart` will return the most recent bound
-restart with the given name, or `nil`.
+`find-restart 'name-of-restart` は、指定された名前で最も新しく束縛された restart、または `nil` を返します。
 
 
-### Hiding and showing restarts
+### restarts を隠す、表示する
 
-Restarts can be hidden. In `restart-case`, in addition to `:report`
-and `:interactive`, they also accept a `:test` key:
+Restarts は隠せます。`restart-case` では、`:report` と `:interactive` に加えて、`:test` キーも受け取ります。
 
 ~~~lisp
 (restart-case
@@ -752,56 +641,52 @@ and `:interactive`, they also accept a `:test` key:
     ...
 ~~~
 
-## Invoking the debugger manually
+## デバッガを手動で起動する
 
-Suppose you handle a condition with `handler-bind`, and your condition
-object is bound to the `c` variable (as in our examples
-above). Suppose a parameter of yours, say `*devel-mode*`, tells you
-are not in production. It may be handy to fire the debugger on the
-given condition. Use:
+`handler-bind` で condition を handle しており、condition オブジェクトが（上の例のように）`c` 変数に束縛されているとします。さらに、たとえば `*devel-mode*` というパラメータが、本番環境ではないことを示しているとします。この condition に対してデバッガを起動すると便利かもしれません。次を使います。
 
 ~~~lisp
 (invoke-debugger c)
 ~~~
 
-In production, you can print the backtrace instead with `trivial-backtrace:print-backtrace`.
+本番環境では、代わりに `trivial-backtrace:print-backtrace` でバックトレースを出力できます。
 
 
-## Disabling the debugger
+## デバッガを無効にする
 
-We can run our lisp programs in production with the debugger turned off. Each implementation has a command-line switch. In SBCL, it is:
+本番環境では、デバッガをオフにして lisp プログラムを実行できます。各処理系にはコマンドラインスイッチがあります。SBCL では次のとおりです。
 
     $ sbcl --disable-debugger
 
-(which is implied by `--script` and `--non-interactive`).
+（これは `--script` と `--non-interactive` では暗黙に指定されます）。
 
 
 
-## Conclusion
+## まとめ
 
-You're now ready to write some production code!
+これで、本番コードを書く準備ができました！
 
 
-## Resources
+## 資料
 
-* [Practical Common Lisp: "Beyond Exception Handling: Conditions and Restarts"](http://gigamonkeys.com/book/beyond-exception-handling-conditions-and-restarts.html) - the go-to tutorial, more explanations and primitives.
-* Common Lisp Recipes, chap. 12, by E. Weitz
+* [Practical Common Lisp: "Beyond Exception Handling: Conditions and Restarts"](http://gigamonkeys.com/book/beyond-exception-handling-conditions-and-restarts.html) - 定番チュートリアル。より多くの説明とプリミティブ。
+* Common Lisp Recipes、第 12 章、E. Weitz
 * [language reference](https://www.cs.cmu.edu/Groups/AI/html/cltl/clm/node317.html)
-* [Video tutorial: introduction on conditions and restarts](http://nklein.com/2011/03/tutorial-introduction-to-conditions-and-restarts/), by Patrick Stein.
+* [Video tutorial: introduction on conditions and restarts](http://nklein.com/2011/03/tutorial-introduction-to-conditions-and-restarts/)、Patrick Stein による。
 * [Condition Handling in the Lisp family of languages](http://www.nhplace.com/kent/Papers/Condition-Handling-2001.html)
-* [z0ltan.wordpress.com](https://z0ltan.wordpress.com/2016/08/06/conditions-and-restarts-in-common-lisp/) (the article this recipe is heavily based upon)
+* [z0ltan.wordpress.com](https://z0ltan.wordpress.com/2016/08/06/conditions-and-restarts-in-common-lisp/)（このレシピが大きく基づいている記事）
 
-## See also
+## 関連項目
 
-* [Algebraic effects - You can touch this !](http://jacek.zlydach.pl/blog/2019-07-24-algebraic-effects-you-can-touch-this.html) - how to use conditions and restarts to implement progress reporting and aborting of a long-running calculation, possibly in an interactive or GUI context.
-* [A tutorial on conditions and restarts](https://github.com/stylewarning/lisp-random/blob/master/talks/4may19/root.lisp),  based around computing the roots of a real function. It was presented by the author at a Bay Area Julia meetup on may 2019 ([talk slides here](https://github.com/stylewarning/talks/blob/master/4may19-julia-meetup/Bay%20Area%20Julia%20Users%20Meetup%20-%204%20May%202019.pdf)).
-* [lisper.in](https://lisper.in/restarts#signaling-validation-errors) - example with parsing a csv file and using restarts with success, [in a flight travel company](https://www.reddit.com/r/lisp/comments/7k85sf/a_tutorial_on_conditions_and_restarts/drceozm/).
-* [https://github.com/svetlyak40wt/python-cl-conditions](https://github.com/svetlyak40wt/python-cl-conditions) - implementation of the CL condition system in Python.
-* [https://github.com/phoe/portable-condition-system](https://github.com/phoe/portable-condition-system) - portable implementation of the CL condition system in Common Lisp.
+* [Algebraic effects - You can touch this !](http://jacek.zlydach.pl/blog/2019-07-24-algebraic-effects-you-can-touch-this.html) - conditions と restarts を使って、長時間実行される計算の進捗報告と中止を実装する方法。対話的または GUI の文脈でも利用可能。
+* [A tutorial on conditions and restarts](https://github.com/stylewarning/lisp-random/blob/master/talks/4may19/root.lisp) - 実関数の根の計算を題材にしたもの。著者により 2019 年 5 月の Bay Area Julia meetup で発表されました（[talk slides here](https://github.com/stylewarning/talks/blob/master/4may19-julia-meetup/Bay%20Area%20Julia%20Users%20Meetup%20-%204%20May%202019.pdf)）。
+* [lisper.in](https://lisper.in/restarts#signaling-validation-errors) - csv ファイルの parsing と restarts の成功例。[旅行会社での事例](https://www.reddit.com/r/lisp/comments/7k85sf/a_tutorial_on_conditions_and_restarts/drceozm/)。
+* [https://github.com/svetlyak40wt/python-cl-conditions](https://github.com/svetlyak40wt/python-cl-conditions) - Python における CL condition system の実装。
+* [https://github.com/phoe/portable-condition-system](https://github.com/phoe/portable-condition-system) - Common Lisp における CL condition system の portable 実装。
 
-## Acknowledgements
+## 謝辞
 
-* [`@vindarel`'s video course on Udemy](https://www.udemy.com/course/common-lisp-programming/?referralCode=2F3D698BBC4326F94358) for the `handler-bind` part.
+* `handler-bind` 部分について、[`@vindarel` の Udemy 動画講座](https://www.udemy.com/course/common-lisp-programming/?referralCode=2F3D698BBC4326F94358)。
 
 
 [ignore-errors]: http://www.lispworks.com/documentation/HyperSpec/Body/m_ignore.htm
