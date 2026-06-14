@@ -16,9 +16,25 @@ kramdown:
 sass:
   style: :compressed
 
+# Japanese translation support
+collections:
+  ja:
+    output: true
+    permalink: /:collection/:path/
+
 defaults:
-  -
-    scope:
+  # Default (English) pages
+  - scope:
       path: ""
+      type: "pages"
     values:
       layout: "chapter"
+      lang: "en"
+  
+  # Japanese pages
+  - scope:
+      path: "ja"
+      type: "ja"
+    values:
+      layout: "chapter"
+      lang: "ja"
