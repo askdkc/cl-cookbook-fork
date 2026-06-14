@@ -1,0 +1,16 @@
+---
+title:
+- type: main
+  text: Common Lisp Cookbook 日本語版
+- type: subtitle
+  text: プログラム可能なプログラミング言語への入門
+creator:
+- role: author
+  text: The Common Lisp Cookbook contributors
+- role: translator
+  text: Japanese translation project
+lang: ja-JP
+rights: © January 2026, vindarel <vindarel@mailz.org>.
+  This e-book is free of charge, but you can [pay what you want](https://ko-fi.com/s/01fee22a32) for it.
+cover-image: ja/orly-cover.png
+...
