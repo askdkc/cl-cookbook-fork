@@ -63,7 +63,7 @@ CL-USER> (loop (print (eval (read))))
 3
 ~~~
 
-上の行は永遠に loop し、抜け出す方法はありません。ただし `(quit)` は別で、これは top-level REPL も終了します。次は、`q` symbol（文字列ではありません）を見たら終了する、とても単純な loop です。
+上の行は永遠に loop し、抜け出す方法はありません。ただし `(quit)` は別で、これは top-level REPL も終了します。次は、`q` シンボル（文字列ではありません）を見たら終了する、とても単純な loop です。
 
 ~~~lisp
 (loop for input = (read)
@@ -97,7 +97,7 @@ CL-USER> *input*
   ...)
 ~~~
 
-[`*standard-output*`](http://www.lispworks.com/documentation/HyperSpec/Body/v_debug_.htm) は dynamic variable なので、`LET` form の body の実行中にそれを参照するすべての箇所は、あなたが bind した stream を参照します。`LET` form を抜けると、通常実行であれ、関数全体を抜ける `RETURN-FROM` であれ、exception であれ、その他何であれ、`*STANDARD-OUTPUT*` の古い値が復元されます。（ちなみに、Common Lisp で global variable が他の言語ほど壊れたものにならないのはこのためです。特定の form の実行中だけ bind でき、その form が終わった後に以前の値を失う危険がないので、かなり安全に使えます。すべての関数に渡される追加の parameter のように振る舞います。）
+[`*standard-output*`](http://www.lispworks.com/documentation/HyperSpec/Body/v_debug_.htm) は dynamic 変数なので、`LET` form の body の実行中にそれを参照するすべての箇所は、あなたが bind したストリームを参照します。`LET` form を抜けると、通常実行であれ、関数全体を抜ける `RETURN-FROM` であれ、exception であれ、その他何であれ、`*STANDARD-OUTPUT*` の古い値が復元されます。（ちなみに、Common Lisp で global 変数が他の言語ほど壊れたものにならないのはこのためです。特定の form の実行中だけ bind でき、その form が終わった後に以前の値を失う危険がないので、かなり安全に使えます。すべての関数に渡される追加のパラメータのように振る舞います。）
 
 プログラムの出力をファイルへ送るべき場合は、次のようにできます。
 
@@ -110,11 +110,13 @@ CL-USER> *input*
 
 [`with-open-file`](http://www.lispworks.com/documentation/HyperSpec/Body/m_w_open.htm) はファイルを開き、必要なら作成し、`*standard-output*` を bind し、body を実行し、ファイルを閉じ、`*standard-output*` を以前の値へ復元します。これ以上快適にはなりません。<a name="faith"></a>
 
-## 文字 stream による忠実な出力
+<a id="stream-"></a>
 
-ここでいう _faithful output_ とは、0 から 255 の間の code を持つ文字がそのまま書き出されることを意味します。つまり、stream に対して `(princ (code-char 0..255) s)` でき、8-bit byte が書き出されると期待できるということです。Unicode と 16 bit または 32 bit の文字表現の時代には、これは自明ではありません。これは、ä、ß、þ といった文字の [`char-code`](http://www.lispworks.com/documentation/HyperSpec/Body/f_char_c.htm) が 0..255 の範囲にあることを要求するものでは*ありません*。実装は任意の code を使えます。しかし、とりわけ `#\Newline` から CRLF への変換が起きないことは要求します。
+## 文字ストリームによる忠実な出力
 
-Common Lisp には、character I/O と byte（binary）I/O を区別する長い伝統があります。たとえば [`read-byte`](http://www.lispworks.com/documentation/HyperSpec/Body/f_rd_by.htm) と [`read-char`](http://www.lispworks.com/documentation/HyperSpec/Body/f_rd_cha.htm) は標準に含まれています。一部の実装では両方の関数を交換可能に呼べます。他の実装では、どちらか一方だけが許可されます。[simple stream proposal](https://www.cliki.net/simple-stream) は、両方が可能な _bivalent stream_ の概念を定義しています。
+ここでいう _faithful output_ とは、0 から 255 の間の code を持つ文字がそのまま書き出されることを意味します。つまり、ストリームに対して `(princ (code-char 0..255) s)` でき、8-bit byte が書き出されると期待できるということです。Unicode と 16 bit または 32 bit の文字表現の時代には、これは自明ではありません。これは、ä、ß、þ といった文字の [`char-code`](http://www.lispworks.com/documentation/HyperSpec/Body/f_char_c.htm) が 0..255 の範囲にあることを要求するものでは*ありません*。実装は任意の code を使えます。しかし、とりわけ `#\Newline` から CRLF への変換が起きないことは要求します。
+
+Common Lisp には、文字 I/O と byte（バイナリ）I/O を区別する長い伝統があります。たとえば [`read-byte`](http://www.lispworks.com/documentation/HyperSpec/Body/f_rd_by.htm) と [`read-char`](http://www.lispworks.com/documentation/HyperSpec/Body/f_rd_cha.htm) は標準に含まれています。一部の実装では両方の関数を交換可能に呼べます。他の実装では、どちらか一方だけが許可されます。[simple ストリーム proposal](https://www.cliki.net/simple-stream) は、両方が可能な _bivalent stream_ の概念を定義しています。
 
 さまざまな element-type が有用なのは、一部の protocol が channel 上で 8-Bit output を送信できることに依存しているからです。たとえば HTTP では、header は通常 ASCII であり、行終端として CRLF を使うべきです。一方で body は MIME type application/octet-stream を持つことができ、その場合 CRLF 変換はデータを破壊します。（これは、誤って設定された Webserver が未知のファイルを text/plain MIME type として宣言したとき、MS-Windows 上の Netscape browser が送信データを壊す仕組みです。text/plain はほとんどの Apache 設定でデフォルトです）。
 
@@ -122,7 +124,7 @@ Common Lisp には、character I/O と byte（binary）I/O を区別する長い
 
 ### SBCL
 
-任意の byte を string にロードするには、`:iso-8859-1` external format を使います。例:
+任意の byte を文字列にロードするには、`:iso-8859-1` external format を使います。例:
 
 ~~~lisp
 (uiop:read-file-string "/path/to/file" :external-format :iso-8859-1)
@@ -221,7 +223,7 @@ code > 127 の文字は ASCII で表現できません。
 
 ## 高速な bulk I/O
 
-大量のデータをコピーする必要があり、source と destination がどちらも stream（同じ [element type](http://www.lispworks.com/documentation/HyperSpec/Body/26_glo_e.htm#element_type)）である場合、[`read-sequence`](http://www.lispworks.com/documentation/HyperSpec/Body/f_rd_seq.htm) と [`write-sequence`](http://www.lispworks.com/documentation/HyperSpec/Body/f_wr_seq.htm) を使うと非常に高速です。
+大量のデータをコピーする必要があり、source と destination がどちらもストリーム（同じ [element type](http://www.lispworks.com/documentation/HyperSpec/Body/26_glo_e.htm#element_type)）である場合、[`read-sequence`](http://www.lispworks.com/documentation/HyperSpec/Body/f_rd_seq.htm) と [`write-sequence`](http://www.lispworks.com/documentation/HyperSpec/Body/f_wr_seq.htm) を使うと非常に高速です。
 
 ~~~lisp
 (let ((buf (make-array 4096 :element-type (stream-element-type input-stream))))

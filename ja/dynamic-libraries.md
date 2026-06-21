@@ -2,38 +2,42 @@
 title: Building Dynamic Libraries
 ---
 
-Common Lisp implementation の大多数には、C ABI を使う library の function を呼び出せる何らかの [foreign function interface](ffi.html) があります。しかし逆方向、つまり CL library を他の言語から C ABI 経由で呼び出せる library として compile することは、あまり一般的ではないかもしれません。
+Common Lisp 処理系の大多数には、C ABI を使うライブラリの関数を呼び出せる何らかの [外部関数インターフェイス](ffi.html) があります。しかし逆方向、つまり CL ライブラリを他の言語から C ABI 経由で呼び出せるライブラリとして compile することは、あまり一般的ではないかもしれません。
 
-LispWorks や Allegro CL のような commercial implementation は通常この機能を提供しており、document もよく整備されています [^1]。
+LispWorks や Allegro CL のような commercial 処理系は通常この機能を提供しており、document もよく整備されています [^1]。
 
-この章では、[SBCL-Librarian](https://github.com/quil-lang/sbcl-librarian) という project を説明します。これは、優れた open-source かつ free-to-use な implementation である [SBCL (Steel Bank Common Lisp)](https://www.sbcl.org) を使い、C (C FFI を持つもの全般) と Python から呼び出せる library を作るための、方針を持った方法です。
+この章では、[SBCL-Librarian](https://github.com/quil-lang/sbcl-librarian) という project を説明します。これは、優れた open-source かつ free-to-use な処理系である [SBCL (Steel Bank Common Lisp)](https://www.sbcl.org) を使い、C (C FFI を持つもの全般) と Python から呼び出せるライブラリを作るための、方針を持った方法です。
 
-SBCL-Librarian は callback を support しているため、すばらしい machine learning や statistical library を使う Python code など、どんな code とでも Lisp library を統合できます。
+SBCL-Librarian は callback を support しているため、すばらしい machine learning や statistical ライブラリを使う Python code など、どんな code とでも Lisp ライブラリを統合できます。
 
 SBCL-Librarian の動作は、C source file、C header、Python module を生成するというものです。
 
-C source file はまず dynamic library に compile されます。この library は、提供される header file を使って、任意の C project から、または C library の loading を support する言語の任意の project から load できます。
+C source file はまず dynamic ライブラリに compile されます。このライブラリは、提供される header file を使って、任意の C project から、または C ライブラリの loading を support する言語の任意の project から load できます。
 
-生成された Python module は、compile 済み library を Python process に load します。つまり、Lisp library を Python code から使う前に C library を compile しておく必要があります。この事実には、主に 2 つの結果があります。
+生成された Python module は、compile 済みライブラリを Python プロセスに load します。つまり、Lisp ライブラリを Python code から使う前に C ライブラリを compile しておく必要があります。この事実には、主に 2 つの結果があります。
 
-- 一方で、Lisp library はすべて効率的な native code になります。これはすばらしいことです。Python interpreter はかなり遅いことがあり、特に machine learning や statistics の library の多くは native code に compile されています。Common Lisp でも同じ効率を達成できます。
-- 他方で、library は Python と通信するために C interface だけを使えます。C の primitive data type、structure、function、pointer (function への pointer を含む) です。C の基本知識が必要です。
+- 一方で、Lisp ライブラリはすべて効率的な native code になります。これはすばらしいことです。Python interpreter はかなり遅いことがあり、特に machine learning や statistics のライブラリの多くは native code に compile されています。Common Lisp でも同じ効率を達成できます。
+- 他方で、ライブラリは Python と通信するために C インターフェイスだけを使えます。C の primitive data type、structure、関数、ポインタ (関数へのポインタを含む) です。C の基本知識が必要です。
 
 <div class="info" style="background-color: #e7f3fe; border-left: 6px solid #2196F3; padding: 17px;">
 <!-- if inside a <p> then bootstrap adds 10px padding to the bottom -->
 <strong>NOTE:</strong> SBCL-Librarian の背後にいる team は、industry で quantum computing に取り組んでいます。より正確には、Quil という quantum computing 用 programming language とその ecosystem に取り組んでいます。
 </div>
 
-## Environment の準備
+<a id="environment-"></a>
 
-### Shared Library Support 付きで SBCL を build する
+## 環境の準備
 
-SBCL の binary distribution は通常、shared library として build された SBCL を含んでいません。しかしこれは SBCL-Librarian に必要です。
+<a id="shared-library-support--sbcl--build-"></a>
+
+### Shared ライブラリ Support 付きで SBCL を build する
+
+SBCL のバイナリ distribution は通常、shared ライブラリとして build された SBCL を含んでいません。しかしこれは SBCL-Librarian に必要です。
 [SBCL git repository](https://github.com/sbcl/sbcl) から download するか、[Roswell を使って](getting-started.html#with-roswell) `ros install sbcl-source` command を実行して取得できます。
 
-SBCL は compilation process を bootstrap するために、動作する Common Lisp system も必要とします。簡単な trick は、Roswell から binary installation を download し、それを `PATH` variable に追加することです。
+SBCL は compilation プロセスを bootstrap するために、動作する Common Lisp system も必要とします。簡単な trick は、Roswell からバイナリ installation を download し、それを `PATH` 変数に追加することです。
 
-SBCL は `zstd` library に依存します。Linux-based system では、library と header file の両方を package manager から取得できます。通常は `libzstd-dev` という名前です。Windows では、推奨される方法は
+SBCL は `zstd` ライブラリに依存します。Linux-based system では、ライブラリと header file の両方をパッケージ manager から取得できます。通常は `libzstd-dev` という名前です。Windows では、推奨される方法は
 [MSYS2](https://www.msys2.org) を使うことです。MSYS2 には Roswell、`zstd`、その header が含まれます。
 
 source のある directory へ移動し、次を実行します。
@@ -49,7 +53,7 @@ export PATH=~/.roswell/impls/x86-64/linux/sbcl-bin/2.4.1/bin/:$PATH
 ./make-shared-library.sh --fancy
 ~~~
 
-shared library は Windows や Mac でも `.so` extension を持つことに注意してください。ただし、問題なく動くようです。MSYS2 で Roswell を使う場合、MSYS2 home directory ではなく Windows home directory を使うことがあります。これらは異なる path です。したがって、Roswell への path は `~/.roswell/` ではなく `$USERPROFILE/.roswell` (または `/C/Users/<username>/.roswell`) かもしれません。
+shared ライブラリは Windows や Mac でも `.so` extension を持つことに注意してください。ただし、問題なく動くようです。MSYS2 で Roswell を使う場合、MSYS2 home directory ではなく Windows home directory を使うことがあります。これらは異なる path です。したがって、Roswell への path は `~/.roswell/` ではなく `$USERPROFILE/.roswell` (または `/C/Users/<username>/.roswell`) かもしれません。
 
 ### SBCL-Librarian を download して setup する
 
@@ -61,9 +65,9 @@ git clone https://github.com/quil-lang/sbcl-librarian.git
 
 ## Lisp からの Hello World
 
-SBCL-Librarian にはいくつかの documentation といくつかの example が付属していますが、基本 tutorial のようなものは実際にはありません。この章では、2 つの数を足す基本的な function を作り、それを Python から呼び出します。
+SBCL-Librarian にはいくつかの documentation といくつかの example が付属していますが、基本チュートリアルのようなものは実際にはありません。この章では、2 つの数を足す基本的な関数を作り、それを Python から呼び出します。
 
-便利のため、environment variable をいくつか設定しましょう。
+便利のため、環境変数をいくつか設定しましょう。
 
 ~~~bash
 # Directory with SBCL sources
@@ -73,7 +77,7 @@ export SBCL_SRC=~/.roswell/src/sbcl-2.4.1
 export CL_SOURCE_REGISTRY="~/prg/sbcl-librarian//"
 ~~~
 
-より新しい Linux-based system では、通常、現在の directory は library の検索対象になりません。Python が library を検索する path も、通常は current working directory に設定されていません。便利のため、次のように設定します。
+より新しい Linux-based system では、通常、現在の directory はライブラリの検索対象になりません。Python がライブラリを検索する path も、通常は current working directory に設定されていません。便利のため、次のように設定します。
 
 ~~~bash
 export LD_LIBRARY_PATH=.:
@@ -130,7 +134,7 @@ export PATH=.:$PATH
 (build-core-and-die libhelloworld "." :compression t)
 ~~~
 
-macro `define-enum-type` は、Common Lisp function が signal する condition と、wrapping C function の return type との mapping を作ります。Common Lisp から condition が signal されると、`define-error-map` の中で数値、つまり C function return value に変換されます。enumeration type は C `enum` を追加するため、次の代わりに:
+マクロ `define-enum-type` は、Common Lisp 関数が signal するコンディションと、wrapping C 関数の return type との mapping を作ります。Common Lisp からコンディションが signal されると、`define-error-map` の中で数値、つまり C 関数 return 値に変換されます。enumeration type は C `enum` を追加するため、次の代わりに:
 
 ~~~C
 if (1 == cl_function()) {
@@ -144,9 +148,9 @@ if (ERR_FAIL == cl_function()) {
 
 こちらのほうが読みやすいです。
 
-`define-api` は、作成される library code の structure を概説し、error map、type、function、およびそれらの順序を指定します (この場合、`:literal` は comment に使われます)。
+`define-api` は、作成されるライブラリ code の structure を概説し、エラー map、type、関数、およびそれらの順序を指定します (この場合、`:literal` は comment に使われます)。
 
-`define-aggregate-library` は、library 全体を定義し、何をどの順序で含めるかを指定します。
+`define-aggregate-library` は、ライブラリ全体を定義し、何をどの順序で含めるかを指定します。
 
 次の command で file を compile できます。
 
@@ -164,14 +168,14 @@ import helloworld
 dir(helloworld)
 ~~~
 
-print された dictionary に function `helloworld_hello_world` が存在するはずです。
+print された dictionary に関数 `helloworld_hello_world` が存在するはずです。
 
-この function は、function の return value が error code になるという C standard に従います
-(0 は success、その他の数値は `error-map` definition に従う `err_t` class で定義されるべきです)。
-function の最後の parameter が、その return value です。この場合これは integer への pointer なので、
-`ctypes` library を使って integer を作成し、result value への pointer とともに `helloworld_hello_world` を呼び出す必要があります。
+この関数は、関数の return 値がエラー code になるという C standard に従います
+(0 は success、その他の数値は `error-map` definition に従う `err_t` クラスで定義されるべきです)。
+関数の最後のパラメータが、その return 値です。この場合これは integer へのポインタなので、
+`ctypes` ライブラリを使って integer を作成し、result 値へのポインタとともに `helloworld_hello_world` を呼び出す必要があります。
 
-次の program は 11 を print するはずです。
+次のプログラムは 11 を print するはずです。
 
 ~~~python
 import helloworld
@@ -184,7 +188,7 @@ print(rv.value)
 
 system によって、よく起きる問題が 2 つあります。
 
-1 つ目は Python からのややわかりにくい error です。
+1 つ目は Python からのややわかりにくいエラーです。
 
 ~~~
 >>> import helloworld
@@ -193,7 +197,7 @@ Traceback (most recent call last):
 ImportError: dynamic module does not define module export function (PyInit_helloworld)
 ~~~
 
-これは、Python が `helloworld.py` ではなく `helloworld.so` を Python module として開こうとしていることを意味します。`helloworld.so` は natively-compiled Python module ではなく普通の dynamic library なので、これは動きません。
+これは、Python が `helloworld.py` ではなく `helloworld.so` を Python module として開こうとしていることを意味します。`helloworld.so` は natively-compiled Python module ではなく普通の dynamic ライブラリなので、これは動きません。
 
 ~~~bash
 cp ./helloworld.py ./py_helloworld.py
@@ -210,7 +214,7 @@ Traceback (most recent call last):
 Exception: Unable to locate libhelloworld
 ~~~
 
-まず、required dependency、ここでは `libsbcl` と `libzstd` が、output directory に copy されているか、operating system が library を load する path にあるかを確認してください。それでも動かない場合は、あなたの particular system で Python が library を locate する mechanism の問題かもしれません。
+まず、required dependency、ここでは `libsbcl` と `libzstd` が、output directory に copy されているか、operating system がライブラリを load する path にあるかを確認してください。それでも動かない場合は、あなたの particular system で Python がライブラリを locate する mechanism の問題かもしれません。
 
 `helloworld.py` (または先ほどの提案どおり rename した場合は `py_helloworld.py`) を開き、次の行を
 
@@ -239,7 +243,7 @@ SBCL-Librarian には複数の example が含まれており、そのうちの 1
   :depends-on (#:sbcl-librarian)
 ~~~
 
-ASDF system は SBCL-Librarian source をどこで見つけるかを知る必要があります。これを指定する方法の 1 つは、上で見たように、その directory を含むよう `CL_SOURCE_REGISTRY` environment variable を設定することです。あるいは、ASDF が見つけられる location (`~/common-lisp/`, `~/quicklisp/local-projects/`) に project を clone します。
+ASDF system は SBCL-Librarian source をどこで見つけるかを知る必要があります。これを指定する方法の 1 つは、上で見たように、その directory を含むよう `CL_SOURCE_REGISTRY` 環境変数を設定することです。あるいは、ASDF が見つけられる location (`~/common-lisp/`, `~/quicklisp/local-projects/`) に project を clone します。
 
 ### Bindings.lisp
 
@@ -251,9 +255,9 @@ ASDF system は SBCL-Librarian source をどこで見つけるかを知る必要
     (sb-alien:alien-funcall callback str outbuffer)))
 ~~~
 
-この function は example の要です。Python code から invoke され、Python method (`callback` parameter) を call back します。SBCL-Librarian は C library と、それを wrap する Python module の両方を生成するため、この function は C からも Python からも呼び出せます。この example は Python に焦点を当てます。
+この関数は example の要です。Python code から invoke され、Python メソッド (`callback` パラメータ) を call back します。SBCL-Librarian は C ライブラリと、それを wrap する Python module の両方を生成するため、この関数は C からも Python からも呼び出せます。この example は Python に焦点を当てます。
 
-SBCL-Librarian は、C function と連携するための SBCL package である `sb-alien` を利用します。`with-alien` は、その scope 内で有効で、終了後に自動的に破棄される resource (ここでは type `c-string` の `str`) を作成し、memory leak を防ぎます。`alien-funcall` は C function を呼び出すために使われ、この場合は、新しく作成した string と argument として渡された string buffer を使って `callback` を呼び出します。
+SBCL-Librarian は、C 関数と連携するための SBCL パッケージである `sb-alien` を利用します。`with-alien` は、その scope 内で有効で、終了後に自動的に破棄される resource (ここでは type `c-string` の `str`) を作成し、memory leak を防ぎます。`alien-funcall` は C 関数を呼び出すために使われ、この場合は、新しく作成した文字列と引数として渡された文字列 buffer を使って `callback` を呼び出します。
 
 ~~~lisp
 (sbcl-librarian::define-type :callback
@@ -267,7 +271,7 @@ SBCL-Librarian は、C function と連携するための SBCL package である 
   :python-type "c_char_p")
 ~~~
 
-この section は、C、Python、Common Lisp における `callback` と `char-buffer` type を定義します。両者の C type と Python type は、それぞれ `void*` と `char*` です。callback の Common Lisp type は function prototype を指定します。つまり、`void` を返し、`c-string` と `char` への pointer という 2 つの parameter を取る function への pointer です。`sb-alien:*` は pointer を示すため、`:callback` は function への pointer です。`:char-buffer` type は、3 つの言語すべてで `char*` を表します。
+この section は、C、Python、Common Lisp における `callback` と `char-buffer` type を定義します。両者の C type と Python type は、それぞれ `void*` と `char*` です。callback の Common Lisp type は関数 prototype を指定します。つまり、`void` を返し、`c-string` と `char` へのポインタという 2 つのパラメータを取る関数へのポインタです。`sb-alien:*` はポインタを示すため、`:callback` は関数へのポインタです。`:char-buffer` type は、3 つの言語すべてで `char*` を表します。
 
 この file の残りは、`Hello World` section で説明したものと似ています。
 
@@ -289,7 +293,7 @@ SBCL-Librarian は、C function と連携するための SBCL package である 
 
 これで新しい file がいくつかできます。
 
-`libcallback.c` は library の source code です。
+`libcallback.c` はライブラリの source code です。
 
 ~~~c
 #define CALLBACKING_API_BUILD
@@ -314,17 +318,17 @@ CALLBACKING_API int init(char* core) {
   return 0; }
 ~~~
 
-先頭には、Lisp garbage collector に実行に適した時点であることを signal する `lisp_gc` など、SBCL 関連の function がいくつかあります。次に `callback_call_callback` function への pointer があります。最後に、Lisp code を実行する前に run すべき `init` function があります。
+先頭には、Lisp ガベージコレクタに実行に適した時点であることを signal する `lisp_gc` など、SBCL 関連の関数がいくつかあります。次に `callback_call_callback` 関数へのポインタがあります。最後に、Lisp code を実行する前に run すべき `init` 関数があります。
 
-SBCL (version 2.4.2 時点) は Lisp core の de-initialize を support していなかったため、それを行う function はありません。
+SBCL (version 2.4.2 時点) は Lisp core の de-initialize を support していなかったため、それを行う関数はありません。
 
-`libcallback.h ` は、`lispcallback.c` と呼び出し側の任意の C code の両方で include されるべき header file です。これは `lispcallback.c` 内の function と function pointer の prototype、error `enum`、および `bindings.lisp` で追加された comment を含みます。
+`libcallback.h ` は、`lispcallback.c` と呼び出し側の任意の C code の両方で include されるべき header file です。これは `lispcallback.c` 内の関数と関数ポインタの prototype、エラー `enum`、および `bindings.lisp` で追加された comment を含みます。
 
 ~~~C
 typedef enum { ERR_SUCCESS = 0, ERR_FAIL = 1, } err_t;
 ~~~
 
-最後の file、`lispcallback.py` は library の Python wrapper です。最も注目すべき部分は次です。
+最後の file、`lispcallback.py` はライブラリの Python wrapper です。最も注目すべき部分は次です。
 
 ~~~Python
 from ctypes import *
@@ -338,7 +342,7 @@ except TypeError as e:
 
 file の残りは C header file と似ています。
 
-この setup は compile 済み C library (shared object、DLL、dylib) を load し、その library に含まれる function と type を Python interpreter に知らせます。また、Python interpreter によって load されたときに Lisp core を initialize します。生成された library が C から呼び出される場合、initialization は手動で呼び出す必要があります。
+この setup は compile 済み C ライブラリ (shared オブジェクト、DLL、dylib) を load し、そのライブラリに含まれる関数と type を Python interpreter に知らせます。また、Python interpreter によって load されたときに Lisp core を initialize します。生成されたライブラリが C から呼び出される場合、initialization は手動で呼び出す必要があります。
 
 
 ### C Code を compile する
@@ -371,13 +375,13 @@ I guess  it works!
 
 ## Makefile
 
-各 example には、Mac で build するために設計された Makefile が付属します。`libsbcl.so` library を自動的に build し、current directory へ copy することさえします。ただし、project (たとえば `libcallback`) を build する command は、Linux-based operating system と Windows (MSYS2 使用) で動くよう修正する必要があります。
+各 example には、Mac で build するために設計された Makefile が付属します。`libsbcl.so` ライブラリを自動的に build し、current directory へ copy することさえします。ただし、project (たとえば `libcallback`) を build する command は、Linux-based operating system と Windows (MSYS2 使用) で動くよう修正する必要があります。
 
 ## CMake
 
-CMake の利用は比較的 straightforward です。残念ながら、現在 CMake-aware library や `vcpkg`/`conan` package は存在しないため、必要な library を locate するには `find_library` で `HINTS` を使う必要があります。
+CMake の利用は比較的 straightforward です。残念ながら、現在 CMake-aware ライブラリや `vcpkg`/`conan` パッケージは存在しないため、必要なライブラリを locate するには `find_library` で `HINTS` を使う必要があります。
 
-`my_project` という project を compile し、LISP library を追加したいと仮定すると、次のように進められます。
+`my_project` という project を compile し、LISP ライブラリを追加したいと仮定すると、次のように進められます。
 
 ~~~CMake
 # If there is a better way, let me know.
@@ -416,7 +420,7 @@ add_custom_command(TARGET my_project POST_BUILD
         $<TARGET_FILE_DIR:my_project>)
 ~~~
 
-これで SBCL-librarian を始めるための tutorial は終わりです。Common Lisp で作れるものについて、あなたの想像力が広がり、正しい方向へ進む助けになれば幸いです。
+これで SBCL-librarian を始めるためのチュートリアルは終わりです。Common Lisp で作れるものについて、あなたの想像力が広がり、正しい方向へ進む助けになれば幸いです。
 
 
 [^1]: [LispWorks について](https://www.lispworks.com/documentation/lw70/DV/html/delivery-20.htm)、[LispWorks for Java について](https://www.lispworks.com/documentation/lw80/lw/lw-lw-ji-88.htm)、[AllegroCL について](https://franz.com/support/documentation/10.1/doc/dll.htm)。

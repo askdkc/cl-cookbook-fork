@@ -582,7 +582,7 @@ Error while parsing arguments to DESTRUCTURING-BIND:
 
 **リスト** と **ベクタ**（したがって **文字列**）はシーケンスです。
 
-_注_: [strings](strings.html) のページも参照してください。
+_注_: [文字列](strings.html) のページも参照してください。
 
 シーケンス関数の多くはキーワード引数を取ります。すべてのキーワード引数は省略可能で、
 指定する場合は任意の順序で現れてかまいません。
@@ -681,7 +681,9 @@ sequence 内で *foo* にマッチする要素数を返します。
 `subseq` は "setf" 可能ですが、新しいシーケンスが置換対象と同じ長さの場合にのみ動作します。
 
 
-#### sort, stable-sort (sequence, test [, key function]) (破壊的)
+<a id="sort-stable-sort-sequence-test--key-function-"></a>
+
+#### sort, stable-sort (sequence, test [, key 関数]) (破壊的)
 
 これらのソート関数は破壊的なので、ソート前に `copy-seq` でシーケンスをコピーした方がよい場合があります。
 
@@ -872,7 +874,7 @@ mapcar は `&rest more-seqs` で複数のリストも受け取ります。最短
 (map 'list (lambda (it) (* 10 it)) foo)
 ~~~
 
-`reduce` *(function, sequence)*。特別なパラメータ: `:initial-value`。
+`reduce` *(関数, sequence)*。特別なパラメータ: `:initial-value`。
 
 ~~~lisp
 (reduce '- '(1 2 3 4))
@@ -1023,7 +1025,7 @@ list-a
 
 配列は固定長にも調整可能にもできます。*simple array* は、displaced
 （`:displaced-to` を使って別の配列を指すもの）でも調整可能（`:adjust-array`）でもなく、
-fill pointer（要素を追加または削除すると移動する `fill-pointer`）も持ちません。
+fill ポインタ（要素を追加または削除すると移動する `fill-pointer`）も持ちません。
 
 **ベクタ** は rank 1（1 次元）の配列です。これは *シーケンス* でもあります（上記参照）。
 
@@ -1095,9 +1097,9 @@ myarray
 
 ベクタ（またはベクタに似た配列）には次のインターフェイスが利用できます。
 
-* `vector-push` *(new-element vector)*: fill pointer が指すベクタ要素を `new-element` に置き換え、その後 fill pointer を 1 増やします。新しい要素が置かれたインデックス、または十分な空きがなければ NIL を返します。
-* `vector-push-extend` *(new-element vector [extension])*: `vector-push` と同様ですが、fill pointer が大きくなりすぎた場合は `adjust-array` を使って配列を拡張します。`extension` は、拡張が必要な場合に配列へ追加する最小要素数です。
-* `vector-pop` *(vector)*: fill pointer を減らし、それが新たに指す要素を返します。
+* `vector-push` *(new-element vector)*: fill ポインタが指すベクタ要素を `new-element` に置き換え、その後 fill ポインタを 1 増やします。新しい要素が置かれたインデックス、または十分な空きがなければ NIL を返します。
+* `vector-push-extend` *(new-element vector [extension])*: `vector-push` と同様ですが、fill ポインタが大きくなりすぎた場合は `adjust-array` を使って配列を拡張します。`extension` は、拡張が必要な場合に配列へ追加する最小要素数です。
+* `vector-pop` *(vector)*: fill ポインタを減らし、それが新たに指す要素を返します。
 * `fill-pointer` *(vector)*. `setf` 可能。
 
 *シーケンス* 関数も参照してください。
