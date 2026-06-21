@@ -88,18 +88,20 @@ hello me!
 
 アプリケーションコードの途中で依存関係をインストールさせる言語を、他に見つけてください。
 
-### The "main" entry point
+<a id="the-main-entry-point"></a>
 
-When you `load` a file, all top-level instructions are executed.
+### 「main」エントリポイント
 
-With this:
+ファイルを `load` で読み込むと、トップレベルの命令がすべて実行されます。
+
+次のコードでは:
 
 ```lisp
 (defun foo ()
   :hello)
 ```
 
-the `foo` function is compiled but nothing gets executed. With this:
+`foo` 関数はコンパイルされますが、何も実行されません。次のコードでは:
 
 ```lisp
 (defun foo ()
@@ -320,6 +322,8 @@ buildapp --output myapp \
 
 多くのアプリケーションが使っています（たとえば [pgloader](https://github.com/dimitri/pgloader)）。Debian では `apt install buildapp` で入りますが、今なら `asdf:make` や Roswell で足りるはずです。
 
+
+<a id="for-web-apps"></a>
 
 ### Web アプリ向け
 
@@ -597,11 +601,11 @@ SBCL はコマンドライン引数を `sb-ext:*posix-argv*` に入れます。
 - we can easily try it out on the REPL
 - etc
 
-Let's download it:
+ダウンロードしてみましょう。
 
     (ql:quickload "clingon")
 
-As often, work happens in two phases:
+よくあることですが、作業は 2 つの段階に分かれます。
 
 * we first declare the options that our application accepts, their
   kind (flag, string, integer…), their long and short names and the
@@ -658,24 +662,20 @@ As often, work happens in two phases:
     :key :name)))
 ~~~
 
-The second option we created is of kind `:string`. This option expects one argument, which will be parsed as a string. There is also `:integer`, to parse the argument as an integer.
+2 つ目に作ったオプションは `:string` 種別です。このオプションは引数を 1 つ取り、それは文字列として解析されます。引数を整数として解析する `:integer` もあります。
 
-There are more option kinds of Clingon, which you will find on its good documentation: `:choice`, `:enum`, `:list`, `:filepath`, `:switch` and so on.
+Clingon にはほかにもオプション種別があり、その充実したドキュメントで確認できます。`:choice`、`:enum`、`:list`、`:filepath`、`:switch` などです。
 
 ### Top-level command
 
-We have to tell Clingon about our top-level command.
-`clingon:make-command` accepts some descriptive fields, and two important ones:
+トップレベルコマンドを Clingon に伝える必要があります。`clingon:make-command` はいくつかの説明用フィールドと、2 つの重要なフィールドを受け取ります。
 
-- `:options` is a list of Clingon options, each created with `clingon:make-option`
-- `:handler` is the function that will do the app's logic.
+- `:options` は Clingon オプションのリストで、各オプションは `clingon:make-option` で作ります
+- `:handler` はアプリのロジックを実行する関数です。
 
-And finally, we'll use `clingon:run` in our main function (the entry
-point of our binary) to parse the command-line arguments, and apply
-our command's logic. During development, we can also manually call
-`clingon:parse-command-line` to try things out.
+最後に、main 関数（バイナリのエントリポイント）の中で `clingon:run` を使って、コマンドライン引数を解析し、コマンドのロジックを適用します。開発中は `clingon:parse-command-line` を手動で呼んで試すこともできます。
 
-Here's a minimal command. We'll define our handler function afterwards:
+最小限のコマンドを示します。ハンドラ関数はあとで定義します。
 
 ~~~lisp
 (defun cli/command ()

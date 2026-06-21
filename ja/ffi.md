@@ -4,7 +4,7 @@ title: 外部関数インターフェイス
 
 ANSI Common Lisp 標準はこの話題に触れていません。そのため、ここで言えることのほとんどは OS と実装に依存します。しかし現在では、移植性があり使いやすい C 外部関数インターフェイスである [CFFI](https://github.com/cffi/cffi) ライブラリを使えます。
 
-> CFFI、Common Foreign Function Interface は、Common Lisp 向けの移植可能な FFI であることを目指しています。さまざまな Common Lisp 実装のネイティブ FFI の API の違いを抽象化します。
+> CFFI、すなわち Common Foreign Function Interface は、Common Lisp 向けの移植可能な FFI であることを目指しています。さまざまな Common Lisp 実装のネイティブ FFI の API の違いを抽象化します。
 
 すぐに例を見てみましょう。
 

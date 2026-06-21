@@ -12,7 +12,7 @@ title: 正規表現
 
 ## PPCRE
 
-[CL-PPCRE](https://github.com/edicl/cl-ppcre)（Portable Perl-compatible regular expressions の略）は、Common Lisp 向けの移植可能な正規表現ライブラリで、幅広い機能と優れた性能を備えています。多くの Common Lisp 実装へ移植されており、Quicklisp 経由で簡単にインストールできます（または依存関係として追加できます）。
+[CL-PPCRE](https://github.com/edicl/cl-ppcre)（Portable Perl-compatible 正規表現の略）は、Common Lisp 向けの移植可能な正規表現ライブラリで、幅広い機能と優れた性能を備えています。多くの Common Lisp 実装へ移植されており、Quicklisp 経由で簡単にインストールできます（または依存関係として追加できます）。
 
 ~~~lisp
 (ql:quickload "cl-ppcre")
@@ -74,7 +74,7 @@ CL-USER> (mapcar #'parse-integer *)
 (1 10 42)
 ~~~
 
-2つの関数は通常の `:start` と `:end` key argument を受け付けます。さらに、`all-matches-as-strings` は `:sharedp` argument を受け付けます。
+2つの関数は通常の `:start` と `:end` key 引数を受け付けます。さらに、`all-matches-as-strings` は `:sharedp` 引数を受け付けます。
 
 > SHAREDP が真の場合、部分文字列は TARGET-STRING と構造を共有することがあります。
 
@@ -97,7 +97,7 @@ CL-USER> (ppcre:count-matches "\\w*" "foo bar baz")
 
 `scan-to-strings` 関数は `scan` に似ていますが、位置ではなく target-string の部分文字列を返します。この関数は成功時に2つの値を返します。マッチ全体の文字列と、マッチした register に対応する部分文字列（または NIL）の配列です。
 
-`register-groups-bind` 関数は、与えられたパターンを target string に対してマッチさせ、マッチした断片を与えられた変数に bind します。
+`register-groups-bind` 関数は、与えられたパターンを target 文字列に対してマッチさせ、マッチした断片を与えられた変数に bind します。
 
 ~~~lisp
 (ppcre:register-groups-bind (first second third fourth)

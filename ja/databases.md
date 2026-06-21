@@ -613,7 +613,7 @@ keys."))
 
 [SxQL's query composer](https://github.com/fukamachi/sxql/blob/master/COMPOSER.md) でクエリを合成できます。
 
-以下の `->` は SxQL の threading macro です。
+以下の `->` は SxQL の threading マクロです。
 クエリを連鎖させるための主要なインターフェイスです。
 初期値を受け取り、それを一連の変換へ通していきます。
 
@@ -752,7 +752,7 @@ and the author fields."
 
 ### トリガー
 
-`insert-dao`、`update-dao`、`delete-dao` は generic function として定義されているため、通常の [method combination](clos.html#qualifiers-and-method-combination) と同じように、それらに対して `:before`、`:after`、`:around` メソッドを定義できます。
+`insert-dao`、`update-dao`、`delete-dao` は generic 関数として定義されているため、通常の [メソッド combination](clos.html#qualifiers-and-method-combination) と同じように、それらに対して `:before`、`:after`、`:around` メソッドを定義できます。
 
 ~~~lisp
 (defmethod mito:insert-dao :before ((object user))
@@ -989,7 +989,7 @@ DB 操作を本番 DB に対してテストしたくはありません。
 - [mito-auth](https://github.com/fukamachi/mito-auth)
 - [can](https://github.com/fukamachi/can/) ロールベースのアクセス権制御ライブラリ
 <!-- epub-exclude-start -->
-- 高度な ["defmodel" macro](drafts/defmodel.lisp.html)。
+- 高度な ["defmodel" マクロ](drafts/defmodel.lisp.html)。
 <!-- epub-exclude-end -->
 
 <!-- # todo: 既存 DB のモデル生成 -->
