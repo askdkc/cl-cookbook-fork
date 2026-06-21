@@ -429,7 +429,7 @@ CL-USER> *my-string*
 
 次の点に注意してください。HyperSpec によると、
 
-> for STRING-UPCASE, STRING-DOWNCASE, and STRING-CAPITALIZE, string is not modified. However, if no characters in string require conversion, the result may be either string or a copy of it, at the implementation's discretion.
+> STRING-UPCASE、STRING-DOWNCASE、STRING-CAPITALIZE は文字列を変更しません。ただし、変換が必要な文字がない場合、処理系の裁量により、結果は元の文字列またはそのコピーのどちらかになります。
 
 このため、次の例の最後の結果は実装依存です。"BIG" になるか "BUG" になるかは実装次第です。確実にしたいなら `copy-seq` を使ってください。
 

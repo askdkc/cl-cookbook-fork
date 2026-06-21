@@ -122,7 +122,7 @@ LispWorks IDE は自己完結していますが、Emacs と Slime から LispWor
 
 - `C-g` で今していることを cancel
 - `C-x C-s` で現在の buffer を保存
-- `M-w` と `C-y` で copy and paste
+- `M-w` と `C-y` でコピーと貼り付け
 - `M-b`、`M-f`、`C-a`、`C-e`… で単語単位の移動、行頭・行末への移動
 - `C-k` で行末まで kill、`C-w` で選択 region を kill
 - `M-.` でシンボルの source を探す
@@ -520,7 +520,7 @@ IDE 側では次を実行します。
 - [LispWorks IDE User Guide](http://www.lispworks.com/documentation/lw71/IDE-U/html/ide-u.htm)（ここで扱わなかった sections も確認してください）
 - [LispWorks on Wikipedia](https://en.wikipedia.org/wiki/LispWorks)
 - [Awesome LispWorks](https://github.com/fourier/awesome-lispworks) list
-- [Real Image-based approach in Common Lisp](https://www.youtube.com/watch?v=nsKx40ab9SY) - SBCL と LispWorks の違い
+- [Common Lisp における真のイメージベースアプローチ](https://www.youtube.com/watch?v=nsKx40ab9SY) - SBCL と LispWorks の違い
 - blog post: [Delivering a LispWorks application](https://blog.dziban.net/posts/delivering-a-lispworks-application/)
 - [lw-plugins](https://github.com/apr3vau/lw-plugins) - LispWorks plugins:
   * terminal integration、code folding、side tree、markdown highlighting、Nerd Fonts、fuzzy-matching、enhanced directory mode、expand region、pair editing、SVG rendering…

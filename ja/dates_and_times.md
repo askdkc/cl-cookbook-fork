@@ -2,7 +2,7 @@
 title: Dates and Times
 ---
 
-Common Lisp は time を見る 2 つの異なる方法を提供します。"real world" における time を意味する universal time と、コンピュータの CPU から見た time を意味する run time です。ここではそれぞれを分けて扱います。
+Common Lisp は time を見る 2 つの異なる方法を提供します。「現実世界」の time を意味する universal time と、コンピュータの CPU から見た time を意味する実行時間です。ここではそれぞれを分けて扱います。
 
 <a name="univ"></a>
 
@@ -37,14 +37,14 @@ NIL
 5
 ~~~
 
-**NB**: 次の section では、`local-time` ライブラリを使って、より user-friendly な関数を得ます。たとえば `(local-time:universal-to-timestamp (get-universal-time))` は `@2021-06-25T09:16:29.000000+02:00` を返します。
+**NB**: 次の section では、`local-time` ライブラリを使って、より使いやすい関数を得ます。たとえば `(local-time:universal-to-timestamp (get-universal-time))` は `@2021-06-25T09:16:29.000000+02:00` を返します。
 
 この `decode-universal-time` 呼び出しは 9 つの値を返します。`seconds, minutes, hours, day, month, year, day of
-the week, daylight savings time flag and time zone` です。day of the week は 0..6 の範囲の integer として表され、0 が Monday、6 が Sunday であることに注意してください。また、**time zone** は current time に足すと GMT time になる時間数として表されます。
+the week, daylight savings time flag and time zone` です。曜日は 0..6 の範囲の integer として表され、0 が Monday、6 が Sunday であることに注意してください。また、**タイムゾーン** は現在時刻に足すと GMT time になる時間数として表されます。
 
 したがってこの例では、decoded time は EST time zone における `2002 年 1 月 25 日 Friday の 19:22:06` で、daylight savings は有効ではありません。もちろんこれはコンピュータ自身の clock に依存するため、正しく設定されていることを確認してください (time zone と DST flag を含みます)。shortcut として、
 [`get-decoded-time`](http://www.lispworks.com/documentation/HyperSpec/Body/f_get_un.htm)
-を使うと、current time の calendar time representation を直接得られます。
+を使うと、現在時刻のカレンダー時刻表現を直接得られます。
 
 ~~~lisp
 CL-USER> (get-decoded-time)
@@ -109,7 +109,7 @@ CL-USER> internal-time-units-per-second
 - その 1 つは "real" time の経過を測ります (universal time が測るのと同じ time ですが、unit が異なります)。
 - もう 1 つは CPU time の経過、つまり CPU が current Lisp プロセスのために実際の computation を行うのに費やした time を測ります。
 
-ほとんどの modern コンピュータでは、これら 2 つの time は異なります。CPU がプログラムだけに完全に専念することはないからです (single-user machine でさえ、CPU は interrupt の処理や I/O の実行などに時間の一部を割く必要があります)。internal time を取得するために使う 2 つの関数は、それぞれ [`get-internal-real-time`](http://www.lispworks.com/documentation/HyperSpec/Body/f_get_in.htm) と [`get-internal-run-time`](http://www.lispworks.com/documentation/HyperSpec/Body/f_get__1.htm) と呼ばれます。これらを使えば、関数の run time を測るという上の問題を解決できます。これは built-in マクロ `time` が行っていることです。
+ほとんどの modern コンピュータでは、これら 2 つの time は異なります。CPU がプログラムだけに完全に専念することはないからです (single-user machine でさえ、CPU は interrupt の処理や I/O の実行などに時間の一部を割く必要があります)。internal time を取得するために使う 2 つの関数は、それぞれ [`get-internal-real-time`](http://www.lispworks.com/documentation/HyperSpec/Body/f_get_in.htm) と [`get-internal-run-time`](http://www.lispworks.com/documentation/HyperSpec/Body/f_get__1.htm) と呼ばれます。これらを使えば、関数の実行時間を測るという上の問題を解決できます。これは組み込みマクロ `time` が行っていることです。
 
 ~~~lisp
 CL-USER> (time (sleep 1))
@@ -165,7 +165,7 @@ CL-USER> (ql:quickload "local-time")
 @2021-06-25T07:45:59.000000+02:00
 ~~~
 
-human-readable な time 文字列を parse することもできます。
+人が読みやすい time 文字列を parse することもできます。
 
 ~~~lisp
 (local-time:parse-timestring "1984-01-01")
@@ -293,8 +293,9 @@ timestamp の list がある場合は、`(apply #'timestamp-minimum <your list o
 
 
 <a id="timestamp-object--query--dayday-of-weekdays-in-month-"></a>
+<a id="timestamp--query--dayday-of-weekdays-in-month-"></a>
 
-### timestamp オブジェクトに query する (day、day of week、days in month などを得る)
+### timestamp オブジェクトに query する (day、曜日、月の日数などを得る)
 
 次を使います。
 

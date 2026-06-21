@@ -300,7 +300,9 @@ SOMETHING
 ;; -> 3
 ~~~
 
-### Array, simple-array, row-major-array pattern
+<a id="array-simple-array-row-major-array-pattern"></a>
+
+### 配列、`simple-array`、`row-major-array` のパターン
 
 https://github.com/guicho271828/trivia/wiki/Type-Based-Destructuring-Patterns#array-simple-array-row-major-array-pattern を参照してください。
 

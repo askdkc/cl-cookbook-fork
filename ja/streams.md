@@ -85,7 +85,7 @@ Common Lisp は、デフォルトで bound されているいくつかの global
 
 たとえば、通常は standard output に print する関数の出力を、文字列として捕捉したいでしょうか。
 
-一般には、この形の `let` binding を使えます。
+一般には、この形の `let` による束縛を使えます。
 
 ~~~lisp
 (let ((*standard-output* some-other-stream))
@@ -510,7 +510,7 @@ trivial-gray-streams:fundamental-character-output-stream
 
 ### Gray stream: method
 
-実装すべき key メソッドはストリーム type に依存します。どのメソッドが必須で、どれが省略可能かに注意してください。
+実装すべき主要なメソッドはストリームの型に依存します。どのメソッドが必須で、どれが省略可能かに注意してください。
 
 **character input streams** について:
 
@@ -536,14 +536,14 @@ trivial-gray-streams:fundamental-character-output-stream
 - `stream-write-byte`
 - `stream-read-sequence` / `stream-write-sequence`
 
-sequence メソッドにより、ストリームはデータの whole slices を一度に移動できます。これは 1 文字または 1 byte ずつ読み書きするより、しばしばはるかに高速です。
+シーケンス用メソッドにより、ストリームはデータのまとまった範囲を一度に移動できます。これは 1 文字または 1 バイトずつ読み書きするより、多くの場合はるかに高速です。
 
 ## 参考
 
 - [CLHS: Streams](http://www.lispworks.com/documentation/HyperSpec/Body/21_.htm)
 - [CLtL2: Streams](https://www.cs.cmu.edu/Groups/AI/html/cltl/clm/node329.html)
 - [trivial-gray-streams](https://github.com/trivial-gray-streams/trivial-gray-streams)
-- [flexi-streams](https://edicl.github.io/flexi-streams/) - FLEXI-STREAMS は「real バイナリまたは bivalent ストリームの上に layer でき、各種 single-octet または multi-octet encoding で文字 data を読み書きでき、その encoding を on the fly で変更できる "virtual" bivalent ストリーム」を実装します。また、文字列ストリームに似た in-memory バイナリストリームも提供します。
+- [flexi-streams](https://edicl.github.io/flexi-streams/) - FLEXI-STREAMS は「実体のあるバイナリストリームまたは双方向型ストリームの上に重ねられ、各種の単一オクテットまたは複数オクテットの符号化方式で文字データを読み書きでき、その符号化方式を動的に変更できる仮想的な双方向型ストリーム」を実装します。また、文字列ストリームに似たメモリ上のバイナリストリームも提供します。
 - [nontrivial-gray-streams](https://github.com/yitzchak/nontrivial-gray-streams) - Gray ストリーム protocol の拡張（Sequence Extensions、File Position Extensions…）。trivial-gray-streams とは異なり、fundamental ストリームクラスの独自 subclass を導入しません。代わりに、CL 処理系の fundamental ストリームクラスを直接 export します。
-- [SBCL's bivalent ストリーム](https://www.sbcl.org/manual/#Bivalent-Streams) - 「bivalent ストリームは `character` と `(unsigned-byte 8)` 値の両方を読み書きするために使えます。bivalent ストリームは、引数 :element-type :default で open を呼び出すことで作成されます。そのようなストリームでは、通常の input/output 関数でバイナリ data と文字 data の両方を読み書きできます。」
+- [SBCL の双方向型ストリーム](https://www.sbcl.org/manual/#Bivalent-Streams) - 「双方向型ストリームは `character` と `(unsigned-byte 8)` の値をどちらも読み書きできます。引数 `:element-type :default` を指定して `open` を呼び出すことで作成します。このストリームでは、通常の入出力関数でバイナリデータと文字データの両方を読み書きできます。」
 - [Allegro CL's simple-streams](https://franz.com/support/documentation/10.1/doc/streams.htm) - [SBCL の subset](https://www.sbcl.org/manual/#Simple-Streams) もあります。

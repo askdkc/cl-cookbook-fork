@@ -648,7 +648,7 @@ _注_: [文字列](strings.html) のページも参照してください。
 
 #### count (foo sequence)
 
-sequence 内で *foo* にマッチする要素数を返します。
+シーケンス内で *foo* にマッチする要素数を返します。
 
 追加パラメータ: `:from-end`、`:start`、`:end`。
 
@@ -704,7 +704,7 @@ sequence 内で *foo* にマッチする要素数を返します。
 
 `fill` は **破壊的** な操作です。
 
-`sequence` 内の `start` と `end` の位置の間にある要素を、`item`（シーケンス）で破壊的に置き換えます。
+シーケンス内の `start` と `end` の位置の間にある要素を、`item` で破壊的に置き換えます。
 
 ~~~lisp
 (make-list 3)
@@ -730,9 +730,9 @@ sequence 内で *foo* にマッチする要素数を返します。
 
 #### search と mismatch (sequence-a, sequence-b)
 
-`search` は sequence-b の中から sequence-a にマッチするサブシーケンスを検索します。
-sequence-b 内の *位置*、または NIL を返します。`from-end`、`end1`、`end2` と、
-通常の `test`、`key` パラメータを持ちます。
+`search` は `sequence-b` の中から `sequence-a` にマッチするサブシーケンスを検索します。
+`sequence-b` 内の *位置*、または NIL を返します。`from-end`、`end1`、`end2` と、
+通常の `test`、`key` パラメータを取ります。
 
 ~~~lisp
 (search '(20 30) '(10 20 30 40))
@@ -760,7 +760,7 @@ sequence-b 内の *位置*、または NIL を返します。`from-end`、`end1`
 
 #### substitute, nsubstitute[if,if-not]
 
-`old` と等しいすべての要素を `new` に置き換えた、`sequence` と同じ種類のシーケンスを返します。
+`old` と等しいすべての要素を `new` に置き換えた、元のシーケンスと同じ種類のシーケンスを返します。
 
 ~~~lisp
 (substitute #\o #\x "hellx") ;; => "hello"
@@ -796,7 +796,7 @@ test1
 
 #### replace (sequence-a, sequence-b, &key start1, end1) (破壊的)
 
-sequence-a の要素を sequence-b の要素で破壊的に置き換えます。
+`sequence-a` の要素を `sequence-b` の要素で破壊的に置き換えます。
 
 完全なシグネチャは次のとおりです。
 
@@ -827,7 +827,7 @@ START1 と END1 で区切られたサブシーケンスへ、START2 と END2 で
 
 #### remove, delete (foo sequence)
 
-foo にマッチする要素を除いた sequence のコピーを作ります。`:start/end`、`:key`、
+`foo` にマッチする要素を除いたシーケンスのコピーを作ります。`:start/end`、`:key`、
 `:count` パラメータがあります。
 
 `delete` は `remove` の再利用版です。
@@ -1023,13 +1023,13 @@ list-a
 
 **配列** は定数時間アクセスの性質を持ちます。
 
-配列は固定長にも調整可能にもできます。*simple array* は、displaced
+配列は固定長にも調整可能にもできます。*単純配列* は、displaced
 （`:displaced-to` を使って別の配列を指すもの）でも調整可能（`:adjust-array`）でもなく、
 fill ポインタ（要素を追加または削除すると移動する `fill-pointer`）も持ちません。
 
 **ベクタ** は rank 1（1 次元）の配列です。これは *シーケンス* でもあります（上記参照）。
 
-*simple vector* は、特殊化もされていない simple array です
+*simple vector* は、特殊化もされていない単純配列です
 （要素の型を設定するために `:element-type` を使いません）。
 
 

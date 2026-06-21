@@ -35,7 +35,7 @@ Clack は次のようなものです。
 
 こちらも多作な lisper である [E. Fukamachi](https://github.com/fukamachi/) によるものです。実際には既定のサーバーとして Hunchentoot を使いますが、差し替え可能な architecture により、非同期の [Woo](https://github.com/fukamachi/woo) のような別の web サーバーも使えます。Woo は [libev](http://software.schmorp.de/pkg/libev.html) のイベント loop 上に構築されており、おそらく "あらゆる programming language の中で最速の web server" でしょう。
 
-さらに、非同期 HTTP サーバーの [Wookie](https://github.com/orthecreedence/wookie) と、その companion ライブラリである [cl-async](https://github.com/orthecreedence/cl-async) もあります。cl-async は、Node.js の backend ライブラリである libuv 上で動く、Common Lisp の汎用 non-blocking programming 向けライブラリです。
+さらに、非同期 HTTP サーバーの [Wookie](https://github.com/orthecreedence/wookie) と、その companion ライブラリである [cl-async](https://github.com/orthecreedence/cl-async) もあります。cl-async は、Node.js の backend ライブラリである libuv 上で動く、Common Lisp の汎用ノンブロッキングプログラミング向けライブラリです。
 
 Clack は比較的新しくドキュメントも少なめで、Hunchentoot は事実上の標準です。そのため、このレシピでは後者に絞ります。もちろん貢献は歓迎です。
 
@@ -374,7 +374,7 @@ regexp を有効にするには `:regexp t` を付けます。
 
 #### Hunchentoot
 
-request body を読むには `hunchentoot:raw-post-data` を使います。`:force-text t` を付けると、octet の vector ではなく常に文字列を得られます。
+リクエスト本体を読むには `hunchentoot:raw-post-data` を使います。`:force-text t` を付けると、オクテットのベクトルではなく常に文字列を得られます。
 
 それから、この文字列を好きな JSON ライブラリ（[jzon](https://github.com/Zulu-Inuoe/jzon/)、[shasht](https://github.com/yitzchak/shasht) など）で parse できます。
 
@@ -929,7 +929,7 @@ server {
 
 `proxy_pass http://1.2.3.4:8001/;` ではサーバーの public IP address を使っている点に注意してください。Hunchentoot のような Lisp webserver がその IP に直接 listen していることもよくありますが、security 上の理由から Lisp app を localhost で動かしたいかもしれません。
 
-nginx を reload します（"reload" signal を送る）。
+nginx を再読み込みします（`reload` シグナルを送ります）。
 
     $ nginx -s reload
 
