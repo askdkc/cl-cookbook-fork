@@ -1,4 +1,3 @@
-
 ;;
 ;; pandoc from markdown to epub
 ;; typst from markdown to Typst to pdf
@@ -172,16 +171,18 @@
   (insert-pdf-tocs)
 
   ;; Compile the Typst document:
-  (uiop:run-program (format nil "typst compile ~a" *full-with-preamble*) :output t :error-output t)
-  ; todo utiliser min-book?
-  (uiop:run-program (format nil "mv ~a.pdf ~a" *full-with-preamble* *pdfname*))
+  (uiop:run-program
+   (format nil "typst compile ~a ~a" *full-with-preamble* *pdfname*)
+   :output t
+   :error-output t)
+
   (format t "Done: ~a" *pdfname*))
 
 (defun build-full-source ()
   (format t "Creating the full source into ~a...~&" *full-markdown*)
   (loop for chap in chapters
-     for cmd = (format nil "cat ~a >> ~a" (concatenate 'string *source-dir* chap) *full-markdown*)
-     do (uiop:run-program cmd))
+	for cmd = (format nil "cat ~a >> ~a" (concatenate 'string *source-dir* chap) *full-markdown*)
+	do (uiop:run-program cmd))
   (full-editing))
 
 (defun generate ()
