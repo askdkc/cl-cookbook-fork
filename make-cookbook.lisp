@@ -34,6 +34,9 @@
 
 (defparameter *source-dir* (normalize-dir (uiop:getenv "SOURCE_DIR")))
 (defparameter *output-dir* (normalize-dir (uiop:getenv "OUTPUT_DIR")))
+;; The Japanese build needs extra link fixing that the English build doesn't:
+;; the link-text-dependent rules in fix-epub-links.sed don't match translated text.
+(defparameter *japanese-p* (string= *source-dir* "ja/"))
 (defparameter *metadata-file*
   (or (uiop:getenv "METADATA_FILE")
       (concatenate 'string *source-dir* "metadata.txt")))
@@ -128,7 +131,10 @@
                             *sed-command*
                             *full-markdown*))
   ;; Make internal links work in the generated EPUB.
-  (uiop:run-program (format nil "~a -i -f fix-epub-links.sed ~a" *sed-command* *full-markdown*)))
+  (uiop:run-program (format nil "~a -i -f fix-epub-links.sed ~a" *sed-command* *full-markdown*))
+  ;; The Japanese build needs link-text-independent fixing on top of the above.
+  (when *japanese-p*
+    (uiop:run-program (format nil "~a -i -f fix-ja-links.sed ~a" *sed-command* *full-markdown*))))
 
 (defun to-epub ()
   (format t "~&Generating ~a...~&" *bookname*)
@@ -186,10 +192,32 @@
 
   (format t "Done: ~a" *pdfname*))
 
+(defun effective-chapters ()
+  "Chapters to include. The Japanese index TOC links to the equality chapter
+  (not inside an epub-exclude region), so the Japanese build must include it.
+  The English build keeps its original chapter set."
+  (if *japanese-p*
+      (loop for chap in chapters
+	    collect chap
+	    when (string= chap "numbers.md") collect "equality.md")
+      chapters))
+
 (defun build-full-source ()
   (format t "Creating the full source into ~a...~&" *full-markdown*)
-  (loop for chap in chapters
-	for cmd = (format nil "cat ~a >> ~a" (concatenate 'string *source-dir* chap) *full-markdown*)
+  ;; For the Japanese build, tag each chapter title with an explicit {#chapter-stem}
+  ;; id (e.g. variables.md -> {#chapter-variables}). This gives every chapter a stable
+  ;; anchor that matches the foo.html -> #chapter-foo rewrite in fix-ja-links.sed,
+  ;; independent of the translated title text. The "chapter-" prefix avoids colliding
+  ;; with auto-generated ids of same-named section headings (e.g. a "Debugging" one).
+  ;; The English build relies on fix-epub-links.sed's auto-id references instead, so
+  ;; it must NOT get these explicit ids, and just concatenates the chapters as-is.
+  (loop for chap in (effective-chapters)
+	for stem = (pathname-name (pathname chap))
+	for src = (concatenate 'string *source-dir* chap)
+	for cmd = (if *japanese-p*
+		      (format nil "~a 's/^title:.*/& {#chapter-~a}/' ~a >> ~a"
+			      *sed-command* stem src *full-markdown*)
+		      (format nil "cat ~a >> ~a" src *full-markdown*))
 	do (uiop:run-program cmd))
   (full-editing))
 
