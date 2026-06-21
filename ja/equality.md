@@ -1,20 +1,20 @@
 ---
-title: Equality
+title: 等価性
 ---
 
-Common Lisp にはさまざまな equality 関数があります。`=`、`eq`、`eql`、`equal`、`equalp`、`string-equal`、`char-equal` などです。しかし違いは何でしょうか。例を使ってすべて説明します。
+Common Lisp には、等価性を判定するためのさまざまな関数があります。`=`、`eq`、`eql`、`equal`、`equalp`、`string-equal`、`char-equal` などです。これらの違いを例とともに説明します。
 
-要するに:
+要点は次のとおりです。
 
-- `=` は number 専用であり、`equal` は多くのものに対して期待どおりに動く equality predicate です。
-- ライブラリを使わない限り、`=` や `equal` のような built-in operator を自分のクラス用に overload することはできません。
-- 関数型の組み込み関数（`remove-if`、`find` など）で文字列のシーケンスを操作していて、結果が得られず驚いたなら、おそらく `:test` キー引数を忘れています。`(find "foo" '("hello" "foo") :test #'equal)`。
-- generic predicate を使わないほうが、static analysis と performance は良くなります。
+- `=` は数値専用です。`equal` は、リストや文字列など多くの値を通常期待する方法で比較します。
+- ライブラリを使わない限り、`=` や `equal` のような標準関数を自作のクラス向けに特殊化することはできません。
+- `find` などで文字列のシーケンスを検索しても結果が得られない場合は、`:test` キーワード引数を確認してください。たとえば `(find "foo" '("hello" "foo") :test #'equal)` とします。
+- 汎用的な述語を介さず、用途に合った比較関数を直接使うほうが、静的解析や性能の面で有利になることがあります。
 
 
-## `=` は number 用 (`NIL` に注意)
+## `=` は数値用（`NIL` に注意）
 
-`=` 関数は 2 つ以上の number の値を比較します。
+`=` 関数は、2 つ以上の数値が数値的に等しいかどうかを比較します。
 
 ~~~lisp
 (= 2 2) ;; => T
@@ -24,7 +24,7 @@ Common Lisp にはさまざまな equality 関数があります。`=`、`eq`、
 (= 2 42) ;; => NIL
 ~~~
 
-しかし `=` は number 専用です。下の例では interactive debugger 付きのエラーが発生します。SBCL からのエラーメッセージ、コンディション type、backtrace を示します。
+ただし、`=` は数値専用です。次の例は型エラーとなり、対話デバッガに入ります。ここでは SBCL のエラーメッセージ、コンディションの型、バックトレースを示します。
 
 ~~~lisp
 (= 2 NIL)
@@ -46,28 +46,27 @@ Backtrace:
   2: (= 2 NIL)
 ~~~
 
-`SB-KERNEL::Y` が compiler の internal 変数を参照している点に注意してください。いいえ、あなたの code に `Y` があるわけではありません。
+`SB-KERNEL::Y` は処理系内部の変数を指しています。プログラム中に `Y` という変数があるわけではありません。
 
-結果として、number に対する equality check に NIL が含まれる可能性がある場合は、`equalp` を使うか、変数を `(or …
-0)` で包むか、事前に `(null …)` で check できます。
+したがって、数値の比較対象に `NIL` が含まれる可能性がある場合は、`equalp` を使う、変数を `(or … 0)` で包む、または事前に `(null …)` で確認する、といった方法が使えます。
 
 <a id="eq--low-level-pointermemory-"></a>
 <a id="eq--low-level-memory-"></a>
 
-## `eq` は低水準です。ポインタ、memory 上の位置と考えてください。
+## `eq` はオブジェクトの同一性を判定する
 
-> (eq x y) は、x と y がまったく同一のオブジェクトである場合に限り true です。
+> `(eq x y)` は、`x` と `y` が同一のオブジェクトである場合に限り真になります。
 
-シンボルと keyword には `eq` を使います。
+シンボルやキーワードの比較には `eq` を使います。
 
-これらは true です。
+次の式はいずれも真になります。
 
 ~~~lisp
 (eq :a :a)
 (eq 'a 'a)
 ~~~
 
-オブジェクトをそれ自身と比較すれば、それは `eq` です。
+オブジェクトをそれ自身と比較すると、`eq` は真になります。
 
 ~~~lisp
 (let ((x '(a . b)))
@@ -75,75 +74,72 @@ Backtrace:
 ;; => T
 ~~~
 
-`eq` は number、list、文字列、その他の compound オブジェクトの比較には意味のある形では動きません。動くように見える場合はありますが、すべての処理系で true になるとは指定されていません。
+数値や文字、およびリストや文字列などの複合オブジェクトを、値や内容に基づいて比較する目的では `eq` は使えません。動作するように見える場合もありますが、すべての処理系で真になることは規定されていません。
 
-そのため、私の処理系では `eq` は number に対して動きますが、あなたのものでは動かないかもしれません。
+たとえば、ある処理系では数値に対する `eq` が真になっても、別の処理系では真にならないことがあります。
 
 ~~~lisp
-(eq 2 2) ;; => T or NIL, this is not specified (it is T on my implementation).
+(eq 2 2) ;; => T または NIL（規格では結果が保証されない）
 
-;; However:
+;; 一方、大きな整数では次のようになることがある
 (eq
   49827139472193749213749218734917239479213749127394871293749123
-  49827139472193749213749218734917239479213749127394871293749123) ;; => NIL on my implementation, and on yours?
+  49827139472193749213749218734917239479213749127394871293749123) ;; => 処理系によっては NIL
 ~~~
 
-理由は、処理系が同じ number に対して memory 上のまったく同じ位置を割り当てるかもしれないし、そうしないかもしれないからです。これは standard によって決められていません。
+これは、数値を同一のオブジェクトとして表現するかどうかが処理系によって異なり、規格では定められていないためです。
 
-同様に、これらも処理系に依存するかもしれません。
+同様に、次の結果も処理系に依存します。
 
 ~~~lisp
-(eq '(a . b) '(a . b)) ;; might be true or false.
-(eq #\a #\a) ;; true or false
+(eq '(a . b) '(a . b)) ;; T または NIL
+(eq #\a #\a)           ;; T または NIL
 ~~~
 
-list や文字列の比較は false です。
+実行時にそれぞれ別個に作られたリストや文字列は、内容が同じでも `eq` ではありません。
 
 ~~~lisp
 (eq (list 'a) (list 'a)) ;; => NIL
-(eq "a" "a") ;; => NIL
+(eq (copy-seq "a") (copy-seq "a")) ;; => NIL
 ~~~
 
-<!-- or unspecified? -->
-
-これらの文字列（文字のベクトル）が `eq` で等しくないのは、処理系がメモリ上に 2 つの異なる文字列オブジェクトを作った可能性があるためです。
+この例では、内容が同じでも別々のオブジェクトが作られているため、`eq` は偽になります。
 
 
 <a id="eql--number--character--eq-"></a>
 
-## `eql` は、同じ型の number と文字にも使える、より一般的な `eq` です。
+## `eql` は、同じ型の数値と文字にも使える、より一般的な `eq`
 
-> `eql` predicate は、その引数が `eq` である場合、または同じ type の number で同じ値を持つ場合、または同じ文字を表す文字オブジェクトである場合に true です。
+> `eql` 述語は、引数同士が `eq` である場合、同じ型かつ同じ値の数値である場合、または同じ文字を表す文字オブジェクトである場合に真になります。
 
 有用性の観点では、`eq` < `eql` と言えます。
 
-この number 比較は true になります。
+次の数値比較は真になります。
 
 ~~~lisp
 (eql 3 3) ;; => T
 ~~~
 
-しかし注意してください。こちらは 3 と 3.0 が同じ type ではないため true ではありません
-(integer と single float)。
+ただし、次の比較は偽になります。`3` と `3.0` の型が異なるためです（整数と単精度浮動小数点数）。
 
 ~~~lisp
 (eql 3 3.0) ;; => NIL
 ~~~
 
-complex number の場合:
+複素数の場合は次のようになります。
 
 ~~~lisp
-(eql #c(3 -4) #c(3 -4)) ;; is true.
-(eql #c(3 -4.0) #c(3 -4)) ;; is false (because of -4.0 and -4)
+(eql #c(3 -4) #c(3 -4))       ;; => T
+(eql #c(3 -4.0) #c(3 -4))     ;; => NIL（-4.0 と -4 の型が異なるため）
 ~~~
 
-2 つの文字の比較は動きます。
+文字も比較できます。
 
 ~~~lisp
 (eql #\A #\A) ;; => T
 ~~~
 
-そして、list や cons cell を意味のある形で比較することは、まだできません。
+一方、リストやコンスセルの内容を比較することはできません。
 
 ~~~lisp
 (eql (cons 'a 'b) (cons 'a 'b)) ;; => NIL
@@ -151,19 +147,19 @@ complex number の場合:
 
 <a id="equal--string--printed-representation--object-"></a>
 
-## `equal` は文字列にも使えます (printed representation が似ているオブジェクト用)。
+## `equal` は文字列やリストの構造も比較する
 
-> `equal` predicate は、その引数が構造的に似た (isomorphic な) オブジェクトである場合に true です。大まかな目安として、2 つのオブジェクトは、その printed representation が同じである場合に限り `equal` です。
+> `equal` 述語は、引数同士が構造的に同等（同型）である場合に真になります。大まかな目安としては、印字表現が同じオブジェクト同士は `equal` であると考えられます。
 
-再び概念的には、`eq` < `eql` < `equal` と言えます。`eql` である任意の 2 つのオブジェクトは `equal` でもあります。
+概念的には、`eq` < `eql` < `equal` と表せます。`eql` である 2 つのオブジェクトは、必ず `equal` でもあります。
 
-異なる type の **number** は、まだ比較 **できません**。
+ただし、型が異なる **数値** は、数値的に同じ値でも等価とは判定されません。
 
 ~~~lisp
 (equal 3 3.0) ;; => NIL
 ~~~
 
-しかし **list** と cons cell は比較できるようになりました。実際、それらの printed representation は同じです。今回は memory 上で異なるオブジェクトかどうかは関係ありません。
+一方、**リスト**やコンスセルは、その構造と要素を比較できます。別々に作られたオブジェクトでも構いません。
 
 ~~~lisp
 (equal (cons 'a 'b) (cons 'a 'b)) ;; => T
@@ -171,47 +167,47 @@ complex number の場合:
 (equal (list 'a) (list 'a)) ;; => T
 ~~~
 
-**string** も比較できます。
+**文字列**も比較できます。
 
 ~~~lisp
 (equal "Foo" "Foo") ;; => T
 ~~~
 
-memory 上で異なるオブジェクトかどうかは関係ありません。
+別々のオブジェクトでも、内容が同じなら真になります。
 
 ~~~lisp
 (equal "Foo" (copy-seq "Foo")) ;; => T
 ~~~
 
-case は重要です。実際、"FOO" は "foo" と同じようには print されません。
+文字列の大文字と小文字は区別されます。
 
 ~~~lisp
 (equal "FOO" "foo") ;; => NIL
 ~~~
 
-structure や hash-table など他のオブジェクトについては、それらが `eq`（低水準の同一性）なら `equal` です。`equal` は内部へ降りて、そこに格納された値の equality を確認することはありません。
+構造体やハッシュテーブルなどのオブジェクトについては、同一のオブジェクト、つまり `eq` である場合に限り `equal` になります。`equal` は、その内部に格納された値を再帰的には比較しません。
 
-下に link している Community Spec でさらに読めます。
+詳しくは、末尾にリンクした Community Spec を参照してください。
 
 
 <a id="equalp--string--case-number--numerical-value-"></a>
 
-## `equalp` は文字列の case を無視し、number は numerical 値を見ます。
+## `equalp` は文字列の大小を区別せず、数値を数値的に比較する
 
-> 2 つのオブジェクトは、`equal` である場合、文字であり alphabetic case や文字の特定の他の attribute を無視する `char-equal` を満たす場合、異なる type であっても同じ numerical 値を持つ number である場合、または component がすべて `equalp` である場合に `equalp` です。
+> 2 つのオブジェクトは、`equal` である場合、大文字と小文字などの属性を無視する `char-equal` で等しい文字である場合、型が異なっても数値的に同じ値を持つ場合、またはすべての構成要素が `equalp` である場合に `equalp` です。
 
 順序を続けると、`eq` < `eql` < `equal` < `equalp` と言えます。
-しかし一般的な有用性の点では、ほとんどの場合 `equalp` より `equal` を好むことになるでしょう。読み進めてください。
+ただし、一般的には `equalp` より `equal` のほうが適切な場合が多いでしょう。
 
-異なる type を持っていても、値を見て 2 つの **number** を比較できます。
+型が異なる **数値** でも、数値的な値を比較できます。
 
 ~~~lisp
 (equalp 3 3.0) ;; => T
 ~~~
 
-number は「`=` のもとで同じなら」`equalp` です。これはよいことです。
+数値は、`=` で等しければ `equalp` でも等しくなります。
 
-次に **string** 比較に注意してください。
+次の **文字列** の比較に注目してください。
 
 ~~~lisp
 (equalp "FOO" "foo") ;; => T
@@ -219,37 +215,37 @@ number は「`=` のもとで同じなら」`equalp` です。これはよいこ
 
 `equalp` は文字列の大文字と小文字を区別しません。文字列は文字のシーケンスであり、`equalp` は文字の大小を無視する `char-equal` を使って、すべての構成要素を比較するからです。
 
-`equalp` が **配列** を比較するとき、それらが specialize している type を無視します。そのため、文字列と配列が equalp になることがあります。
+`equalp` で **配列** を比較するときは、配列の要素型の違いが無視されます。そのため、文字列と文字のベクターが `equalp` になることがあります。
 
 ~~~lisp
 (equalp "x" #(#\x)) ;; => T
 ~~~
 
-一方:
+一方、`equal` では偽になります。
 
 ~~~lisp
 (equal "x" #(#\x)) ;; => NIL
 ~~~
 
-**structure** と **hash-table** については、`equalp` は内部へ降ります。
+**構造体**と**ハッシュテーブル**については、`equalp` は内部の要素も比較します。
 
-たとえば、2 つの hash-table を作ります (`serapeum:dict` shorthand を使います)。
+たとえば、`serapeum:dict` という略記を使って 2 つのハッシュテーブルを作ります。
 
 ~~~lisp
 (dict :a 1 :b 2)
 (dict :b 2 :a 1)
 ~~~
 
-そして比較します。それらは equalp でしょうか。
+これらを比較すると、`equalp` は真になります。
 
 ~~~lisp
 (equalp * **)
 ;; => T
 ~~~
 
-ただし **equalp** は **object instance** の内部へは降りません。下の専用 section を見てください。
+ただし、**equalp** は CLOS の**インスタンス**のスロットまでは比較しません。後述の節を参照してください。
 
-下に link している Community Spec でさらに読めます。
+詳しくは、末尾にリンクした Community Spec を参照してください。
 
 
 <a id="function"></a>
@@ -258,63 +254,63 @@ number は「`=` のもとで同じなら」`equalp` です。これはよいこ
 
 ### `null`
 
-関数 `null` は、唯一の引数が NIL なら true を返します。
+関数 `null` は、引数が `NIL` なら真を返します。
 
 ~~~lisp
 (null '()) ;; => T
 ~~~
 
 
-### 多くの CL built-in では default で `eql` が使われます
+### 多くの Common Lisp 標準関数は既定で `eql` を使う
 
-これは文字列を操作する newcomer によくある問題です。CL built-in 関数を使っていて、なぜ結果が得られないのか戸惑うことがあります。
+これは、文字列を扱い始めた人がよく遭遇する問題です。Common Lisp の標準関数を使っても、期待した結果が得られないことがあります。
 
-これを見てください。
+次の例を見てください。
 
 ~~~lisp
 (find "foo" (list "test" "foo" "bar"))
 ;; NIL
 ~~~
 
-与えられた list に文字列 "foo" が存在するか知りたいのです。NIL が返ります。何が起きているのでしょうか。
+このリストに文字列 `"foo"` が存在するか調べていますが、`NIL` が返ります。何が起きているのでしょうか。
 
-この Common Lisp の組み込み関数は、シーケンスに対して動作するものすべてと同様に、各要素を検査するために `eql` を使います。しかし `(eql "foo" "foo")` は文字列を意図どおりに比較しません。別の検査関数を使う必要があります。
+`find` は、既定では各要素の比較に `eql` を使います。しかし、`eql` は文字列の内容を比較しません。文字列の内容を比較できる別の述語を指定する必要があります。
 
-これらの関数はすべて `:test` keyword パラメータを受け取り、test 関数を変更できます。
+`find` などの関数は `:test` キーワード引数を受け取り、比較に使う述語を変更できます。
 
 ~~~lisp
 (find "foo" (list "test" "foo" "bar") :test #'equal)
 ;; => "foo"
 ~~~
 
-文字列の case を無視するには `equalp` も使えます。
+文字列の大文字と小文字を区別しない場合は、`equalp` も使えます。
 
 ~~~lisp
 (find "FOO" (list "test" "foo" "bar") :test #'equalp)
 ;; => "foo"
 ~~~
 
-これらの built-in 関数についての例は [data-structures](https://lispcookbook.github.io/cl-cookbook/data-structures.html) にさらにあります。
+これらの標準関数については、[データ構造](https://lispcookbook.github.io/cl-cookbook/data-structures.html)にも例があります。
 
 ### `char-equal`
 
-文字を比較するための特別な operator があります。
+文字を比較するための関数として `char-equal` があります。
 
-> `char-equal` は alphabetic case と文字の特定の他の attribute を無視します。
+> `char-equal` は、大文字と小文字、および文字の一部の属性を無視して比較します。
 
 
 <a id="string--string-equal"></a>
 
 ### 文字列と `string-equal`
 
-`string-equal` は、文字列と substring を比較するための specific 関数 signature を持ちます (比較のための *start* と *end* boundary を指定できます)。ただし、これは `char-equal` を使うため、比較は case-*in*sensitive です。またシンボルにも使えます。
+`string-equal` は文字列およびその一部分を比較します。比較する範囲の *start* と *end* を指定できます。文字の比較には `char-equal` を使うため、大文字と小文字は区別しません。また、文字列指定子としてシンボルも渡せます。
 
 ~~~lisp
 (string-equal :foo "foo") ;; => T
 (string-equal :foo "FOO") ;; => T
 ~~~
 
-これが docstring です。
+次はそのドキュメント文字列です。
 
 ```
 STRING-EQUAL
@@ -329,56 +325,58 @@ start2, end1 and end2, compares characters in string1 to characters in
 string2 (using char-equal).
 ```
 
-次の関数もあります: ` string=; string/=; string<; string>; string<=; string>=; string-equal; string-not-equal; string-lessp; string-greaterp; string-not-greaterp; string-not-lessp`。
+文字列の比較には、ほかにも `string=`、`string/=`、`string<`、`string>`、`string<=`、`string>=`、`string-equal`、`string-not-equal`、`string-lessp`、`string-greaterp`、`string-not-greaterp`、`string-not-lessp` があります。
 
-[strings.html](https://lispcookbook.github.io/cl-cookbook/strings.html) の page を参照してください。
+詳しくは[文字列](https://lispcookbook.github.io/cl-cookbook/strings.html)を参照してください。
 
-### `tree-equal` で tree を比較する
+### `tree-equal` で木を比較する
 
-こちらです。
-
-> `tree-equal` は、X と Y が identical leaves を持つ isomorphic tree である場合に T を返します。
+> `tree-equal` は、`X` と `Y` が同じ葉を持つ同型の木である場合に `T` を返します。
 
 
 <a id="function------function-"></a>
 
-## 比較関数表: (これ) と比較するには (あれ) の関数を使う
+## 比較対象と使用する関数
 
 ```txt
-To compare against...      Use...
+比較対象                    使用する関数
 
-Objects/Structs            EQ
+オブジェクト／構造体        EQ
 
-NIL                        EQ (but the function NULL is more concise and probably cheaper)
+NIL                         EQ（ただし NULL のほうが簡潔で、おそらく低コスト）
 
-T                          EQ (or just the value but then you don't care for the type)
+T                           EQ（または値そのものを条件式として使う）
 
-Precise numbers            EQL
+型も含めた数値              EQL
 
-Floats                     =
+数値                        =
 
-Characters                 EQL or CHAR-EQUAL
+文字                        EQL または CHAR-EQUAL
 
-Lists, Conses, Sequences   EQ (if you want the exact same object)
-                           EQUAL (if you just care about elements)
+リスト、コンス              EQ（同一のオブジェクトか調べる場合）
+                            EQUAL（要素の内容を比較する場合）
 
-Strings                    EQUAL (case-sensitive), EQUALP (case-insensitive)
-                           STRING-EQUAL (if you throw symbols into the mix)
+配列                        EQ（同一のオブジェクトか調べる場合）
+                            EQUALP（要素の内容を比較する場合）
 
-Trees (lists of lists)     TREE-EQUAL (with appropriate :TEST argument)
+文字列                      EQUAL（大文字と小文字を区別する）
+                            EQUALP（大文字と小文字を区別しない）
+                            STRING-EQUAL（シンボルも比較対象に含める場合）
+
+木（リストのリスト）        TREE-EQUAL（適切な :TEST 引数を指定する）
 ```
 
 <a id="object--built-in-function--object-oriented-"></a>
 
-## 自分のオブジェクトを比較する方法、別名 built-in 関数は object-oriented ではない
+## 自作のオブジェクトを比較する
 
-2 つのオブジェクトが identical であり、memory 上で同じオブジェクトであることを check するには `eq` を使います。
+2 つの変数が同一のオブジェクトを指しているか確認するには、`eq` を使います。
 
-自分のオブジェクトを独自の logic で比較したい場合 (たとえば 2 つの "person" オブジェクトは同じ name と surname を持つなら equal と見なす、など)、built-in 関数を specialize することはできません。自分の `person=` や同様の関数を使うか、ライブラリを使ってください (下の link を参照)。
+自作のオブジェクトを独自の基準で比較したい場合もあります。たとえば、2 つの `person` オブジェクトについて、名前と姓が同じなら等価とみなす場合です。そのために Common Lisp の標準関数を特殊化することはできません。`person=` のような独自の関数を定義するか、ライブラリを使ってください（末尾のリンクを参照）。
 
-これは制限とも見なせますが、generic なものの代わりに specialised 関数を使うことには、(ずっと) 高速であるという利点があります。
+これは制約ともいえますが、汎用的な比較関数ではなく、用途に特化した関数を使うことで性能上有利になる場合があります。
 
-例として、CLOS チュートリアルの `person` クラスを考えます。
+例として、CLOS チュートリアルの `person` クラスを使います。
 
 ```lisp
 (defclass person ()
@@ -387,21 +385,21 @@ Trees (lists of lists)     TREE-EQUAL (with appropriate :TEST argument)
     :accessor name)))
 ```
 
-2 つの person オブジェクトを作ります。同じ name を持ちますが、2 つの異なるオブジェクトです。
+同じ名前を持つ、別々の `person` オブジェクトを 2 つ作ります。
 
 ```lisp
 (defparameter *p1* (make-instance 'person :name "me"))
 (defparameter *p2-same-name* (make-instance 'person :name "me"))
 ```
 
-2 つのオブジェクトを比較するには `eq` を使います。
+オブジェクトの同一性は `eq` で比較できます。
 
 ~~~lisp
 (eq *p1* *p1*) ;; => T
 (eq *p1* *p2-same-name*) ;; => NIL
 ~~~
 
-異なるオブジェクトを比較し、それらがいつ equal であるかを決めるために、独自の `person=` メソッドを使います。
+オブジェクトが等価となる条件を独自に定めるには、`person=` のようなメソッドを定義します。
 
 ~~~lisp
 (defmethod person= (p1 p2)
@@ -410,36 +408,36 @@ Trees (lists of lists)     TREE-EQUAL (with appropriate :TEST argument)
 (person= *p1* *p2-same-name*)  ;; => T
 ~~~
 
-どうしても `=` や `equal` を使いたい場合は、下を参照してライブラリを使ってください。
+独自のオブジェクトにも `=` や `equal` を使いたい場合は、末尾で紹介しているライブラリを利用してください。
 
-## Coalescing: `compile-file` の含意
+## オブジェクトの併合と `compile-file`
 
-`(eql "a" "a")` の例に戻りましょう。これは NIL を返します。
+`(eql "a" "a")` の例に戻りましょう。REPL では、この式が `NIL` を返すことがあります。
 
-これは REPL で NIL を返す、と正確に言う必要があります。interpreter は 2 つの文字列 "a" を memory 上の同じオブジェクトと見なさないため、NIL を返します。
+これは、2 つの文字列リテラルが別々のオブジェクトとして読み込まれることがあるためです。
 
-しかし compiler はオブジェクトをまとめることがあります。
+一方、コンパイラーはオブジェクトを併合することがあります。
 
-`compile-file` で file を compile すると、compiler は異なるオブジェクトを coalesce しているかもしれません。"a" と "a" が似ている 2 つの literal 文字列であることに気づき、それらを同じ memory location に保存しているかもしれません。
+`compile-file` でファイルをコンパイルすると、コンパイラーが複数の類似したリテラルを同一のオブジェクトとして扱う場合があります。たとえば、2 つの文字列リテラル `"a"` が併合される可能性があります。
 
-そのため、equality predicate が今度は T を返す可能性があります。
+その場合、同じ比較式が `T` を返す可能性があります。
 
-結論: 正しい equality predicate を使ってください。
+したがって、比較対象に合った等価性述語を使う必要があります。
 
-これは、たとえば `(list 1 2 3)` (`list` 関数を使う) ではなく `'(1 2 3)` (quote を使う) のように、literal で定義した変数を変更すべきでない理由でもあります。
+これは、`'(1 2 3)` のようなリテラルを破壊的に変更してはならない理由の一つでもあります。変更可能なリストが必要なら、`(list 1 2 3)` のように実行時に作成します。
 
-`compile` はオブジェクトを coalesce することを許可されていない点に注意してください。
+なお、`compile` にはオブジェクトの併合が許されていません。
 
 
-## Credits
+## 謝辞
 
 - [CLtL2: Equality Predicates](http://www.cs.cmu.edu/Groups/AI/html/cltl/clm/node74.html)
-- compare table: [Stack-Overflow の Leslie P. Polzer](https://stackoverflow.com/questions/547436/whats-the-difference-between-eq-eql-equal-and-equalp-in-common-lisp)
+- 比較表: [Stack Overflow における Leslie P. Polzer の回答](https://stackoverflow.com/questions/547436/whats-the-difference-between-eq-eql-equal-and-equalp-in-common-lisp)
 
 ## 参照
 
 - [CL Community Spec の `equal`](https://cl-community-spec.github.io/pages/equal.html)
 - [CL Community Spec の `equalp`](https://cl-community-spec.github.io/pages/equalp.html)
-- [equals](https://github.com/karlosz/equals/) - Common Lisp 用 generic equality。
-- [generic-cl](https://github.com/alex-gutev/generic-cl/) - CL built-in への generic 関数インターフェイス。
-  - 自分の custom オブジェクトに `=` や `<` を使えます。
+- [equals](https://github.com/karlosz/equals/) - Common Lisp 向けの汎用的な等価性判定。
+- [generic-cl](https://github.com/alex-gutev/generic-cl/) - Common Lisp 標準関数に対する総称関数インターフェイス。
+  - 自作のオブジェクトに `=` や `<` を使えるようになります。
