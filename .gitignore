@@ -4,5 +4,8 @@ vendor
 AGENT.md
 CLAUDE.md
 .DS_Store
+ja/common-lisp-cookbook-ja.pdf
+ja/full-with-preamble.typ
+ja/full.typ
 ja/common-lisp-cookbook-ja.epub
 ja/full.md

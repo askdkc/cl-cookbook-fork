@@ -155,7 +155,15 @@
 
   ;; Include images for the PDF.
   ;; The issue: our images in HTLM <img> tags are not brought along in the .typ then PDF.
-  (uiop:run-program (format nil "~a -i -f include-pdf-images.sed ~a" *sed-command* *full-markdown*))
+  (uiop:run-program
+   (format nil "~a -f include-pdf-images.sed ~a > ~a.tmp && mv ~a.tmp ~a"
+           *sed-command*
+           *full-markdown*
+           *full-markdown*
+           *full-markdown*
+           *full-markdown*)
+   :output t
+   :error-output t)
 
   ;; Transform our md file to .typ:
   (uiop:run-program (format nil "pandoc -o ~a ~a" *full-typ* *full-markdown*)
