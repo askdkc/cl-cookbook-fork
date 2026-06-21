@@ -3,3 +3,4 @@ vendor
 .bundle
 AGENT.md
 CLAUDE.md
+.DS_Store
