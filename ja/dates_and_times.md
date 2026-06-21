@@ -207,7 +207,7 @@ CL-USER> (ql:quickload "local-time")
 
 利用できる unit は `:sec :minute :hour :day :year` です。
 
-この operation は `adjust-timestamp` でも可能です。これは次の section ですぐ見るように、もう少し多くのことができます (一度に多くの operation を行えます)。
+この操作は `adjust-timestamp` でも行えます。次の節ですぐ見るように、この関数は一度に複数の操作を行えます。
 
 ~~~lisp
 (local-time:timestamp+ (today) 3 :day)
