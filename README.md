@@ -95,7 +95,7 @@ Also, refer to the [CONTRIBUTING.md][contributing] file.
 
 ### Building the EPUB and the PDF
 
-Run `make epub` to only build epub, `make pdf` to build the PDF.  Run `make epub+pdf` to build both. See `make-cookbook.lisp`.
+In this fork, `make epub`, `make pdf`, and `make epub+pdf` build the Japanese edition from the `ja/` tree. If you need the English build locally, use `make epub-en`, `make pdf-en`, or `make epub+pdf-en`. The upstream repository also handles the English edition. See `make-cookbook.lisp`.
 
 For the epub, you need a decently recent version of [Calibre](https://calibre-ebook.com/). They provide an easy binary installation.
 

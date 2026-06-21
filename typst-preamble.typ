@@ -6,6 +6,11 @@
     description: [A code-first tutorial and language reference for Common Lisp],
 )
 
+#set text(
+  lang: "ja",
+  font: "Noto Serif CJK JP",
+)
+
 #show heading.where(level: 1, outlined: true): it => {
 	pagebreak()
 	it
