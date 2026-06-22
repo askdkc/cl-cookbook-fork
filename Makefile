@@ -12,10 +12,10 @@ run:
 clean: clean-ja
 
 clean-en:
-	rm -f full.md full.typ full-with-preamble.typ full-with-preamble.pdf common-lisp-cookbook.epub common-lisp-cookbook.pdf
+	rm -f full.md full.epub.md full.typ full-with-preamble.typ full-with-preamble.pdf common-lisp-cookbook.epub common-lisp-cookbook.pdf
 
 clean-ja:
-	rm -f ja/full.md ja/full.typ ja/full-with-preamble.typ ja/full-with-preamble.pdf ja/common-lisp-cookbook-ja.epub ja/common-lisp-cookbook-ja.pdf
+	rm -f ja/full.md ja/full.epub.md ja/full.typ ja/full-with-preamble.typ ja/full-with-preamble.pdf ja/common-lisp-cookbook-ja.epub ja/common-lisp-cookbook-ja.pdf
 
 epub: clean-ja
 	$(JA_BUILD_ENV) sbcl --load make-cookbook.lisp --eval '(generate)' --eval '(to-epub)' --eval '(uiop:quit)'

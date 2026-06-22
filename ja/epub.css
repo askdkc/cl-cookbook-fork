@@ -30,15 +30,25 @@ pre {
 .shiki {
   border: 1px solid #d0d7de;
   border-radius: 4px;
+  font-size: 0.83em;
   margin: 1em 0;
-  overflow-x: auto;
   padding: 0.85em 1em;
+  /* Wrap long lines instead of an overflow-x scroll box: paginated EPUB readers
+     treat an overflow container as atomic and clip whatever crosses a page
+     break, making code disappear. Wrapping + allowing breaks keeps it all. */
+  white-space: pre-wrap;
+  overflow-wrap: break-word;
+  word-break: break-word;
+  break-inside: auto;
+  page-break-inside: auto;
 }
 
 .shiki code {
   background: transparent;
   color: inherit;
-  white-space: pre;
+  white-space: pre-wrap;
+  overflow-wrap: break-word;
+  word-break: break-word;
 }
 
 .shiki .line {
