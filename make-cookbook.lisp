@@ -95,7 +95,9 @@
 
 (defparameter *sed-command* (uiop:getenv "SED_CMD"))
 (defparameter *full-markdown* (concatenate 'string *output-dir* "full.md"))
-(defparameter *full-typ* (concatenate 'string *output-dir* "full.typ"))
+;; EPUB-only intermediate: full.md with code blocks turned into Shiki HTML.
+;; The PDF build keeps using the raw *full-markdown*.
+(defparameter *full-epub-markdown* (concatenate 'string *output-dir* "full.epub.md"))
 (defparameter *full-with-preamble* (concatenate 'string *output-dir* "full-with-preamble.typ"))
 (defparameter *bookname*
   (or (uiop:getenv "BOOKNAME")
@@ -103,8 +105,20 @@
 (defparameter *pdfname*
   (or (uiop:getenv "PDFNAME")
       (concatenate 'string *output-dir* "common-lisp-cookbook.pdf")))
-(defparameter *epub-command-placeholder* "pandoc -o ~a --toc ~a ~a"
-  "format with book name and sources file.")
+(defparameter *epub-command-placeholder* "pandoc -o ~a --toc ~a~a ~a"
+  "format with book name, metadata, css flag, sources file.")
+
+(defun shiki-highlight ()
+  "Turn fenced code blocks in *full-markdown* into static Shiki HTML, written to
+  *full-epub-markdown*. Build-time only; the EPUB carries no JavaScript.
+  Requires node_modules (run 'npm ci')."
+  (unless (probe-file "node_modules/shiki")
+    (format t "~&Shiki is not installed. Run 'npm ci' first.~&")
+    (uiop:quit 1))
+  (format t "~&Highlighting code blocks with Shiki...~&")
+  (uiop:run-program (format nil "node scripts/shiki-highlight.mjs ~a ~a"
+                            *full-markdown* *full-epub-markdown*)
+                    :output t :error-output t))
 
 (defparameter pdf-toc "== Table Of Contents (High-level)
 <high-level-table-of-contents>
@@ -137,8 +151,12 @@
     (uiop:run-program (format nil "~a -i -f fix-ja-links.sed ~a" *sed-command* *full-markdown*))))
 
 (defun to-epub ()
+  (shiki-highlight)
   (format t "~&Generating ~a...~&" *bookname*)
-  (uiop:run-program (format nil *epub-command-placeholder* *bookname* *metadata-file* *full-markdown*)))
+  (let* ((css (concatenate 'string *output-dir* "epub.css"))
+         (css-flag (if (probe-file css) (format nil " --css=~a" css) "")))
+    (uiop:run-program (format nil *epub-command-placeholder*
+                              *bookname* *metadata-file* css-flag *full-epub-markdown*))))
 
 (defun sample-pdf ()
   (format t "~&Generating a very short PDF sample.~&")
@@ -171,13 +189,11 @@
    :output t
    :error-output t)
 
-  ;; Transform our md file to .typ:
-  (uiop:run-program (format nil "pandoc -o ~a ~a" *full-typ* *full-markdown*)
-                    :output t
-                    :error-output t)
-
-  ;; Add typst configuration:
-  (uiop:run-program (format nil "cat ~a >> ~a && cat ~a >> ~a" *typst-preamble* *full-with-preamble* *full-typ* *full-with-preamble*)
+  ;; Transform our md file to .typ, using typst-preamble.typ as a Pandoc
+  ;; template so Skylighting's token functions ($highlighting-definitions$)
+  ;; are defined in the standalone output. Needs pandoc >= 3.8.
+  (uiop:run-program (format nil "pandoc --standalone --template=~a --syntax-highlighting=pandoc-light.theme -o ~a ~a"
+                            *typst-preamble* *full-with-preamble* *full-markdown*)
                     :output t
                     :error-output t)
 
