@@ -135,11 +135,11 @@ We handled an error.
       (error "oh no")))
 ~~~
 
-`handler-case` と比べると構文が「逆」になっていることに気づくでしょう。先に bindings があり、次に（暗黙の progn 内の）フォームがあります。
+`handler-case` と比べると構文が「逆」になっていることに気づくでしょう。先に束縛があり、次に（暗黙の progn 内の）フォームがあります。
 
-handler が通常どおり戻った場合（コンディションの処理を辞退した場合）、コンディションは別の handler を探して伝播し続け、最終的に対話的デバッガに到達します。
+ハンドラが通常どおり戻った場合（コンディションの処理を辞退した場合）、コンディションは別のハンドラを探して伝播し続け、最終的に対話的デバッガに到達します。
 
-これも `handler-case` との違いです。handler 関数が `return-from handler-bind-example` で呼び出し元関数から明示的に戻らなければ、エラーは伝播し続け、対話的デバッガが表示されます。
+これも `handler-case` との違いです。ハンドラ関数が `return-from handler-bind-example` で呼び出し元関数から明示的に戻らなければ、エラーは伝播し続け、対話的デバッガが表示されます。
 
 この挙動は、プログラムが単純なコンディションを通知したときに特に便利です。単純なコンディションはエラーではないため（下の「コンディション階層」を参照）、デバッガを起動しません。コンディション（アプリケーション内で何かが起きたという通知）に対して処理を行い、プログラムを続行できます。
 
@@ -191,7 +191,7 @@ Backtrace for: #<SB-THREAD:THREAD "repl-thread" RUNNING {1008695453}>
 
 ここまでは問題ありません。"Date/time" と "An unhandled エラーコンディション…" というメッセージを出しているのは `trivial-backtrace` です。
 
-次に、`handler-bind` を使った場合の stacktrace と比較します。
+次に、`handler-bind` を使った場合のスタックトレースと比較します。
 
 ```lisp
 (defun main-no-stack-unwinding ()
@@ -354,7 +354,7 @@ SBCL ソース:
 
 `:accessor` なら getter と setter の両方になります。
 
-つまり、`define-condition` の一般形は通常のクラス定義のように見え、感じられます。ただし似ていても、コンディションは standard オブジェクトではありません。
+つまり、`define-condition` の一般形は通常のクラス定義のように見え、感じられます。ただし似ていても、コンディションは標準オブジェクトではありません。
 
 違いの 1 つは、スロットに対して `slot-value` を使えないことです。
 
@@ -391,7 +391,7 @@ SBCL ソース:
 
 ### コンディション階層
 
-`simple-error` のクラス precedence list は `simple-error, simple-condition, error, serious-condition, condition, t` です。
+`simple-error` のクラス優先順位リストは `simple-error, simple-condition, error, serious-condition, condition, t` です。
 
 `simple-warning` のクラス precedence list は `simple-warning, simple-condition, warning, condition, t` です。
 
@@ -527,7 +527,7 @@ Type a form to be evaluated:
 
 ![](simple-restarts.png)
 
-これで問題ありませんが、より人間に分かりやすい "reports" を書きましょう。
+これで問題ありませんが、より人間に分かりやすい「説明（report）」を書きましょう。
 
 ~~~lisp
 (defun divide-with-restarts (x y)
@@ -544,7 +544,7 @@ Type a form to be evaluated:
 ;;  1: [DIVIDE-BY-ONE] Divide by 1
 ~~~
 
-こちらの方がよいですが、上の `assert` の例で行ったように operand を変更する機能がありません。
+こちらの方がよいですが、上の `assert` の例で行ったようにオペランドを変更する機能がありません。
 
 
 ### restart で変数を変更する
@@ -699,7 +699,7 @@ Restarts は隠せます。`restart-case` では、`:report` と `:interactive` 
 * [A Tutorial on Conditions and Restarts](https://github.com/stylewarning/lisp-random/blob/master/talks/4may19/root.lisp) - 実関数の根の計算を題材にしたもの。著者により 2019 年 5 月の Bay Area Julia meetup で発表されました（[talk slides here](https://github.com/stylewarning/talks/blob/master/4may19-julia-meetup/Bay%20Area%20Julia%20Users%20Meetup%20-%204%20May%202019.pdf)）。
 * [lisper.in](https://lisper.in/restarts#signaling-validation-errors) - csv ファイルの parsing と restarts の成功例。[旅行会社での事例](https://www.reddit.com/r/lisp/comments/7k85sf/a_tutorial_on_conditions_and_restarts/drceozm/)。
 * [https://github.com/svetlyak40wt/python-cl-conditions](https://github.com/svetlyak40wt/python-cl-conditions) - Python における CL コンディション system の実装。
-* [https://github.com/phoe/portable-condition-system](https://github.com/phoe/portable-condition-system) - Common Lisp における CL コンディション system の portable 実装。
+* [https://github.com/phoe/portable-condition-system](https://github.com/phoe/portable-condition-system) - Common Lisp における CL コンディションシステムの移植可能な実装。
 
 ## 謝辞
 

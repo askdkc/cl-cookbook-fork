@@ -35,7 +35,7 @@ NIL
 ;; => (10 20 30)
 ~~~
 
-`loop` マクロは、ほとんどの Lisp 式とは異なり、s-expression を使わない複雑な内部 DSL を持っています。そのため、`loop` 式を読むときは、頭の半分を Lisp モードに、もう半分を `loop` モードにしておく必要があります。好きになるか嫌いになるかのどちらかです。たいていは、しばらく嫌いになってから好きになります。
+`loop` マクロは、ほとんどの Lisp 式とは異なり、S 式を使わない複雑な内部 DSL を持っています。そのため、`loop` 式を読むときは、頭の半分を Lisp モードに、もう半分を `loop` モードにしておく必要があります。好きになるか嫌いになるかのどちらかです。たいていは、しばらく嫌いになってから好きになります。
 
 `loop` 式は 4 つの部分からなると考えられます。
 
@@ -46,19 +46,19 @@ NIL
 
 さらに、`loop` 式は値を返せます。1 つの `loop` 式でこれらすべてを使うことはめったにありませんが、さまざまな方法で組み合わせられます。
 
-loop clause は 2 つのスタイルで書けます。上のようにシンボルとして書くか、次のように keyword として書きます。
+loop の節は 2 つのスタイルで書けます。上のようにシンボルとして書くか、次のようにキーワードとして書きます。
 
 ~~~lisp
 (loop :for x :in '(1 2 3) :collect (* x 10))
 ~~~
 
-ここでは `:for`、`:in`、`:collect` を keyword として書いています。
+ここでは `:for`、`:in`、`:collect` をキーワードとして書いています。
 
 
 ### `iterate` ライブラリ
 
-**[iterate](https://common-lisp.net/project/iterate/doc/index.html)** is a
-`loop` より単純で、より「Lisp らしく」、より予測しやすく、さらに拡張可能であることを目指した人気の反復マクロです。ただし組み込みではないので、import する必要があります。
+**[iterate](https://common-lisp.net/project/iterate/doc/index.html)** は、
+`loop` より単純で、より「Lisp らしく」、より予測しやすく、さらに拡張可能であることを目指した人気の反復マクロです。ただし組み込みではないので、取り込む必要があります。
 
     (ql:quickload "iterate")
     (use-package :iterate)
@@ -86,7 +86,7 @@ Iterate には `display-iterate-clauses` も付属しており、かなり便利
 
 ### `for` ライブラリ
 
-**[for](https://github.com/Shinmera/for/)** is an extensible iteration macro
+**[for](https://github.com/Shinmera/for/)** は、
 しばしば `loop` より短く書ける拡張可能な反復マクロです。「`loop` と違って拡張可能で分かりやすく、Iterate と違って code-walking を必要とせず拡張しやすい」とされています。
 
 もう 1 つの利点として、すべてのデータ構造（list、vector、hash-table など）に対して使える 1 つの構文があります。迷ったら `for… over…` を使えばよいのです。
@@ -96,13 +96,13 @@ Iterate には `display-iterate-clauses` も付属しており、かなり便利
    (print …))
 ~~~
 
-これも quickload する必要があります。
+これも quickload で読み込む必要があります。
 
     (ql:quickload "for")
 
 ### `map`, `mapcar` など（組み込み）
 
-**`mapcar`** と `map` の例も示します。さらに、E. Weitz が "Common Lisp Recipes" 第 7 章でうまく分類している仲間の `mapcon`、`mapcan`、`maplist`、`mapc`、`mapl` も扱います。他の言語から来た人に最もなじみがあるのは、おそらく `mapcar` でしょう。これは関数と 1 つ以上のリストを引数に取り、リストの各 *element* に順番に関数を適用し、結果のリストを返します。
+**`mapcar`** と `map` の例も示します。さらに、E. Weitz が "Common Lisp Recipes" 第 7 章でうまく分類している仲間の `mapcon`、`mapcan`、`maplist`、`mapc`、`mapl` も扱います。他の言語から来た人に最もなじみがあるのは、おそらく `mapcar` でしょう。これは関数と 1 つ以上のリストを引数に取り、リストの各 *要素* に順番に関数を適用し、結果のリストを返します。
 
 ~~~lisp
 (mapcar (lambda (it) (+ it 10)) '(1 2 3))
@@ -135,7 +135,7 @@ Iterate には `display-iterate-clauses` も付属しており、かなり便利
 ;; => "abc"
 ~~~
 
-**`map-into`** は破壊的な変種で、新しい sequence を割り当てる代わりに、既存の sequence へ結果を直接格納します。その結果 sequence は戻り値にもなります。
+**`map-into`** は破壊的な変種で、新しいシーケンスを割り当てる代わりに、既存のシーケンスへ結果を直接格納します。その結果のシーケンスは戻り値にもなります。
 
 ~~~lisp
 (let ((result (make-list 3)))
@@ -143,7 +143,7 @@ Iterate には `display-iterate-clauses` も付属しており、かなり便利
 ;; => (11 22 33)
 ~~~
 
-これは vector でも動作し、性能が重要なループで allocation を避けたいときに便利です。
+これは vector でも動作し、性能が重要なループで割り当てを避けたいときに便利です。
 
 ~~~lisp
 (let ((buf (make-array 4)))
@@ -152,9 +152,9 @@ Iterate には `display-iterate-clauses` も付属しており、かなり便利
 ;; => #(97 98 99 100)
 ~~~
 
-注: `map-into` は第 1 引数をその場で変更します。既存の buffer を再利用する必要がない場合は、`map` や `mapcar` を優先してください。
+注: `map-into` は第 1 引数をその場で変更します。既存のバッファを再利用する必要がない場合は、`map` や `mapcar` を優先してください。
 
-他の構文にも、状況によって利点があります。リストの *tail* を処理したり、戻り値を *concatenate* したり、何も返さなかったりします。その一部を見ていきます。
+他の構文にも、状況によって利点があります。リストの *末尾（tail）* を処理したり、戻り値を *連結* したり、何も返さなかったりします。その一部を見ていきます。
 
 `mapcar` が好きでよく使い、lambda をもっと速く短く書きたいなら、次の単純なマクロを使えます。
 
@@ -184,7 +184,7 @@ Iterate には `display-iterate-clauses` も付属しており、かなり便利
 ~~~
 
 `series` は良いものですが、その関数名は今日の関数型言語で見かけるものとは異なります。["Generators
-The Way I Want Them Generated"](https://cicadas.surf/cgit/colin/gtwiwtg.git/about/) ライブラリも気に入るかもしれません。これは `series` に似た lazy sequence ライブラリですが、より新しく、完全性では劣るものの、`take`、`filter`、`for`、`fold` といった語を持つ「現代的な」API を備えていて使いやすいです。
+The Way I Want Them Generated"](https://cicadas.surf/cgit/colin/gtwiwtg.git/about/) ライブラリも気に入るかもしれません。これは `series` に似た遅延シーケンスのライブラリですが、より新しく、完全性では劣るものの、`take`、`filter`、`for`、`fold` といった語を持つ「現代的な」API を備えていて使いやすいです。
 
 ~~~lisp
 (range :from 20)
@@ -198,14 +198,14 @@ The Way I Want Them Generated"](https://cicadas.surf/cgit/colin/gtwiwtg.git/abou
 
 ### `transducers` ライブラリ
 
-**[transducers](https://codeberg.org/fosskers/cl-transducers)** パターンは 2023 年に Common Lisp へ移植され、"source" を効率よく反復するための関数型プログラミング idiom 一式を提供します。"source" は List や Vector のような単純な collection でもよく、巨大な file や無限データの generator でもありえます。
+**[transducers](https://codeberg.org/fosskers/cl-transducers)** パターンは 2023 年に Common Lisp へ移植され、"source" を効率よく反復するための関数型プログラミングのイディオム一式を提供します。"source" は List や Vector のような単純なコレクションでもよく、巨大なファイルや無限データのジェネレータでもありえます。
 
 Transducers は...
 
-- `map` や `filter` のような操作を、各 step の間で memory を割り当てずに連鎖できます。
+- `map` や `filter` のような操作を、各ステップの間でメモリを割り当てずに連鎖できます。
 - 特定のデータ型に縛られません。一度だけ実装すれば済みます。
 - 「データ変換コード」を大幅に単純化します。
-- 「lazy evaluation」とは無関係です。
+- 「遅延評価」とは無関係です。
 
 最初の 1000 個の奇数整数の二乗和を求めてみましょう。
 
@@ -225,12 +225,12 @@ Transducers は...
 ;; => 1333333000
 ~~~
 
-ここでは `ints` が無限 generator であるにもかかわらず、最終結果に必要な数だけの値しか実際には作られません。
+ここでは `ints` が無限のジェネレータであるにもかかわらず、最終結果に必要な数だけの値しか実際には作られません。
 
 利用者は独自のトランスデューサー（`map` のような関数）やリデューサー（`+` のような関数）を自由に作り、望む方法でデータストリームを走査できます。それでいてメモリ効率を非常に高く保てます。
 
-詳しくは [README](https://codeberg.org/fosskers/cl-transducers)、[API](https://fosskers.github.io/cl-transducers/index.html)、または [original
-Transducers document](https://clojure.org/reference/transducers) を参照してください。
+詳しくは [README](https://codeberg.org/fosskers/cl-transducers)、[API](https://fosskers.github.io/cl-transducers/index.html)、または [元の
+Transducers のドキュメント](https://clojure.org/reference/transducers) を参照してください。
 
 ## レシピ
 
@@ -330,7 +330,7 @@ NIL
 
 まず、上で示したように、単に `(loop ...)` を使えば無限にループできます。ここでは、リスト上で永久にループする方法を示します。
 
-最後の element をリスト自身に設定することで、無限リストを作れます。
+最後の要素をリスト自身に設定することで、無限リストを作れます。
 
 ~~~lisp
 (loop with list-a = (list 1 2 3)
@@ -341,7 +341,7 @@ NIL
 ;; => (1 2 3 1 2 3 1 2)
 ~~~
 
-図解: `(last (list 1 2 3))` は `(3)` です。これはリスト、より正確には `car` が 3 で `cdr` が NIL の cons cell です。復習には [data-structures chapter](data-structures.html) を参照してください。これは `(list 3)` の表現です。
+図解: `(last (list 1 2 3))` は `(3)` です。これはリスト、より正確には `car` が 3 で `cdr` が NIL の cons セルです。復習には [データ構造の章](data-structures.html) を参照してください。これは `(list 3)` の表現です。
 
 ~~~
 [o|/]
@@ -357,7 +357,7 @@ NIL
  1       2       3
 ```
 
-最後の element の `cdr` をリスト自身に設定することで、自分自身へ戻るようにします。
+最後の要素の `cdr` をリスト自身に設定することで、自分自身へ戻るようにします。
 
 `#=` 構文を使うと、記法上のショートカットが可能です。
 
@@ -409,8 +409,8 @@ NIL
 
 実際、次のものを反復する方法を知るには [こちら](https://common-lisp.net/project/iterate/doc/Sequence-Iteration.html) を見るか、`(display-iterate-clauses '(for))` を実行してください。
 
-- symbol: `in-package`
-- file または stream: `in-file` または `in-stream`
+- シンボル: `in-package`
+- ファイルまたはストリーム: `in-file` または `in-stream`
 - 要素: `in-sequence`（シーケンスはベクトルまたはリストです）。
 
 ### リストをループする
@@ -635,13 +635,13 @@ NIL
 [`with-hash-table-iterator`](http://www.lispworks.com/documentation/HyperSpec/Body/m_w_hash.htm),
 これは（
 [`macrolet`](http://www.lispworks.com/documentation/HyperSpec/Body/s_flet_.htm))
-を経由して）第 1 引数を iterator に変換するマクロです。この iterator は呼び出されるたびに、hash table entry ごとに 3 つの値を返します。
+を経由して）第 1 引数をイテレータに変換するマクロです。このイテレータは呼び出されるたびに、ハッシュテーブルのエントリごとに 3 つの値を返します。
 
-- entry が返された場合に true になる generalized boolean
+- エントリが返された場合に真になる一般化ブール値
 - エントリのキー
-- entry の値
+- エントリの値
 
-entry がもうない場合は、`nil` という 1 つの値だけが返されます。
+エントリがもうない場合は、`nil` という 1 つの値だけが返されます。
 
 例:
 
@@ -662,7 +662,7 @@ NIL
 
 HyperSpec の次の注意に留意してください。
 
-> 反復の暗黙の内部状態のいずれかが、呼び出しフォームを閉じ込めたクロージャを返すなどして、`with-hash-table-iterator` フォームの dynamic extent の外へ返された場合に何が起こるかは未規定です。
+> 反復の暗黙の内部状態のいずれかが、呼び出しフォームを閉じ込めたクロージャを返すなどして、`with-hash-table-iterator` フォームのダイナミックエクステントの外へ返された場合に何が起こるかは未規定です。
 
 #### iterate: `in-hashtable`
 
@@ -674,11 +674,11 @@ HyperSpec の次の注意に留意してください。
 ;; ((B 2) (A 1))
 ~~~
 
-#### Alexandria's `maphash-keys` and `maphash-values`
+#### Alexandria の `maphash-keys` と `maphash-values`
 
 キーまたは値だけを変換するには、ここでも Alexandria の `maphash-keys` と `maphash-values` を利用できます。
 
-#### Serapeum's `do-hash-table`
+#### Serapeum の `do-hash-table`
 
 [Serapeum ライブラリ](https://github.com/ruricolist/serapeum/blob/master/REFERENCE.md#hash-tables) には `do-hash-table` という do 風のマクロがあります。
 
@@ -687,7 +687,7 @@ HyperSpec の次の注意に留意してください。
 
 #### for
 
-`for` ライブラリでは `over` keyword を使います。
+`for` ライブラリでは `over` キーワードを使います。
 
 ~~~lisp
 (for:for ((it over *my-hash-table*))
@@ -872,7 +872,7 @@ NIL
 ;; ((1 10 1) (2 20 1) (3 30 1))
 ~~~
 
-HyperSpec は `with` clause を次のように定義しています。
+HyperSpec は `with` 節を次のように定義しています。
 
     with-clause ::= with var1 [type-spec] [= form1] {and var2 [type-spec] [= form2]}*
 
@@ -894,7 +894,7 @@ HyperSpec は `with` clause を次のように定義しています。
 ;; ((0 :FOO :BAR) (1 :FOO :BAR) (2 :FOO :BAR) (3 :FOO :BAR))
 ~~~
 
-`for` に、各反復で呼び出される `then` clause を与えることもできます。
+`for` に、各反復で呼び出される `then` 節を与えることもできます。
 
 ~~~lisp
 (loop repeat 3

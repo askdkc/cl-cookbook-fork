@@ -45,7 +45,7 @@ Mito は、使うデータベースドライバに応じて別のシステムを
 with migrations, relationships and PostgreSQL support" です。
 
 - **MySQL、PostgreSQL、SQLite3 をサポート**します。
-- モデルを定義すると、Ruby の ActiveRecord や Django のように、デフォルトで `id` (serial primary key)、
+- モデルを定義すると、Ruby の ActiveRecord や Django のように、デフォルトで `id`（連番の主キー）、
   `created_at`、`updated_at` フィールドを追加します。
 - サポートするバックエンド向けの DB **マイグレーション**を扱います。
 - DB **スキーマのバージョン管理**ができます。
@@ -270,7 +270,7 @@ Mito は参照先テーブルに外部キー制約を追加しません。
 多対多リレーションには中間テーブルが必要です。
 この中間テーブルは、仲介する 2 つのテーブルそれぞれに対する「多」側になります。
 
-そして join table のおかげで、リレーションに関する追加情報を保存できます。
+そして結合テーブルのおかげで、リレーションに関する追加情報を保存できます。
 
 `book` クラスを定義してみます。
 
@@ -292,7 +292,7 @@ Mito は参照先テーブルに外部キー制約を追加しません。
 ユーザーのコレクションに本を追加したいときは毎回 (`add-book` 関数内などで)、新しい `user-books` オブジェクトを作成します。
 
 ただし、誰かが同じ本を複数冊所有していることも十分あり得ます。
-これは join table に保存できる情報です。
+これは結合テーブルに保存できる情報です。
 
 ~~~lisp
 (mito:deftable user-books ()
@@ -303,7 +303,7 @@ Mito は参照先テーブルに外部キー制約を追加しません。
 ~~~
 
 
-#### 継承と mixin
+#### 継承とミックスイン
 
 DAO-CLASS のサブクラスは継承できます。
 似たカラムを持つクラスが必要なときに便利です。
@@ -617,7 +617,7 @@ keys."))
 クエリを連鎖させるための主要なインターフェイスです。
 初期値を受け取り、それを一連の変換へ通していきます。
 
-基本クエリを定義できます。ここでは active なユーザーを選択します。
+基本クエリを定義できます。ここではアクティブなユーザーを選択します。
 
 ```lisp
 (use-package :sxql)  ;; sxql の全シンボルを import する。
@@ -752,7 +752,7 @@ and the author fields."
 
 ### トリガー
 
-`insert-dao`、`update-dao`、`delete-dao` は generic 関数として定義されているため、通常の [メソッド combination](clos.html#qualifiers-and-method-combination) と同じように、それらに対して `:before`、`:after`、`:around` メソッドを定義できます。
+`insert-dao`、`update-dao`、`delete-dao` は総称関数として定義されているため、通常の [メソッド結合](clos.html#qualifiers-and-method-combination) と同じように、それらに対して `:before`、`:after`、`:around` メソッドを定義できます。
 
 ~~~lisp
 (defmethod mito:insert-dao :before ((object user))
@@ -779,7 +779,7 @@ Inflation/Deflation は、Mito と RDBMS の間で値を変換するための機
                 :deflate #'local-time:timestamp-to-universal)))
 ~~~
 
-### Eager loading
+### 事前読み込み（Eager loading）
 
 ORM を使う際の悩みの 1 つが "N+1 query" 問題です。
 
