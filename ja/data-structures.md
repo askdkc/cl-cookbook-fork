@@ -2281,7 +2281,7 @@ FSet は次のコレクションを提供します。
 - さらに "replay sets and maps"、"binary relations"、"tuples"、"interval sets"（範囲）、"bounded sets"、厳密な（弱）順序を持つ同様のコレクション。
 
 高水準の概念的背景、チュートリアル、API リファレンス、他のエコシステムの関数型データ構造との比較を含む
-[優れたドキュメント](https://gitlab.common-lisp.net/fset/fset/-/wikis/FSet/Intro) から読み始められます。
+[優れたドキュメント](https://fset.common-lisp.dev/Modern-CL/Top_html/index.html) から読み始められます。
 
 - FSet のホームと issue tracker: https://gitlab.common-lisp.net/fset/fset/
 
