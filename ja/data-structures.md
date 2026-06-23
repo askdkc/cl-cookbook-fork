@@ -8,10 +8,10 @@ title: データ構造
 
 - Peter Seibel による [Practical CL](http://gigamonkeys.com/book/they-called-it-lisp-for-a-reason-list-processing.html)
 - E. Weitz による [CL Recipes](http://weitz.de/cl-recipes/)。説明とヒントが豊富です。
-- [CL standard](https://franz.com/support/documentation/cl-ansi-standard-draft-w-sidebar.pdf)
+- [CL 標準仕様](https://franz.com/support/documentation/cl-ansi-standard-draft-w-sidebar.pdf)
   には、PDF リーダーのサイドバーに見やすい目次があり、関数リファレンス、詳細な説明、
   さらに多くの例と注意事項、つまりほとんどすべてが含まれています。
-  [PDF mirror](https://gitlab.com/vancan1ty/clstandard_build/-/blob/master/cl-ansi-standard-draft-w-sidebar.pdf)
+  [PDF のミラー](https://gitlab.com/vancan1ty/clstandard_build/-/blob/master/cl-ansi-standard-draft-w-sidebar.pdf)
 - [Common Lisp quick reference](http://clqr.boundp.org/)
 
 付録も見逃さないでください。さらに多くのデータ構造が必要な場合は、
@@ -433,7 +433,7 @@ Error while parsing arguments to DESTRUCTURING-BIND:
 ~~~
 
 これでパターンマッチングをしたくなったら、
-[pattern matching](pattern_matching.html).
+[パターンマッチング](pattern_matching.html)
 を参照してください。
 
 
@@ -517,11 +517,11 @@ Error while parsing arguments to DESTRUCTURING-BIND:
 
 <!-- TODO redact -->
 
-オブジェクトが list のいずれかの末尾と同一であれば、`tailp` は true を返します。
-そうでなければ false を返します。
+オブジェクトがリストのいずれかの末尾と同一であれば、`tailp` は真を返します。
+そうでなければ偽を返します。
 
-オブジェクトが list のいずれかの末尾と同一であれば、`ldiff` は list のリスト構造内で
-オブジェクトに先行する要素からなる新しいリストを返します。そうでなければ list のコピーを返します。
+オブジェクトがリストのいずれかの末尾と同一であれば、`ldiff` はリストのリスト構造内で
+オブジェクトに先行する要素からなる新しいリストを返します。そうでなければリストのコピーを返します。
 
 <!-- ~~~lisp -->
 <!-- (ldiff '(1 2) (list 9 8 1 2 3)) -->
@@ -529,7 +529,7 @@ Error while parsing arguments to DESTRUCTURING-BIND:
 <!-- ~~~ -->
 
 循環リストではどうなるでしょうか。実装のドキュメントを確認してください。
-循環性を検出した場合は false を返さなければなりません。
+循環性を検出した場合は偽を返さなければなりません。
 
 
 ### member (elt, list)
@@ -883,7 +883,7 @@ mapcar は `&rest more-seqs` で複数のリストも受け取ります。最短
 ;; => 90
 ~~~
 
-ここでいう **Filter** は `remove-if-not` と呼ばれます。
+ここでいう**フィルタリング**は `remove-if-not` と呼ばれます。
 
 ### リストを平坦化する (Alexandria)
 
@@ -1023,11 +1023,11 @@ list-a
 
 **配列** は定数時間アクセスの性質を持ちます。
 
-配列は固定長にも調整可能にもできます。*単純配列* は、displaced
-（`:displaced-to` を使って別の配列を指すもの）でも調整可能（`:adjust-array`）でもなく、
-fill ポインタ（要素を追加または削除すると移動する `fill-pointer`）も持ちません。
+配列は固定長にも調整可能にもできます。*単純配列* は、変位（displaced。
+`:displaced-to` を使って別の配列を指すもの）でも調整可能（`:adjust-array`）でもなく、
+フィルポインタ（要素を追加または削除すると移動する `fill-pointer`）も持ちません。
 
-**ベクタ** は rank 1（1 次元）の配列です。これは *シーケンス* でもあります（上記参照）。
+**ベクタ** はランク 1（1 次元）の配列です。これは *シーケンス* でもあります（上記参照）。
 
 *simple vector* は、特殊化もされていない単純配列です
 （要素の型を設定するために `:element-type` を使いません）。
@@ -1239,7 +1239,7 @@ Serapeum の `dict` を使うと、ハッシュテーブルを作成し、要素
 ### ハッシュテーブルの比較
 
 ハッシュテーブルの等価性を要素ごとに比較するには `equalp` を使います。`equalp` は
-文字列について大文字小文字を区別しません。詳しくは [equality](equality.html) の節を参照してください。
+文字列について大文字小文字を区別しません。詳しくは [等価性](equality.html) の節を参照してください。
 
 
 ### ハッシュテーブル内のキーの存在をテストする
@@ -1247,7 +1247,7 @@ Serapeum の `dict` を使うと、ハッシュテーブルを作成し、要素
 `gethash` が返す第 1 値は、`gethash` の引数として与えたキーに関連付けられた
 ハッシュテーブル内のオブジェクト、またはそのキーに値が存在しない場合の `nil` です。
 この値は、キーの存在をテストしたい場合に
-[generalized boolean](http://www.lispworks.com/documentation/HyperSpec/Body/26_glo_g.htm#generalized_boolean">generalized
+[一般化ブール値](http://www.lispworks.com/documentation/HyperSpec/Body/26_glo_g.htm#generalized_boolean">generalized
 boolean) として振る舞えます。
 
 ~~~lisp
@@ -1363,7 +1363,7 @@ NIL
 - `with-hash-table-iterator`
 - alexandria、serapeum、その他のサードパーティライブラリもあります。
 
-=> [iteration page](/cl-cookbook/iteration.html#looping-over-a-hash-table) を参照してください。
+=> [繰り返しのページ](/cl-cookbook/iteration.html#looping-over-a-hash-table) を参照してください。
 
 ~~~lisp
 (loop :for k :being :the :hash-key :of *my-hash-table* :collect k)

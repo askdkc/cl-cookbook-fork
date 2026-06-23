@@ -1,5 +1,5 @@
 ---
-title: socket による TCP/UDP プログラミング
+title: ソケットによる TCP/UDP プログラミング
 ---
 
 これは [usockets](https://github.com/usocket/usocket) を使った Common Lisp での TCP/IP と UDP/IP の client/server プログラミングの短いガイドです。
@@ -13,15 +13,15 @@ title: socket による TCP/UDP プログラミング
 
 ここでサーバーを作成する必要があります。呼び出す必要がある主要な関数は2つあります。`usocket:socket-listen` と `usocket:socket-accept` です。
 
-`usocket:socket-listen` は port に bind して listen します。これは socket オブジェクトを返します。accept する connection が来るまで、このオブジェクトで待つ必要があります。そこで `usocket:socket-accept` が登場します。これは blocking call で、connection が作られたときにだけ返ります。その connection に固有の新しい socket オブジェクトを返します。その後、その connection を使ってクライアントと通信できます。
+`usocket:socket-listen` はポートにバインドして待ち受けます。これはソケットオブジェクトを返します。受け付ける接続が来るまで、このオブジェクトで待つ必要があります。そこで `usocket:socket-accept` が登場します。これはブロッキング呼び出しで、接続が作られたときにだけ返ります。その接続に固有の新しいソケットオブジェクトを返します。その後、その接続を使ってクライアントと通信できます。
 
 では、自分のミスによって直面した問題は何だったでしょうか。
 
-ミス1 - 最初、`socket-accept` はストリームオブジェクトを返すと思っていました。違います……。これは socket オブジェクトを返します。振り返ればそれが正しく、自分のミスで時間を失いました。socket に書き込みたいなら、この新しい socket から対応するストリームを実際に取得する必要があります。socket オブジェクトにはストリームスロットがあり、それを明示的に使う必要があります。どうやってそれを知るのでしょうか。`(describe connection)` が助けになります。
+ミス1 - 最初、`socket-accept` はストリームオブジェクトを返すと思っていました。違います……。これはソケットオブジェクトを返します。振り返ればそれが正しく、自分のミスで時間を失いました。ソケットに書き込みたいなら、この新しいソケットから対応するストリームを実際に取得する必要があります。ソケットオブジェクトにはストリームスロットがあり、それを明示的に使う必要があります。どうやってそれを知るのでしょうか。`(describe connection)` が助けになります。
 
-ミス2 - 新しい socket とサーバー socket の両方を close する必要があります。これもまたかなり明白ですが、最初のコードでは connection だけを close していたため、socket in use の問題に何度も遭遇しました。もちろん、listen するときに socket を再利用するという選択肢もあります。
+ミス2 - 新しいソケットとサーバーのソケットの両方を閉じる必要があります。これもまたかなり明白ですが、最初のコードでは接続だけを閉じていたため、ソケットが使用中という問題に何度も遭遇しました。もちろん、待ち受けるときにソケットを再利用するという選択肢もあります。
 
-これらのミスを乗り越えれば、残りはかなり簡単です。connection とサーバー socket を close すれば、それで完了です。
+これらのミスを乗り越えれば、残りはかなり簡単です。接続とサーバーのソケットを閉じれば、それで完了です。
 
 
 ~~~lisp
@@ -67,12 +67,12 @@ Voilà! 2つ目の REPL に "Hello World" が表示されるはずです。
 
 ## UDP/IP
 
-protocol として、UDP は connection-less です。そのため、connection を bind して accept するという概念はありません。代わりに `socket-connect` だけを行いますが、特定の port でデータを待つ UDP socket を作るために、特定のパラメータ set を渡します。
+プロトコルとして、UDP はコネクションレスです。そのため、接続をバインドして受け付けるという概念はありません。代わりに `socket-connect` だけを行いますが、特定のポートでデータを待つ UDP ソケットを作るために、特定のパラメータの組を渡します。
 
 では、自分のミスによって直面した問題は何だったでしょうか。
-ミス1 - TCP と違い、`socket-connect` に host と port を渡しません。それを行うと、packet を送信したいと示していることになります。代わりに `nil` を渡しますが、データを受け取りたい address と port に `:local-host` と `:local-port` を設定します。この部分を理解するには少し時間がかかりました。documentation がそれを扱っていなかったからです。代わりに [blackthorn-engine-3d](https://code.google.com/p/blackthorn-engine-3d/source/browse/src/examples/usocket/usocket.lisp) のコードを少し読むことが大いに助けになりました。
+ミス1 - TCP と違い、`socket-connect` にホストとポートを渡しません。それを行うと、パケットを送信したいと示していることになります。代わりに `nil` を渡しますが、データを受け取りたいアドレスとポートに `:local-host` と `:local-port` を設定します。この部分を理解するには少し時間がかかりました。ドキュメントがそれを扱っていなかったからです。代わりに [blackthorn-engine-3d](https://code.google.com/p/blackthorn-engine-3d/source/browse/src/examples/usocket/usocket.lisp) のコードを少し読むことが大いに助けになりました。
 
-また、UDP は connectionless なので、誰でもいつでもデータを送れます。そのため、どの host/port からデータを受け取ったのかを知る必要があります。そうすれば、そこへ応答できます。そのため、`socket-receive` に複数の値を bind し、それらの値を使って peer "client" へデータを送り返します。
+また、UDP はコネクションレスなので、誰でもいつでもデータを送れます。そのため、どのホスト／ポートからデータを受け取ったのかを知る必要があります。そうすれば、そこへ応答できます。そのため、`socket-receive` に複数の値を束縛し、それらの値を使って通信相手の「クライアント」へデータを送り返します。
 
 ~~~lisp
 (defun create-server (port buffer)
@@ -92,7 +92,7 @@ protocol として、UDP は connection-less です。そのため、connection 
 ~~~
 
 
-次は sender/receiver です。この部分はかなり簡単です。socket を作成し、そこへデータを送信し、データを受け取ります。
+次は送信側／受信側です。この部分はかなり簡単です。ソケットを作成し、そこへデータを送信し、データを受け取ります。
 
 ~~~lisp
 (defun create-client (port buffer)
@@ -119,7 +119,7 @@ protocol として、UDP は connection-less です。そのため、connection 
 
     (create-client 12321 (make-array 8 :element-type '(unsigned-byte 8)))
 
-Voilà! 最初の REPL には vector `#(1 2 3 4 5 6 7 8)` が表示され、2つ目には `#(8 7 6 5 4 3 2 1)` が表示されるはずです。
+Voilà! 最初の REPL にはベクトル `#(1 2 3 4 5 6 7 8)` が表示され、2つ目には `#(8 7 6 5 4 3 2 1)` が表示されるはずです。
 
 
 ## クレジット
