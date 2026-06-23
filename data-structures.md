@@ -2361,7 +2361,7 @@ FSet provides the following collections:
 - `bags` or multisets, aka sets that count how many occurences of a member is in the bag,
 - and more: "replay sets and maps", "binary relations", "tuples", "interval sets" (ranges), "bounded sets", and similar collections with strict (weak) ordering.
 
-You can start reading its [excellent documentation](https://gitlab.common-lisp.net/fset/fset/-/wikis/FSet/Intro) that includes a high level conceptual background, a tutorial, an API reference and a comparison with functional data structures from other ecosystems.
+You can start reading its [excellent documentation](https://fset.common-lisp.dev/Modern-CL/Top_html/index.html) that includes a high level conceptual background, a tutorial, an API reference and a comparison with functional data structures from other ecosystems.
 
 - FSet's home and issue tracker: https://gitlab.common-lisp.net/fset/fset/
 
