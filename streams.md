@@ -431,6 +431,9 @@ before passing it to the stream. This mechanism is generally useful
 under load, when the input source feeds data faster than the stream
 can handle it.
 
+Also, when writing to `*standard-output*`, the buffer is by default only
+flushed when writing a newline.
+
 As such, this snippet is typically not portable, it may vary across
 implementations and may depend on the context (running this in a busy
 terminal, etc):
